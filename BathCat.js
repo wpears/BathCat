@@ -460,7 +460,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 							curP.y+=yng;
 						}
 					}
-					//git is amazing
+					//git is amazing, or is it
 
 					function createSymbol(poi){
 						sym=new inE.Graphic();

@@ -460,6 +460,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 							curP.y+=yng;
 						}
 					}
+					//a completely different comment
 					function createSymbol(poi){
 						sym=new inE.Graphic();
 							sym.setSymbol(sy);

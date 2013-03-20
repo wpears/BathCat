@@ -446,7 +446,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 								    	for(;i<j;i++){
 				    						char.addSeries(i, grArr[i]);
 				    					}
-				    					var tip = new Ttip(char, "default"); //edits in the module for positioning/height
+				    					var tip = new Ttip(char, "default"); //edits in the module for positioning/height tooltip.js
 				    					var mag = new Mag(char, "default");
 								    	char.render();
 								    	console.log(char);
@@ -460,6 +460,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 							curP.y+=yng;
 						}
 					}
+					//inserting a mad edit
 					function createSymbol(poi){
 						sym=new inE.Graphic();
 							sym.setSymbol(sy);

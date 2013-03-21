@@ -308,15 +308,17 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				ieC=1;
 				inMap.setMapCursor("default");
 				outlines.disableMouseEvents();
-					function crSym(sy,evtt){
-						var sym= new inE.Graphic();
-						sym.setSymbol(sy);
-						if(evtt)
-							sym.setGeometry(evtt.mapPoint);
-						inMap.graphics.add(sym);
-						mGrphs.push(sym);
-						return sym;
-					}
+				if(meC===0)
+					O.emit(mea,"mousedown",{bubbles:false});
+				function crSym(sy,evtt){
+					var sym= new inE.Graphic();
+					sym.setSymbol(sy);
+					if(evtt)
+						sym.setGeometry(evtt.mapPoint);
+					inMap.graphics.add(sym);
+					mGrphs.push(sym);
+					return sym;
+				}
 
 					lSy=new eS.SimpleLineSymbol(sls,new inD.Color([0,0,0]),2);
 					pSy=new eS.SimpleMarkerSymbol(eS.SimpleMarkerSymbol.STYLE_CIRCLE,5,lSy,new inD.Color([0,0,0]));
@@ -791,7 +793,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
    		O(helpClo,"click",closePane);
 
 		O(mea,"mousedown",function(e){ 							//use measurement tool
-			if(meC===1&&mmt){
+			if(meC&&mmt){
 				mmt.show();
 				meC=0;
 				outlines.disableMouseEvents();
@@ -1033,6 +1035,8 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			if(domcl.contains(ident,"clickable")){
 				if(ieC==1){
 					stopCroClick=1;
+					if(meC===0)
+						O.emit(mea,"mousedown",{bubbles:false});
 					MAP.setMapCursor("help");
 					idCon.style.top=irP.offsetHeight+35+"px";
 					idCon.style.display="block";

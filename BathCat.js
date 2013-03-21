@@ -224,7 +224,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		ghd[0].title="Sort by Name";
 		ghd[1].title="Sort by Date";             //do some style adjustments/variable creation
 		ghd[3].title="Turn images on or off";
-		O.emit(ghd[1],"click",{bubbles:true});
+		O.emit(ghd[1],"mousedown",{bubbles:true});
 		lHead=dque(".dgrid-header")[0];
 		grCon=dque(".dgrid-content")[0];
 		dScroll=dque(".dgrid-scroller")[0];
@@ -505,14 +505,14 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				posMd=O(poS,"mousedown",function(e){mdToSlide(poCon,charts,W)});
 				crossHandler.pause();
 				croClick=inD.connect(inMap,"onClick",conFun);
-				croClo=O.pausable(poClo,"click",crossWipe);
-				unGraph=O.pausable(cros,"click",crossWipe);
+				croClo=O.pausable(poClo,"mousedown",crossWipe);
+				unGraph=O.pausable(cros,"mousedown",crossWipe);
 			}else{
 				whyNoClick();
 			}
 		};
 
-		crossHandler=O.pausable(cros,"click",cross);
+		crossHandler=O.pausable(cros,"mousedown",cross);
 
 
 
@@ -758,7 +758,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
    				dlLink.href="zips/"+pro+"_"+yea+"_"+mo+"_"+dayy+".zip";
    		});
 
-   		O(foot, "click", function(e){
+   		O(foot, "mousedown", function(e){
    			var offs=Math.abs(e.target.offsetLeft-200+35);
    			if(helpPane.style.opacity==0){
    				fx.fadeIn({node:helpPane,duration:150}).play();
@@ -788,9 +788,9 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
    			helpPane.style.zIndex="-1";
    		}
 
-   		O(helpClo,"click",closePane);
+   		O(helpClo,"mousedown",closePane);
 
-		O(mea,"click",function(e){ 							//use measurement tool
+		O(mea,"mousedown",function(e){ 							//use measurement tool
 			if(meC===1&&mmt){
 				mmt.show();
 				meC=0;
@@ -808,7 +808,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				initMmt();
 		});
 
-		O(fex,"click",function(e){                  //go to initial extent
+		O(fex,"mousedown",function(e){                  //go to initial extent
 			MAP.setExtent(inExt);
 		});
 
@@ -987,7 +987,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				body.style["-moz-user-select"]="text";
 			});
 		});
-		O(bmaps,"click",function(e){                            //basemap handling
+		O(bmaps,"mousedown",function(e){                            //basemap handling
 			var et=e.target,typ=et.innerHTML;
 			if(typ=="Satellite"&&!imOn){
 				imON();
@@ -1029,7 +1029,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 
 		});
 
-		O(ident,"click",function(e){ 										//id handling, when initialized
+		O(ident,"mousedown",function(e){ 										//id handling, when initialized
 			if(domcl.contains(ident,"clickable")){
 				if(ieC==1){
 					stopCroClick=1;
@@ -1066,7 +1066,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				if(currentOID&&currentOID===oid){
 					grStore=null;
 					O.emit(ieF.firstChild,"mouseover",{bubbles:true});
-					O.emit(ieF.firstChild,"click",{bubbles:true});
+					O.emit(ieF.firstChild,"mousedown",{bubbles:true});
 					dScroll.scrollTop=rowStore.offsetTop-155;
 				}
 			}
@@ -1246,7 +1246,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		}
 		});
 
-		O(imHead,"click",function(e){      						//mass image display/clear
+		O(imHead,"mousedown",function(e){      						//mass image display/clear
 			var inpArr=dque(".field-Image",ilP), somChk=0,dL=dynamicLayer;
 				darr.forEach(inpArr, function(v){
 					if(v.firstChild.checked){
@@ -1308,7 +1308,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				domcl.replace(ident,"clickable","unclick");
 				domcl.replace(cros,"clickable","unclick");
 			}else if(dLvis.length==1&&idCon.style.display=="block"){
-				O.emit(ident,"click",{bubbles:true});
+				O.emit(ident,"mousedown",{bubbles:true});
 				domcl.replace(ident,"unclick","clickable");
 				domcl.replace(cros,"unclick","clickable");
 			}else{
@@ -1369,7 +1369,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					checkTrack[yO]=true; //flip it back due to input:change handler
 				}	
 			});
-			O.emit(ghd[1],"click",{bubbles:true}); //sort
+			O.emit(ghd[1],"mousedown",{bubbles:true}); //sort
 		};
 
 		DJ.connect(timeSlider, "onTimeExtentChange",cGr); //handle time extent change

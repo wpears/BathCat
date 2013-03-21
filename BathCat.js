@@ -299,7 +299,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					popu.style.opacity=0;
 					crossHandler.resume();
 					if(!ieC)
-						dHan=DJ.connect(inMap, "onClick", runIT);
+						dHan=DJ.connect(inMap, "onMouseDown", runIT);
 				}  
 				mGrphs=[];
 				popu.style.zIndex=200;
@@ -338,7 +338,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 						p2=evt.mapPoint;
 						inD.disconnect(croMove);
 						inD.disconnect(croInClick);
-						croClick=inD.connect(inMap,"onClick",conFun);
+						croClick=inD.connect(inMap,"onMouseDown",conFun);
 						findLayerIds();
 					},
 					conFun=function(e){
@@ -350,7 +350,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 							tls=crSym(lSy);
 							croMove=inD.connect(inMap,"onMouseMove",inMov);
 							inD.disconnect(croClick);
-							croInClick=inD.connect(inMap,"onClick",inClick);
+							croInClick=inD.connect(inMap,"onMouseDown",inClick);
 						}
 					},
 					findLayerIds=function(e){
@@ -504,8 +504,8 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			};
 				posMd=O(poS,"mousedown",function(e){mdToSlide(poCon,charts,W)});
 				crossHandler.pause();
-				croClick=inD.connect(inMap,"onClick",conFun);
-				croClo=O.pausable(poClo,"mousedown",crossWipe);
+				croClick=inD.connect(inMap,"onMouseDown",conFun);
+				croClo=O.pausable(poClo,"click",crossWipe);
 				unGraph=O.pausable(cros,"mousedown",crossWipe);
 			}else{
 				whyNoClick();
@@ -788,7 +788,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
    			helpPane.style.zIndex="-1";
    		}
 
-   		O(helpClo,"mousedown",closePane);
+   		O(helpClo,"click",closePane);
 
 		O(mea,"mousedown",function(e){ 							//use measurement tool
 			if(meC===1&&mmt){
@@ -1039,7 +1039,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					rpCon.scrollTop=rpCon.scrollHeight;
 					if(rP.style.marginRight=="-16.9%")
 						clSh();
-					dHan=DJ.connect(MAP, "onClick", runIT);
+					dHan=DJ.connect(MAP, "onMouseDown", runIT);
 					ieC=0;
 				}else{
 					stopCroClick=0;
@@ -1178,9 +1178,11 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		var oid=e.graphic.attributes.OBJECTID;
 		if(!outBounds[oid]){
 				ieC?MAP.setMapCursor("pointer"):MAP.setMapCursor("help");
-				var teg=otg(oid);
+				var teg=otg(oid),er=getGrid(e),scroT=dScroll.scrollTop;
 				if(teg&&grStore!=oid){
-					caCh(teg,getGrid(e),"hi");
+					caCh(teg,er,"hi");
+					if(er.offsetTop>dScroll.clientHeight+scroT||er.offsetTop<scroT)
+						dScroll.scrollTop=er.offsetTop-155;
 				}
 			}		    	
 		});
@@ -1200,9 +1202,9 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				}
 		});
 
-		DJ.connect(outlines, "onClick", function(e){            //map click handler
+		DJ.connect(outlines, "onMouseDown", function(e){            //map click handler
 			if(ieC){
-				var ega=e.graphic.attributes,oid=ega.OBJECTID;
+				var ega=e.graphic.attributes,oid=ega.OBJECTID,scroT=dScroll.scrollTop;;
 				if(!outBounds[oid]){
 					var teg=otg(oid),er=getGrid(e);
 					if(grStore&&MAP.getScale()>73000){ //don't clear when zoomed in
@@ -1210,15 +1212,15 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 							clSh();
 							return;
 						}else{
-							dScroll.scrollTop=er.offsetTop-155;
 							caCh(otg(grStore),rowStore,""); //clear stored graphic
 							infoFunc(ega);     //this graphic is already highlighted by the mouseover
 						}
 					}else{
-						dScroll.scrollTop=er.offsetTop-155;
 						infoFunc(ega);
 						caCh(teg,er,"hi");
 					}
+					if(er.offsetTop>dScroll.clientHeight+scroT||er.offsetTop<scroT)
+						dScroll.scrollTop=er.offsetTop-155;
 					grStore=oid;
 					rowStore=er;
 					currentOID=oid;
@@ -1610,7 +1612,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				console.log(nope,ioa);
 			}
 			
-			dojo.connect(map,"onClick", function(evt){
+			dojo.connect(map,"onMouseDown", function(evt){
 
 			var reqHand=esri.request({
 				url:url,handleAs: "json",load:loadCall,error:errCall},{useProxy:false});

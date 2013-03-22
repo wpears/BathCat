@@ -91,7 +91,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		measur=dom.byId("measur"),mea=dom.byId("mea"),ident=dom.byId("ident"),zoomEnd,grCon,croClick,lPar,tsNode,timeDiv=dom.byId('timeDiv'),paneIsShowing=0,
 		BC=dijit.byId("mainWindow"),bmaps=dom.byId("bmaps"),shoP=dom.byId("shoP"),outlines,spl=dom.byId("lP_splitter"),clSh,idCount=0,mdLink=dom.byId("mdLink"),
 		fex=dom.byId("fex"),imOn=0,maOn=1,zFun,imON,maON,laOff,phys=dom.byId("phys"),imag=dom.byId("imag"),lC,cGr,daGrid,sLev=8,geoSer,
-		movers=dque(".mov"),tiout,esav,firstHan,rpCon=dom.byId("rpCon"),tiload,outBounds=[],stopCroClick,reqqing=0,croMove,crossHanlder,
+		movers=dque(".mov"),tiout,esav,firstHan,rpCon=dom.byId("rpCon"),tiload,outBounds=[],crossOpen=0,reqqing=0,croMove,crossHanlder,
 		helpBod=dom.byId("helpbod"),helpPane=dom.byId("helppane"),helpHead=dom.byId("helphead"),foot=dom.byId("foot"),currButt,helpClo=dom.byId("helpclo"),
 		cTex="padding:5px 4px 3px 4px;color:#111;box-shadow: inset 0 1px 2px 0 #857ca5;background-image:-webkit-linear-gradient(top,#a0bce5,#f0f5fd);background-image:-moz-linear-gradient(top,#a0bce5,#f0f5fd);",
 		helpText="<p>Zoom in and out with the <b>Zoom buttons</b> or the mousewheel. Shift and drag on the map to zoom to a selected area.</p><p>Go to the full extent of the data with the <b>Globe</b>.</p><p>Select map or satellite view with the <b>Basemap buttons</b>.</p><p>Browse through projects in the table. Sort the table with the column headers and collapse it with the <b>Slider</b>.</p><p>Turn on a raster by double-clicking it in the table or map, or checking its checkbox in the table.</p><ul>When a raster is displayed:<br/><li>With the <b>Identify</b> tool, click to display NAVD88 elevation at any point.</li><li>Draw a cross-section graph with the <b>Profile tool</b>. Click the start and end points of the line to generate a graph in a draggable window. Hover over points to display elevation.</li></ul><p>Use the <b>Measure tool</b> to calculate distance, area, or geographic location.</p><p>Project information and Identify results are displayed in the right pane. Toggle this pane with the <b>Arrow button</b>.</p><p>Use the <b>Time slider</b> to filter the display of features by date. Drag the start and end thumbs or click a year to only display data from that year.</p>",
@@ -279,7 +279,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					initId();
 
 				var inMap=MAP,inE=E, inD=dojo,inEG=inE.geometry,croClo,unGraph,W=window,ang,chartId,posMd,charts=[];
-				inMap.__setClickDuration(0);						                   //has internal move, click and rendering
+				
 				
 				function crossWipe(){
 					for(var i=0,j=mGrphs.length;i<j;i++){    //wipe any cross gfx/lbls    //functions that connect/disconnect
@@ -1025,6 +1025,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 
 		});
 
+
 		O(window, "resize",function(e){			//resize map on browser resize
 			MAP.resize();
 			grid.resize();
@@ -1107,7 +1108,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 
 		O(shoP,"mousedown",clSh);//handle close button click
 
-		grid.on(".dgrid-cell:click",function(e){	//grid click handler
+		grid.on(".dgrid-cell:mousedown",function(e){	//grid click handler
 			if(!e.target.firstChild)
 				return;					
 			if(domcl.contains(e.target.firstChild,"dgrid-resize-header-container"))
@@ -1173,7 +1174,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			ets.backgroundColor="rgba(0,0,0,0)";
 		});
 
-		O(timeDiv, ".dijitRuleLabelH:click", function(e){  //timeslider quicklinks handler
+		O(timeDiv, ".dijitRuleLabelH:mousedown", function(e){  //timeslider quicklinks handler
 			var yr=e.target.innerHTML;
 			if(yr.charAt(0)==="A")
 				timeSlider.setThumbIndexes([0,tCount]);
@@ -1183,7 +1184,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 
 
 		DJ.connect(outlines, "onMouseOver", function(e) {//map mouseover handler
-
+			console.log(rowStore);
 		var oid=e.graphic.attributes.OBJECTID;
 		if(!outBounds[oid]){
 				ieC?MAP.setMapCursor("pointer"):MAP.setMapCursor("help");

@@ -946,12 +946,16 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			});
 		});
 		O(poS,"mousedown",function(e){
+			for(var i in e)
+				console.log(i,e[i]);
 			body.style["-webkit-user-select"]="none";
 			body.style["-moz-user-select"]="none";
 			var pS=popu.style,pSW=+pS.width.slice(0,-2),pcS=poCon.style,pxx="px",
-				oX=e.x-e.offsetX+5-pSW,W=window,xMax=W.innerWidth,psP=phsp.style,
-				mM=O(W,"mousemove",function(e){
-					var ex=e.x;
+				oX=e.screenX-e.offsetX+5-pSW,W=window,xMax=W.innerWidth,psP=phsp.style;
+				console.log(pSW," ",oX," ",xMax," e.screenX = ",e.screenX," e.offsetX= ",e.offsetX);
+				var mM=O(W,"mousemove",function(e){
+					var ex=e.screenX;
+					console.log(ex);
 					if(ex<=xMax){
 						var wid=ex-oX//batch update?
 						pS.width=wid+pxx;
@@ -967,13 +971,14 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				body.style["-moz-user-select"]="text";
 			});
 		});
+		console.log("need to fix windowing collapsing in ie. nb the e.screenX stuff above");
 		O(phsp,"mousedown",function(e){
 			body.style["-webkit-user-select"]="none";
 			body.style["-moz-user-select"]="none";
 			var pS=popu.style,pSH=+pS.height.slice(0,-2),pcS=poCon.style,pxx="px",
-				oY=e.y-e.offsetY+5-pSH,W=window,yMax=W.innerHeight,psP=poS.style,
+				oY=e.screenY-e.offsetY+5-pSH,W=window,yMax=W.innerHeight,psP=poS.style,
 				mM=O(W,"mousemove",function(e){
-					var ey=e.y;
+					var ey=e.screenY;
 					if(ey<=yMax){
 						var hei=ey-oY;
 						pS.height=hei+pxx;

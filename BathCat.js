@@ -224,7 +224,8 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		ghd[0].title="Sort by Name";
 		ghd[1].title="Sort by Date";             //do some style adjustments/variable creation
 		ghd[3].title="Turn images on or off";
-		O.emit(ghd[1],"mousedown",{bubbles:true});
+		O.emit(ghd[1],"click",{bubbles:true});
+		O.emit(ghd[1],"click",{bubbles:true});
 		lHead=dque(".dgrid-header")[0];
 		grCon=dque(".dgrid-content")[0];
 		dScroll=dque(".dgrid-scroller")[0];
@@ -820,7 +821,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			et=e.target,oxL=e.offsetX,oyT=e.offsetY;
 			body.style["-webkit-user-select"]="none";//when the width is collapsed, the offset changes according to the
 			body.style["-moz-user-select"]="none";	//the direction of collapse
-			domcl.add(body,"prevSel");
 			poCon.style.display="none";
 			pS.boxShadow="0 0 0";
 			pS.opacity="0.7";
@@ -1375,7 +1375,8 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					checkTrack[yO]=true; //flip it back due to input:change handler
 				}	
 			});
-			O.emit(ghd[1],"mousedown",{bubbles:true}); //sort
+			O.emit(ghd[1],"click",{bubbles:true}); //sort
+			O.emit(ghd[1],"click",{bubbles:true});
 		};
 
 		DJ.connect(timeSlider, "onTimeExtentChange",cGr); //handle time extent change

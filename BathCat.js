@@ -83,7 +83,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				  ]};
 
 	dojo.connect(qt,"onComplete",function(fs){ //declare most variables upfront for fewer vars/hoisting trouble
-	var grStore=null, rowStore, erow, i=0, W=fs.features,j=W.length,idT,idP, mmt,eS=E.symbol,eD=E.dijit,on=O,runIT,ghd,mGrphs=[],graphHandlers=[],gOffset,
+	var grStore=null, rowStore, erow, i=0, W=fs.features,j=W.length,idT,idP, mmt,eS=E.symbol,eD=E.dijit,on=O,runIT,ghd,mGrphs=[],graphHandlers=[],gOffset,identGfx=[],
 	lph,cros=dom.byId("cros"),phsp=dom.byId("pohsplit"),popu=dom.byId("popu"),arro=dom.byId("arro"),poH=dom.byId("pohead"),cross,graphList=[],hovSy,pSy,lSy,
 	pst=dom.byId("pst"),dockedx="",dockedy="",poS=dom.byId("posplit"),poCon=dom.byId("pocon"), DJ=dojo,poClo=dom.byId("poclo"),zSlid=dom.byId("mapDiv_zoom_slider"),
 		dHan,ieC=1,meC=null,lP=dom.byId("lP"),linArr,imHead,currentOID=null,MAP=map,noClick=dom.byId("noClick"),cHead,boxSave,dScroll,dlLink=dom.byId("dlLink"),
@@ -518,7 +518,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		crossHandler=O.pausable(cros,"mousedown",cross);
 
 
-
 		function addSwellHandlers(gOff,inGfx,gfxArr,hovSy,pSy){
 			var currNum,gTags=document.getElementsByTagName("g"),
 			graphh=gTags[gOff],pathArr=[],pathss,pathObj={};
@@ -830,8 +829,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			if(et.id!="pohead")
 				oxL+=et.offsetLeft,oyT+=et.offsetTop;
 			var mM=O(W,"mousemove",function(evt){
-				var exx=evt.x,exL=exx-oxL,exR=exL+pSW,eyT=evt.y-oyT,eyB=eyT+pSH,nWid,nHe,
-				epx=evt.pageX,epy=evt.pageY;
+				var exx=evt.pageX,eyy=evt.pageY,exL=exx-oxL,exR=exL+pSW,eyT=eyy-oyT,eyB=eyT+pSH,nWid,nHe;
 				if(exL<=0){//if left corner is offscreen
 					if(exR>=75){//if right corner is over 75px away from left
 						if(!dockedx)
@@ -841,7 +839,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 						pcS.width=exR-7+pxx;
 						pHs.width=exR-2+pxx;      //exx=eventx leftpoint= event minus the offset exR is this point
 						pSW=exR;				//plus the width if the left corner moves offscreen, and the box is
-						epx<0?oxL=0:oxL=epx;	//wider than 75, set the undocked width at the original width
+						exx<0?oxL=0:oxL=exx;	//wider than 75, set the undocked width at the original width
 					}							//reset the left corner at 0, set the width to be the value of the
 				}else if(exR>=inW){				//right point, reset the width tracker, reset the offset(spanfix)
 					if(exL<=rMax){
@@ -862,7 +860,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 							pcS.width=exR-7+pxx;
 							pHs.width=exR-2+pxx;
 							pSW=exR;
-							oxL=epx;
+							oxL=exx;
 						}else if(exL>=inW-dockedx){
 							var rdoc=inW-exL;
 							pS.left=exL+pxx;
@@ -891,7 +889,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 						pSs.height=eyB-2+pxx;
 						pcS.height=eyB-34+pxx;
 						pSH=eyB;
-						epy<0?oyT=0:oyT=epy;
+						eyy<0?oyT=0:oyT=eyy;
 					}
 				}else if(eyB>=inH){
 					if(eyT<=bMax){
@@ -912,7 +910,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 							pcS.height=eyB-34+pxx;
 							pSs.height=eyB-2+pxx;
 							pSH=eyB;
-							oyT=epy;
+							oyT=eyy;
 						}else if(eyT>=inH-dockedy){
 							var bdoc=inH-eyT;
 							pS.top=eyT+pxx;
@@ -951,10 +949,10 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			body.style["-webkit-user-select"]="none";
 			body.style["-moz-user-select"]="none";
 			var pS=popu.style,pSW=+pS.width.slice(0,-2),pcS=poCon.style,pxx="px",
-				oX=e.screenX-e.offsetX+5-pSW,W=window,xMax=W.innerWidth,psP=phsp.style;
-				console.log(pSW," ",oX," ",xMax," e.screenX = ",e.screenX," e.offsetX= ",e.offsetX);
+				oX=e.pageX-e.offsetX+5-pSW,W=window,xMax=W.innerWidth,psP=phsp.style;
+				console.log(pSW," ",oX," ",xMax," e.pageX = ",e.pageX," e.offsetX= ",e.offsetX);
 				var mM=O(W,"mousemove",function(e){
-					var ex=e.screenX;
+					var ex=e.pageX;
 					console.log(ex);
 					if(ex<=xMax){
 						var wid=ex-oX//batch update?
@@ -971,14 +969,13 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				body.style["-moz-user-select"]="text";
 			});
 		});
-		console.log("need to fix windowing collapsing in ie. nb the e.screenX stuff above");
 		O(phsp,"mousedown",function(e){
 			body.style["-webkit-user-select"]="none";
 			body.style["-moz-user-select"]="none";
 			var pS=popu.style,pSH=+pS.height.slice(0,-2),pcS=poCon.style,pxx="px",
-				oY=e.screenY-e.offsetY+5-pSH,W=window,yMax=W.innerHeight,psP=poS.style,
+				oY=e.pageY-e.offsetY+5-pSH,W=window,yMax=W.innerHeight,psP=poS.style,
 				mM=O(W,"mousemove",function(e){
-					var ey=e.screenY;
+					var ey=e.pageY;
 					if(ey<=yMax){
 						var hei=ey-oY;
 						pS.height=hei+pxx;
@@ -1057,6 +1054,9 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					DJ.disconnect(dHan);
 					ieC=1;
 					clearNode(resCon);
+					for(var i=0,j=identGfx.length;i<j;i++){
+						MAP.graphics.remove(identGfx[i]);
+					}
 					idCount=0;
 				}
 			}else{
@@ -1564,7 +1564,9 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		}
 		function initId(e){ //id logic... cross section tool feeds here as well.. this gets set up lazily also
 			reqq(["esri/tasks/identify"],function(ide){
-				var lotsOfLayers=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106];
+				var lSy=new eS.SimpleLineSymbol(sls,new DJ.Color([0,0,0]),2),
+					pSy=new eS.SimpleMarkerSymbol(eS.SimpleMarkerSymbol.STYLE_CIRCLE,5,lSy,new DJ.Color([0,0,0])),
+					lotsOfLayers=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106];
 				idT= new eT.IdentifyTask("http://mrsbmapp00642/ArcGIS/rest/services/BATH/Web_Rr/MapServer");
 				idP= new eT.IdentifyParameters();
 				idP.layerOption=eT.IdentifyParameters.LAYER_OPTION_VISIBLE;
@@ -1578,9 +1580,10 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					return function (e,queryy){
 						pA.height = MAP.height;
 						pA.width  = MAP.width;
-						if(e.mapPoint)
-							pA.geometry=e.mapPoint;
-						else{
+						if(e.mapPoint){
+							var mPoint=e.mapPoint;
+							pA.geometry=mPoint;
+						}else{
 							pA.geometry=e;
 							if(queryy){
 								pA.layerIds=lotsOfLayers;
@@ -1597,11 +1600,24 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 						idCount++;
 						var pro=processId(tA,pA);
 						pro.then(function(pr){
+						if(pr&&pr[0]){
+							var sym=new E.Graphic();
+							sym.setSymbol(pSy);
+							sym.setGeometry(mPoint);
+							MAP.graphics.add(sym);
+							identGfx.push(sym);
+							var txtsym=new eS.TextSymbol(idCount),
+							sympoi=new E.geometry.Point(mPoint.x+10,mPoint.y+10,MAP.spatialReference),
+							gra=new E.Graphic(sympoi,txtsym);
+							MAP.graphics.add(gra);
+							identGfx.push(gra);
+
 						pr[0].forEach(function(v,i){
-						resCon.innerHTML=resCon.innerHTML+idCount+".&nbsp;"+outlines.graphics[v].attributes.Project+": "+(pr[1][i].value!=="NoData"?Math.round(pr[1][i].value*10)/10+ " ft<br/>":"No Data<rpCon/>");
+						resCon.innerHTML=resCon.innerHTML+idCount+".&nbsp;"+outlines.graphics[v].attributes.Project+": "+(pr[1][i].value!=="NoData"?Math.round(pr[1][i].value*10)/10+ " ft<br/>":"No Data<br/>");
 						});		
 						rpCon.scrollTop=rpCon.scrollHeight;
 						idCon.style.top=irP.offsetHeight+35+"px";
+						}
 						});
 					};
 				}

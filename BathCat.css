@@ -206,8 +206,9 @@ background-image:-webkit-linear-gradient(top, #e1ebfb, #b4cdf5);
   background-image:-moz-linear-gradient(top,#a0bce5,#f0f5fd);
   padding-top:4px;
 }
-.whiteglow{
-  box-shadow:0 0 16px 6px #5ADE6B !important;             
+.helpglow{
+  box-shadow:0 0 16px 6px #5ADE6B !important;
+  background-color:#5ADE6B;             
 }
 
 #helppane{
@@ -354,7 +355,9 @@ user-select: text;
 }
 
 #mea{
-  background: url(images/dis.png) 1px no-repeat;
+  background-image: url(images/dis.png);
+  background-position:1px;
+  background-repeat:no-repeat;
   width:20px;
   height:20px;
   top:41px;

@@ -86,7 +86,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 	var grStore=null, rowStore, erow, i=0, W=fs.features,j=W.length,idT,idP, mmt,eS=E.symbol,eD=E.dijit,on=O,runIT,ghd,mGrphs=[],graphHandlers=[],gOffset,identGfx=[],
 	lph,cros=dom.byId("cros"),phsp=dom.byId("pohsplit"),popu=dom.byId("popu"),arro=dom.byId("arro"),poH=dom.byId("pohead"),cross,graphList=[],hovSy,pSy,lSy,
 	pst=dom.byId("pst"),dockedx="",dockedy="",poS=dom.byId("posplit"),poCon=dom.byId("pocon"), DJ=dojo,poClo=dom.byId("poclo"),zSlid=dom.byId("mapDiv_zoom_slider"),
-		dHan,ieC=1,meC=null,lP=dom.byId("lP"),linArr,imHead,currentOID=null,MAP=map,noClick=dom.byId("noClick"),cHead,boxSave,dScroll,dlLink=dom.byId("dlLink"),
+		dHan,stopCroClick,ieC=1,meC=null,lP=dom.byId("lP"),linArr,imHead,currentOID=null,MAP=map,noClick=dom.byId("noClick"),cHead,boxSave,dScroll,dlLink=dom.byId("dlLink"),
 		rP=dom.byId("rP"),idCon=dom.byId("idCon"),grid,irP=dom.byId("irP"),ilP=dom.byId("ilP"),drP=dijit.byId("rP"),resCon=dom.byId("resCon"), checkTrack=[],
 		measur=dom.byId("measur"),mea=dom.byId("mea"),ident=dom.byId("ident"),zoomEnd,grCon,croClick,lPar,tsNode,timeDiv=dom.byId('timeDiv'),paneIsShowing=0,
 		BC=dijit.byId("mainWindow"),bmaps=dom.byId("bmaps"),shoP=dom.byId("shoP"),outlines,spl=dom.byId("lP_splitter"),clSh,idCount=0,mdLink=dom.byId("mdLink"),
@@ -678,33 +678,33 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
    				var key=e.target.textContent.slice(0,3);
    				switch (key){
 		   			case "Zoo":
-		   				domcl.add(zSlid,"whiteglow");
+		   				domcl.add(zSlid,"helpglow");
 		   				break;
 		   			case "Glo":
-		   				domcl.add(fex,"whiteglow");
+		   				domcl.add(fex,"helpglow");
 		   				break;
 		   			case "Bas":
-		   				domcl.add(phys,"whiteglow");
-		   				domcl.add(imag,"whiteglow");
+		   				domcl.add(phys,"helpglow");
+		   				domcl.add(imag,"helpglow");
 		   				break;
 		   			case "Sli":
-		   				domcl.add(lP,"whiteglow");
-		   				domcl.add(spl,"whiteglow");
+		   				domcl.add(lP,"helpglow");
+		   				domcl.add(spl,"helpglow");
 		   				break;
 		   			case "Ide":
-		   				domcl.add(ident,"whiteglow");
+		   				domcl.add(ident,"helpglow");
 		   				break;
 		   			case "Pro":
-		   				domcl.add(cros,"whiteglow");
+		   				domcl.add(cros,"helpglow");
 		   				break;
 		   			case "Mea":
-		   				domcl.add(mea,"whiteglow");
+		   				domcl.add(mea,"helpglow");
 		   				break;
 		   			case "Arr":
-		   				domcl.add(shoP,"whiteglow");
+		   				domcl.add(shoP,"helpglow");
 		   				break;
 		   			case "Tim":
-		   				domcl.add(tsNode,"whiteglow");
+		   				domcl.add(tsNode,"helpglow");
 		   				break;
    				}
    			}
@@ -715,33 +715,33 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
    				var key=e.target.textContent.slice(0,3);
    				switch (key){
 		   			case "Zoo":
-		   				domcl.remove(zSlid,"whiteglow");
+		   				domcl.remove(zSlid,"helpglow");
 		   				break;
 		   			case "Glo":
-		   				domcl.remove(fex,"whiteglow");
+		   				domcl.remove(fex,"helpglow");
 		   				break;
 		   			case "Bas":
-		   				domcl.remove(phys,"whiteglow");
-		   				domcl.remove(imag,"whiteglow");
+		   				domcl.remove(phys,"helpglow");
+		   				domcl.remove(imag,"helpglow");
 		   				break;
 		   			case "Sli":
-		   				domcl.remove(lP,"whiteglow");
-		   				domcl.remove(spl,"whiteglow");
+		   				domcl.remove(lP,"helpglow");
+		   				domcl.remove(spl,"helpglow");
 		   				break;
 		   			case "Ide":
-		   				domcl.remove(ident,"whiteglow");
+		   				domcl.remove(ident,"helpglow");
 		   				break;
 		   			case "Pro":
-		   				domcl.remove(cros,"whiteglow");
+		   				domcl.remove(cros,"helpglow");
 		   				break;
 		   			case "Mea":
-		   				domcl.remove(mea,"whiteglow");
+		   				domcl.remove(mea,"helpglow");
 		   				break;
 		   			case "Arr":
-		   				domcl.remove(shoP,"whiteglow");
+		   				domcl.remove(shoP,"helpglow");
 		   				break;
 		   			case "Tim":
-		   				domcl.remove(tsNode,"whiteglow");
+		   				domcl.remove(tsNode,"helpglow");
 		   				break;
    				}
    			}

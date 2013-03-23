@@ -167,20 +167,20 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 						mag: new eS.SimpleFillSymbol(sfs,new eS.SimpleLineSymbol(sls,new DJ.Color([221,4,178]),1.5),new DJ.Color([0,0,0,0])),
 						blu: new eS.SimpleFillSymbol(sfs,new eS.SimpleLineSymbol(sls,new DJ.Color([50,84,255]),1.5),new DJ.Color([0,0,0,0])),
 						red: new eS.SimpleFillSymbol(sfs,new eS.SimpleLineSymbol(sls,new DJ.Color([255,0,0]),1.5),new DJ.Color([0,0,0,0])),
-						grehi: new eS.SimpleFillSymbol(sfs,new eS.SimpleLineSymbol(sls,new DJ.Color([18,160,0]),3),new DJ.Color([0,0,0,0])),
-						maghi: new eS.SimpleFillSymbol(sfs,new eS.SimpleLineSymbol(sls,new DJ.Color([221,4,178]),3),new DJ.Color([0,0,0,0])),
-						bluhi: new eS.SimpleFillSymbol(sfs,new eS.SimpleLineSymbol(sls,new DJ.Color([50,84,255]),3),new DJ.Color([0,0,0,0])),
-						redhi: new eS.SimpleFillSymbol(sfs,new eS.SimpleLineSymbol(sls,new DJ.Color([255,0,0]),3),new DJ.Color([0,0,0,0]))
+						grehi: new eS.SimpleFillSymbol(sfs,new eS.SimpleLineSymbol(sls,new DJ.Color([18,160,0]),6),new DJ.Color([0,0,0,0])),
+						maghi: new eS.SimpleFillSymbol(sfs,new eS.SimpleLineSymbol(sls,new DJ.Color([221,4,178]),6),new DJ.Color([0,0,0,0])),
+						bluhi: new eS.SimpleFillSymbol(sfs,new eS.SimpleLineSymbol(sls,new DJ.Color([50,84,255]),6),new DJ.Color([0,0,0,0])),
+						redhi: new eS.SimpleFillSymbol(sfs,new eS.SimpleLineSymbol(sls,new DJ.Color([255,0,0]),6),new DJ.Color([0,0,0,0]))
 					},
 			imSym={
 					mag: new eS.SimpleFillSymbol(sfs,new eS.SimpleLineSymbol(sls,new DJ.Color([252,109,224]),1.5),new DJ.Color([0,0,0,0])),
 					blu: new eS.SimpleFillSymbol(sfs,new eS.SimpleLineSymbol(sls,new DJ.Color([119,173,255]),1.5),new DJ.Color([0,0,0,0])),
 					red: new eS.SimpleFillSymbol(sfs,new eS.SimpleLineSymbol(sls,new DJ.Color([243,63,51]),1.5),new DJ.Color([0,0,0,0])),
 					gre: new eS.SimpleFillSymbol(sfs,new eS.SimpleLineSymbol(sls,new DJ.Color([24,211,48]),1.5),new DJ.Color([0,0,0,0])),
-					maghi: new eS.SimpleFillSymbol(sfs,new eS.SimpleLineSymbol(sls,new DJ.Color([252,109,224]),3),new DJ.Color([0,0,0,0])),
-					bluhi: new eS.SimpleFillSymbol(sfs,new eS.SimpleLineSymbol(sls,new DJ.Color([119,173,255]),3),new DJ.Color([0,0,0,0])),
-					redhi: new eS.SimpleFillSymbol(sfs,new eS.SimpleLineSymbol(sls,new DJ.Color([243,63,51]),3),new DJ.Color([0,0,0,0])),
-					grehi: new eS.SimpleFillSymbol(sfs,new eS.SimpleLineSymbol(sls,new DJ.Color([24,211,48]),3),new DJ.Color([0,0,0,0])),
+					maghi: new eS.SimpleFillSymbol(sfs,new eS.SimpleLineSymbol(sls,new DJ.Color([252,109,224]),6),new DJ.Color([0,0,0,0])),
+					bluhi: new eS.SimpleFillSymbol(sfs,new eS.SimpleLineSymbol(sls,new DJ.Color([119,173,255]),6),new DJ.Color([0,0,0,0])),
+					redhi: new eS.SimpleFillSymbol(sfs,new eS.SimpleLineSymbol(sls,new DJ.Color([243,63,51]),6),new DJ.Color([0,0,0,0])),
+					grehi: new eS.SimpleFillSymbol(sfs,new eS.SimpleLineSymbol(sls,new DJ.Color([24,211,48]),6),new DJ.Color([0,0,0,0])),
 			};
 
 		outlines = new FL(feaColl, {
@@ -1184,7 +1184,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 
 
 		DJ.connect(outlines, "onMouseOver", function(e) {//map mouseover handler
-			console.log(rowStore);
 		var oid=e.graphic.attributes.OBJECTID;
 		if(!outBounds[oid]){
 				ieC?MAP.setMapCursor("pointer"):MAP.setMapCursor("help");

@@ -207,10 +207,14 @@ background-image:-webkit-linear-gradient(top, #e1ebfb, #b4cdf5);
   padding-top:4px;
 }
 .helpglow{
+
   box-shadow:0 0 16px 6px #5ADE6B !important;
   background-color:#5ADE6B;             
 }
-
+.activeTool{
+  box-shadow:0 0 16px 6px #aad6ff !important;
+   			 background-color:#aad6ff;
+}
 #helppane{
   opacity:0;
   position:absolute;
@@ -356,8 +360,13 @@ user-select: text;
 
 #mea{
   background-image: url(images/dis.png);
+<<<<<<< HEAD
   background-position:1px;
   background-repeat:no-repeat;
+=======
+  background-repeat: no-repeat;
+ background-position: 1px;
+>>>>>>> Working towards sane tool coupling
   width:20px;
   height:20px;
   top:41px;

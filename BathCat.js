@@ -188,7 +188,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
        	 	mode: 0,
        	 	outFields: ["*"]
   		});
-    
+
 		tiout = new FL("http://mrsbmapp00642/ArcGIS/rest/services/BATH/s_ti/MapServer/0",{
 		  	id:"tiout",
        	 	mode: 0,
@@ -298,19 +298,14 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					outlines.enableMouseEvents();
 					popu.style.zIndex=-100;
 					popu.style.opacity=0;
-					crossHandler.resume();
-					if(!ieC)
-						dHan=DJ.connect(inMap, "onMouseDown", runIT);
-				}  
+					crossHandler.resume(); 
+				} 
 				mGrphs=[];
 				popu.style.zIndex=200;
 				popu.style.opacity=1;
-				DJ.disconnect(dHan); //work with ident
-				ieC=1;
+		
 				inMap.setMapCursor("default");
 				outlines.disableMouseEvents();
-				if(meC===0)
-					O.emit(mea,"mousedown",{bubbles:false});
 				function crSym(sy,evtt){
 					var sym= new inE.Graphic();
 					sym.setSymbol(sy);
@@ -345,7 +340,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 						findLayerIds();
 					},
 					conFun=function(e){
-						if(!stopCroClick){
 							console.log("fired");
 							gfxOffset=gfxArr.length+4;
 							crSym(pSy,e);
@@ -354,7 +348,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 							croMove=inD.connect(inMap,"onMouseMove",inMov);
 							inD.disconnect(croClick);
 							croInClick=inD.connect(inMap,"onMouseDown",inClick);
-						}
 					},
 					findLayerIds=function(e){
 						var sR=inMap.spatialReference,curP= new inEG.Point(p1.x,p1.y,sR),lids=[],
@@ -792,23 +785,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 
    		O(helpClo,"click",closePane);
 
-		O(mea,"mousedown",function(e){ 							//use measurement tool
-			if(meC&&mmt){
-				mmt.show();
-				meC=0;
-				outlines.disableMouseEvents();
-			}else if(meC===0&&mmt){
-				mmt.hide();
-				meC=1;
-				mmt.setTool("distance",false);
-				mmt.setTool("area",false);
-				mmt.setTool("location",false);
-				mmt.clearResult();
-				outlines.enableMouseEvents();
-			}
-			else
-				initMmt();
-		});
 
 		O(fex,"mousedown",function(e){                  //go to initial extent
 			MAP.setExtent(inExt);
@@ -1033,13 +1009,52 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			fx.animateProperty({node:idCon,duration:150,properties:{top:irP.offsetHeight+35}}).play();
 
 		});
+		function makeDormant(){
+
+		}
+		function toolToggle(e,create,destroy,revive){
+			var active=dque(."activeTool")[0],targ=e.target;
+			if(targ===active){
+				destroy();
+				domcl.remove(targ,"activeTool");
+				domcl.add(lastActive,"activeTool");
+			}else{
+				if(active){
+					domcl.replace(active,"dormant","activeTool"); //swap in dormant
+					lastActive=active;
+					makeDormant(active);
+				}
+				if(domcl.contains(targ,"dormant")){
+					domcl.replace(targ,"activeTool","dormant"); //activate
+					revive();
+				}else{
+					domcl.add(targ,"activeTool");
+					create();
+				}
+			}
+		}
+
+		O(mea,"mousedown",function(e){ 							//use measurement tool
+			if(meC&&mmt){
+				mmt.show();
+				outlines.disableMouseEvents();
+				meC=0;
+			}else if(meC===0&&mmt){
+				mmt.hide();
+				mmt.setTool("distance",false);
+				mmt.setTool("area",false);
+				mmt.setTool("location",false);
+				mmt.clearResult();
+				outlines.enableMouseEvents();
+				meC=1;
+			}
+			else
+				initMmt();
+		});
 
 		O(ident,"mousedown",function(e){ 										//id handling, when initialized
 			if(domcl.contains(ident,"clickable")){
-				if(ieC==1){
-					stopCroClick=1;
-					if(meC===0)
-						O.emit(mea,"mousedown",{bubbles:false});
+					outlines.disableMouseEvents();
 					MAP.setMapCursor("help");
 					idCon.style.top=irP.offsetHeight+35+"px";
 					idCon.style.display="block";
@@ -1049,7 +1064,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					dHan=DJ.connect(MAP, "onMouseDown", runIT);
 					ieC=0;
 				}else{
-					stopCroClick=0;
+					outlines.enableMouseEvents();
 					MAP.setMapCursor("default");
 					idCon.style.display="none";
 					DJ.disconnect(dHan);
@@ -1060,12 +1075,10 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					}
 					idCount=0;
 				}
-			}else{
+			/*}else{
 				whyNoClick();
-			}
-
+			}*/
 		});
-
 
 		asp.after(grid,"set",function(gr){     //maintain state after grid update INEFFICIENT! USE HASH
 			var inGrid=gr.bodyNode.firstChild.childNodes;
@@ -1212,7 +1225,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		});
 
 		DJ.connect(outlines, "onMouseDown", function(e){            //map click handler
-			if(ieC){
 				var ega=e.graphic.attributes,oid=ega.OBJECTID,scroT=dScroll.scrollTop;;
 				if(!outBounds[oid]){
 					var teg=otg(oid),er=getGrid(e);
@@ -1234,7 +1246,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					rowStore=er;
 					currentOID=oid;
 				}
-			}
 		});
 
 		DJ.connect(outlines, "onDblClick", function(e){						//map dblclick handler
@@ -1245,14 +1256,11 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			currentOID=oid;
 			inpz=rowStore.childNodes[0].childNodes[3].childNodes[0];
 			infoFunc(ega);
-			if(ieC){
 			if(MAP.getScale()>73000)
 				MAP.setExtent(e.graphic._extent.expand(1.3));
-
 			if(!inpz.checked){
 				inpz.checked=true;
 				O.emit(inpz,"change",{bubbles:true});
-			}
 			}
 		}
 		});

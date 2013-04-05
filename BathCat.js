@@ -1013,7 +1013,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 
 		}
 		function toolToggle(e,create,destroy,revive){
-			var active=dque(."activeTool")[0],targ=e.target;
+			var active=dque(".activeTool")[0],targ=e.target;
 			if(targ===active){
 				destroy();
 				domcl.remove(targ,"activeTool");

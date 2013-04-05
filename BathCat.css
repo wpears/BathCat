@@ -360,13 +360,8 @@ user-select: text;
 
 #mea{
   background-image: url(images/dis.png);
-<<<<<<< HEAD
   background-position:1px;
   background-repeat:no-repeat;
-=======
-  background-repeat: no-repeat;
- background-position: 1px;
->>>>>>> Working towards sane tool coupling
   width:20px;
   height:20px;
   top:41px;

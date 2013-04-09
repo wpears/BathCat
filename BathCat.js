@@ -316,32 +316,30 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		
 				inMap.setMapCursor("default");
 				outlines.disableMouseEvents();
-				function crSym(sy,evtt){
-					var sym= new inE.Graphic();
-					sym.setSymbol(sy);
-					if(evtt)
-						sym.setGeometry(evtt.mapPoint);
-					inMap.graphics.add(sym);
-					mGrphs.push(sym);
-					return sym;
-				}
 
 					lSy=new eS.SimpleLineSymbol(sls,new inD.Color([0,0,0]),2);
 					pSy=new eS.SimpleMarkerSymbol(eS.SimpleMarkerSymbol.STYLE_CIRCLE,5,lSy,new inD.Color([0,0,0]));
 					hovSy=new eS.SimpleMarkerSymbol(eS.SimpleMarkerSymbol.STYLE_CIRCLE,15,lSy,new inD.Color([0,0,0]));
 					gOffset=3;
-					var p1,p2,croMov,croInClick,chCo=0,rlen,gfxArr=inMap.graphics.graphics,gfxOffset=gfxArr.length+4,
-					crosscount=1,tls,
-
+					var p1,p2,croMov,croInClick,chCo=0,gfxArr=inMap.graphics.graphics,gfxOffset=gfxArr.length+4,
+					crosscount=1,tls,updateReady=1,sR=inMap.spatialReference,tlin,
+					update= function(e){
+							tlin=new inEG.Polyline(sR)
+							tlin.addPath([p1, e.mapPoint]);
+							tls.setGeometry(tlin);
+							updateReady=0;
+							window.setTimeout(function(){//limit requests to framerate
+								updateReady=1;
+								},16);
+					},
 					inMov=function(e){
-						var sR=inMap.spatialReference,tlin=new inEG.Polyline(sR),
-						iP=e.mapPoint;
-						tlin.addPath([p1, iP]);
-						rlen=inEG.geodesicLengths([inEG.webMercatorToGeographic(tlin)], esri.Units.FEET)[0];
-						tls.setGeometry(tlin);
+						if(updateReady){
+							console.log("reqqing")
+								update(e);	}
 					},
 					inClick=function(evt){
-						var secSym=crSym(pSy,evt);
+						update(evt);
+						addSymbol(pSy,evt.mapPoint,mGrphs);
 						p2=evt.mapPoint;
 						console.log(p2);
 						inD.disconnect(croMove);
@@ -352,9 +350,9 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					conFun=function(e){
 							console.log("fired");
 							gfxOffset=gfxArr.length+4;
-							crSym(pSy,e);
+							addSymbol(pSy,e.mapPoint,mGrphs);
 							p1=e.mapPoint;
-							tls=crSym(lSy);
+							tls=addSymbol(lSy,null,mGrphs);
 							croMove=inD.connect(inMap,"onMouseMove",inMov);
 							if(!currentHandlers[1])
 								currentHandlers[1]={type:"onMouseMove",func:inMov};
@@ -1572,6 +1570,14 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				node.removeChild(node.firstChild);
 			}
 		}
+		function addSymbol(sy,geom,trackingArr){
+			var sym=new E.Graphic();
+				sym.setSymbol(sy);
+				sym.setGeometry(geom);
+				MAP.graphics.add(sym);
+				trackingArr.push(sym);
+				return sym;
+		}
 		function processId(tA,pA){
 			var def=tA.execute(pA);
 				return def.then(function(v){
@@ -1608,6 +1614,23 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				idP.returnGeometry=true;
 				idP.mapExtent=MAP.extent;
 				runIT=makeIT(idT,idP);
+
+				function renderIdent(pr){
+					if(pr&&pr[0]){
+						addSymbol(pSy,mPoint,identGfx);
+						var txtsym=new eS.TextSymbol(idCount),
+						sympoi=new E.geometry.Point(mPoint.x+10,mPoint.y+10,MAP.spatialReference),
+						gra=new E.Graphic(sympoi,txtsym);
+						MAP.graphics.add(gra);
+						identGfx.push(gra);
+
+					pr[0].forEach(function(v,i){
+					resCon.innerHTML=resCon.innerHTML+idCount+".&nbsp;"+outlines.graphics[v].attributes.Project+": "+(pr[1][i].value!=="NoData"?Math.round(pr[1][i].value*10)/10+ " ft<br/>":"No Data<br/>");
+					});		
+					rpCon.scrollTop=rpCon.scrollHeight;
+					idCon.style.top=irP.offsetHeight+35+"px";
+					}
+					}
 										//structured with closure for lazy load pass in id and execute the task
 				function makeIT(tA,pA){//if cross section, return, otherwise handle and display
 					return function (e,queryy){
@@ -1663,102 +1686,3 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 
 //return from the require
 });
-
-	/*		function loadCall(yep, ioa){
-				console.log(yep,ioa);
-			}
-			function errCall(nope, ioa){
-				console.log(nope,ioa);
-			}
-			
-			dojo.connect(map,"onMouseDown", function(evt){
-
-			var reqHand=esri.request({
-				url:url,handleAs: "json",load:loadCall,error:errCall},{useProxy:false});
-			//reqHand.then(loadCall,errCall);
-
-			});*/
-
-
-      //memoize the queries such that don't need a roundtrip
-/* e.attributes?+e.attributes.OBJECTID:
-	dojo.connect(map, "onMouseMove", fEx);
-
-		function fEx(e){
-			console.log(e);
-			var i=0, W=fs.features,j=W.length;
-			for (;i<j;i++){
-				var grap=W[i];
-				if(grap._extent.contains(e.mapPoint))	
-					caCh(grap,getGrid(grap),"hi");
-
-
-			}
-
-
-		}
-*/
-/*}else if(e.graphic){
-				console.log("EGRAPH");
-				return matchOBJECTID(e.graphic.attributes.OBJECTID);*/
-					/*	function colorG(e){
-			darr.forEach(dque(".dgrid-column-__Date",lP),function(v){
-				var daCl=v.innerHTML,parN=v.parentNode;
-				if(1230796800000<daCl&&daCl<1262332800000){
-					domcl.add(parN,"red");
-				}else if(daCl>1262332800000&&daCl<1293868800000){
-					domcl.add(parN,"gre");
-				}else if(daCl>1293868800000&&daCl<1325404800000){
-					domcl.add(parN,"mag");
-				}else if(daCl>1325404800000&&daCl<1357027200000){
-					domcl.add(parN,"blu");
-				}
-			});
-		}
-		points.push([p1x,p1y]);
-							p1x+=xng;
-							p1y+=yng;
-						}
-						mpJs={"points":points,"spatialReference":sR};
-						mPoi=new esri.geometry.Multipoint(mpJs);
-						console.log(mPoi);
-						var	def=runIT(mPoi);
-							def.then(function(v){
-								console.log(v);
-function densify(geom) {
-geom = inEG.webMercatorToGeographic(geom); 
-var dLine = inEG.geodesicDensify(geom, 500000);
-dLine = inEG.geographicToWebMercator(dLine);
-return dLine;
-     					}*/
-			//	asp.after(grid,"renderArray",colorG);
-	/*	function addSwellHandlers(gOff,inGfx,gfxArr,hovSy,pSy){ //g elements are created out of order, so grab their x coordinate and
-			var currNum,gTags=document.getElementsByTagName("g"),//sort based on this. Then create a hash for O(1)
-			graph=gTags[gOff],									//lookup on mouseover (rather than looping 'til match)
-			paths=graph.firstChild.childNodes,//for each of these do the following, +=2 for hover duplicates
-			pathObj={},pathArr=[];
-			for(var i=1;i<paths.length;i+=2){
-				pathArr[pathArr.length]=paths[i].getAttribute("path").slice(1,6);
-			}
-			pathArr.sort(function(a,b){return a-b});
-			for(var pa=0;pa<pathArr.length;pa++){
-				pathObj[pathArr[pa]]=pa;
-			}
-			graphHandlers.push(O(graph,"mouseover",function(e){
-	    		var et=e.target.getAttribute("path").slice(1,6);	    			
-	    			if(pathObj[et]!==undefined){
-	    				currNum=pathObj[et];
-	    			}
-	    	//	console.log(gfxArr,inGfx);
-	    		if(currNum!==undefined)
-	    			gfxArr[inGfx+currNum].setSymbol(hovSy);
-
-	    	}));
-	    	graphHandlers.push(O(graph,"mouseout",function(e){
-	    		if(currNum!==undefined)
-	    			gfxArr[inGfx+currNum].setSymbol(pSy);
-	    	}));
-
-	    	graphList.unshift(arguments);
-	    	gOffset=gTags.length;
-		}*/

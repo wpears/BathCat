@@ -86,7 +86,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 	var grStore=null, rowStore, erow, i=0, W=fs.features,j=W.length,idT,idP, mmt,eS=E.symbol,eD=E.dijit,on=O,runIT,ghd,mGrphs=[],graphHandlers=[],gOffset,identGfx=[],
 	lph,cros=dom.byId("cros"),phsp=dom.byId("pohsplit"),popu=dom.byId("popu"),arro=dom.byId("arro"),poH=dom.byId("pohead"),cross,graphList=[],hovSy,pSy,lSy,
 	pst=dom.byId("pst"),dockedx="",dockedy="",poS=dom.byId("posplit"),poCon=dom.byId("pocon"), DJ=dojo,poClo=dom.byId("poclo"),zSlid=dom.byId("mapDiv_zoom_slider"),
-		dHan,stopCroClick,identHidden=1,meC=null,lP=dom.byId("lP"),linArr,imHead,currentOID=null,MAP=map,noClick=dom.byId("noClick"),cHead,boxSave,dScroll,dlLink=dom.byId("dlLink"),
+		dHan,stopCroClick,identOff=1,meC=null,lP=dom.byId("lP"),linArr,imHead,currentOID=null,MAP=map,noClick=dom.byId("noClick"),cHead,boxSave,dScroll,dlLink=dom.byId("dlLink"),
 		rP=dom.byId("rP"),idCon=dom.byId("idCon"),grid,irP=dom.byId("irP"),ilP=dom.byId("ilP"),drP=dijit.byId("rP"),resCon=dom.byId("resCon"), checkTrack=[],
 		measur=dom.byId("measur"),mea=dom.byId("mea"),ident=dom.byId("ident"),zoomEnd,grCon,croClick,lPar,tsNode,timeDiv=dom.byId('timeDiv'),paneIsShowing=0,
 		BC=dijit.byId("mainWindow"),bmaps=dom.byId("bmaps"),shoP=dom.byId("shoP"),outlines,spl=dom.byId("lP_splitter"),clSh,idCount=0,mdLink=dom.byId("mdLink"),currentMeaTool,
@@ -303,7 +303,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					crossHandler.resume(); 
 				}
 				crossTool.idle=unAttach;
-				crossTool.destroy=crossWipe;
+				crossTool.stop=crossWipe;
 				crossTool.revive=function(){
 					for(var i=0,len=currentHandlers.length;i<len;i++){
 						DJ.connect(inMap,currentHandlers[i].type,currentHandlers[i].func);
@@ -350,8 +350,8 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					conFun=function(e){
 							console.log("fired");
 							gfxOffset=gfxArr.length+4;
-							addSymbol(pSy,e.mapPoint,mGrphs);
 							p1=e.mapPoint;
+							addSymbol(pSy,p1,mGrphs);
 							tls=addSymbol(lSy,null,mGrphs);
 							croMove=inD.connect(inMap,"onMouseMove",inMov);
 							if(!currentHandlers[1])
@@ -361,6 +361,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 							if(!currentHandlers[2])
 								currentHandlers[2]={type:"onMouseDown",func:inClick};
 					},
+			//		do below on first click
 					findLayerIds=function(e){
 						var sR=inMap.spatialReference,curP= new inEG.Point(p1.x,p1.y,sR),lids=[],
 						lDef=runIT(curP,true);
@@ -522,7 +523,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				whyNoClick();
 			}
 		};
-		crossTool.create=cross;
+		crossTool.start=cross;
 		crossHandler=O.pausable(cros,"mousedown",cross);
 
 
@@ -1028,12 +1029,12 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		function toolToggle(e,tool){
 			var active=dque(".activeTool")[0],targ=e.target;
 			if(targ===active){
-				tool.destroy();
+				tool.stop();
 				domcl.remove(targ,"activeTool");
-			if (lastActiveNode){
-				domcl.add(lastActiveNode,"activeTool");
-				lastActiveTool.revive();
-			}
+				if (lastActiveNode){
+					domcl.add(lastActiveNode,"activeTool");
+					lastActiveTool.revive();
+				}
 			}else{
 				if(active){
 					domcl.replace(active,"idle","activeTool"); //swap in idle
@@ -1044,7 +1045,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					tool.revive();
 				}else{
 					domcl.add(targ,"activeTool");
-					tool.create();
+					tool.start();
 				}
 				lastActiveNode=targ;
 				lastActiveTool=tool;
@@ -1052,7 +1053,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		}
 		
 		meaTool={
-			init:function (e){           //create the measurement tool lazily when first clicked, less to load at once
+			init:function (e){           //start the measurement tool lazily when first clicked, less to load at once
 				measur.style.display="block";
 				var ismov;
 				reqq(["esri/dijit/Measurement"],function(mt){
@@ -1071,7 +1072,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					O(mea,"mousedown",function(e){toolToggle(e,meaTool)});
 				});
 			},
-			create:function(){
+			start:function(){
 					mmt.show();
 					outlines.disableMouseEvents();
 			},
@@ -1084,7 +1085,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				mmt.setTool(currentMeaTool,true);
 				outlines.disableMouseEvents();
 			},
-			destroy:function(){
+			stop:function(){
 				this.idle();
 				mmt.clearResult();
 				mmt.hide();
@@ -1094,7 +1095,9 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 
 		runIdent=function(e){ 										//id handling, when initialized
 			if(domcl.contains(ident,"clickable")){
-				if(identHidden){
+				
+
+				start
 					outlines.disableMouseEvents();
 					MAP.setMapCursor("help");
 					idCon.style.top=irP.offsetHeight+35+"px";
@@ -1103,25 +1106,41 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					if(rP.style.marginRight=="-16.9%")
 						clSh();
 					dHan=DJ.connect(MAP, "onMouseDown", runIT);
-					identHidden=0;
-				}else{
+					identOff=0;
+
+				stop
 					outlines.enableMouseEvents();
 					MAP.setMapCursor("default");
 					idCon.style.display="none";
 					DJ.disconnect(dHan);
-					identHidden=1;
+					identOff=1;
 					clearNode(resCon);
 					for(var i=0,j=identGfx.length;i<j;i++){
 						MAP.graphics.remove(identGfx[i]);
 					}
 					idCount=0;
-				}
+				
 			}else{
 				whyNoClick();
 			}
 		};
+		DJ.connect(MAP,"onMouseDragEnd",function(e){console.log("DRAG ENDS")});
+		O(mapDiv,"mousedown",function(){
+			var d1=+(new Date());
+			console.log("mousedown. CYCLE START");
+			var mm=O(mapDiv,"mousemove",function(){console.log("MOUSEMOVE")});
+			O.once(mapDiv,"mouseup",function(){var d2=(new Date())-d1;console.log("mouseup. CYCLE COMPLETE in",d2,"ms.");mm.remove();});
+		})
 
-		O(ident,"mousedown",function(e){return toolToggle(e,identTool)});
+	/*	O(ident,"mousedown",
+			function(e){
+				if(domcl.contains(ident,"clickable")){
+					return toolToggle(e,identTool);
+				}else{
+					whyNoClick();
+				}
+		});*/
+		O(ident,"mousedown",runIdent);
 
 		asp.after(grid,"set",function(gr){     //maintain state after grid update INEFFICIENT! USE HASH
 			var inGrid=gr.bodyNode.firstChild.childNodes;
@@ -1242,7 +1261,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		DJ.connect(outlines, "onMouseOver", function(e) {//map mouseover handler
 		var oid=e.graphic.attributes.OBJECTID;
 		if(!outBounds[oid]){
-				identHidden?MAP.setMapCursor("pointer"):MAP.setMapCursor("help");
+				identOff?MAP.setMapCursor("pointer"):MAP.setMapCursor("help");
 				var teg=otg(oid),er=getGrid(e),scroT=dScroll.scrollTop;
 				if(teg&&grStore!=oid){
 					caCh(teg,er,"hi");
@@ -1256,7 +1275,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		DJ.connect(outlines,"onMouseOut", function(e){		//map mouseout handler
 			var oid=e.graphic.attributes.OBJECTID;
 			if(!outBounds[oid]){												
-			identHidden?MAP.setMapCursor("default"):MAP.setMapCursor("help");
+			identOff?MAP.setMapCursor("default"):MAP.setMapCursor("help");
 				var teg=otg(oid);
 					if(grStore==oid){
 						return;
@@ -1597,7 +1616,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 							}			
 						}		
 					});
-					return output
+					return output;
 				}
 				});
 		}
@@ -1644,7 +1663,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 							if(queryy){
 								pA.layerIds=lotsOfLayers;
 								var lays=processId(tA,pA);
-								return lays.then(function(v){
+								return lays.then(function(v){ //v is an array with an layerIds and one of values
 										if(v){
 											pA.layerIds=v[0];
 											return v[0];
@@ -1655,26 +1674,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 						}
 						idCount++;
 						var pro=processId(tA,pA);
-						pro.then(function(pr){
-						if(pr&&pr[0]){
-							var sym=new E.Graphic();
-							sym.setSymbol(pSy);
-							sym.setGeometry(mPoint);
-							MAP.graphics.add(sym);
-							identGfx.push(sym);
-							var txtsym=new eS.TextSymbol(idCount),
-							sympoi=new E.geometry.Point(mPoint.x+10,mPoint.y+10,MAP.spatialReference),
-							gra=new E.Graphic(sympoi,txtsym);
-							MAP.graphics.add(gra);
-							identGfx.push(gra);
-
-						pr[0].forEach(function(v,i){
-						resCon.innerHTML=resCon.innerHTML+idCount+".&nbsp;"+outlines.graphics[v].attributes.Project+": "+(pr[1][i].value!=="NoData"?Math.round(pr[1][i].value*10)/10+ " ft<br/>":"No Data<br/>");
-						});		
-						rpCon.scrollTop=rpCon.scrollHeight;
-						idCon.style.top=irP.offsetHeight+35+"px";
-						}
-						});
+						pro.then(renderIdent);
 					};
 				}
 			});

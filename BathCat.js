@@ -83,10 +83,10 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				  ]};
 
 	dojo.connect(qt,"onComplete",function(fs){ //declare most variables upfront for fewer vars/hoisting trouble
-	var grStore=null, rowStore, erow, i=0, W=fs.features,j=W.length,idT,idP, mmt,eS=E.symbol,eD=E.dijit,on=O,runIT,ghd,mGrphs=[],graphHandlers=[],gOffset,identGfx=[],
-	lph,cros=dom.byId("cros"),phsp=dom.byId("pohsplit"),popu=dom.byId("popu"),arro=dom.byId("arro"),poH=dom.byId("pohead"),cross,graphList=[],hovSy,pSy,lSy,
+	var grStore=null, rowStore, erow, i=0, W=fs.features,j=W.length,mmt,identifyUp,eS=E.symbol,eD=E.dijit,on=O,runIT,ghd,mGrphs=[],graphHandlers=[],gOffset,
+	lph,cros=dom.byId("cros"),phsp=dom.byId("pohsplit"),popu=dom.byId("popu"),arro=dom.byId("arro"),poH=dom.byId("pohead"),cross,graphList=[],
 	pst=dom.byId("pst"),dockedx="",dockedy="",poS=dom.byId("posplit"),poCon=dom.byId("pocon"), DJ=dojo,poClo=dom.byId("poclo"),zSlid=dom.byId("mapDiv_zoom_slider"),
-		dHan,stopCroClick,identOff=1,meC=null,lP=dom.byId("lP"),linArr,imHead,currentOID=null,MAP=map,noClick=dom.byId("noClick"),cHead,boxSave,dScroll,dlLink=dom.byId("dlLink"),
+		stopCroClick,identOff=1,meC=null,lP=dom.byId("lP"),linArr,imHead,currentOID=null,MAP=map,noClick=dom.byId("noClick"),cHead,boxSave,dScroll,dlLink=dom.byId("dlLink"),
 		rP=dom.byId("rP"),idCon=dom.byId("idCon"),grid,irP=dom.byId("irP"),ilP=dom.byId("ilP"),drP=dijit.byId("rP"),resCon=dom.byId("resCon"), checkTrack=[],
 		measur=dom.byId("measur"),mea=dom.byId("mea"),ident=dom.byId("ident"),zoomEnd,grCon,croClick,lPar,tsNode,timeDiv=dom.byId('timeDiv'),paneIsShowing=0,
 		BC=dijit.byId("mainWindow"),bmaps=dom.byId("bmaps"),shoP=dom.byId("shoP"),outlines,spl=dom.byId("lP_splitter"),clSh,idCount=0,mdLink=dom.byId("mdLink"),currentMeaTool,
@@ -274,9 +274,9 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 
 			cross=function(evt){						//cross section function!
 				if (domcl.contains(cros,"clickable")){ //if a raster is showing
-				if(!idT)                               //create the idtask if needed
-					initId();
-
+						if(!identifyUp){ //initialize the id task
+				initId();
+			}		
 				var inMap=MAP,inE=E, inD=dojo,inEG=inE.geometry,croClo,unGraph,W=window,ang,chartId,posMd,currentHandlers=[],charts=[];
 				
 				
@@ -316,213 +316,218 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		
 				inMap.setMapCursor("default");
 				outlines.disableMouseEvents();
+				gOffset=3;
 
-					lSy=new eS.SimpleLineSymbol(sls,new inD.Color([0,0,0]),2);
-					pSy=new eS.SimpleMarkerSymbol(eS.SimpleMarkerSymbol.STYLE_CIRCLE,5,lSy,new inD.Color([0,0,0]));
-					hovSy=new eS.SimpleMarkerSymbol(eS.SimpleMarkerSymbol.STYLE_CIRCLE,15,lSy,new inD.Color([0,0,0]));
-					gOffset=3;
-					var p1,p2,croMov,croInClick,chCo=0,gfxArr=inMap.graphics.graphics,gfxOffset=gfxArr.length+4,
-					crosscount=1,tls,updateReady=1,sR=inMap.spatialReference,tlin,
-					update= function(e){
-							tlin=new inEG.Polyline(sR)
-							tlin.addPath([p1, e.mapPoint]);
-							tls.setGeometry(tlin);
-							updateReady=0;
-							window.setTimeout(function(){//limit requests to framerate
-								updateReady=1;
-								},16);
-					},
-					inMov=function(e){
-						if(updateReady){
-							console.log("reqqing")
-								update(e);	}
-					},
-					inClick=function(evt){
-						update(evt);
-						addSymbol(pSy,evt.mapPoint,mGrphs);
-						p2=evt.mapPoint;
-						console.log(p2);
-						inD.disconnect(croMove);
-						inD.disconnect(croInClick);
-						croClick=inD.connect(inMap,"onMouseDown",conFun);
-						findLayerIds();
-					},
-					conFun=function(e){
-							console.log("fired");
-							gfxOffset=gfxArr.length+4;
-							p1=e.mapPoint;
-							addSymbol(pSy,p1,mGrphs);
-							tls=addSymbol(lSy,null,mGrphs);
-							croMove=inD.connect(inMap,"onMouseMove",inMov);
-							if(!currentHandlers[1])
-								currentHandlers[1]={type:"onMouseMove",func:inMov};
-							inD.disconnect(croClick);
-							croInClick=inD.connect(inMap,"onMouseDown",inClick);
-							if(!currentHandlers[2])
-								currentHandlers[2]={type:"onMouseDown",func:inClick};
-					},
-			//		do below on first click
-					findLayerIds=function(e){
-						var sR=inMap.spatialReference,curP= new inEG.Point(p1.x,p1.y,sR),lids=[],
-						lDef=runIT(curP,true);
-						lDef.then(function(v){
-						if(v){
-							chartId=outlines.graphics[v[0]].attributes.Project;
-							croClo.pause();
-							unGraph.pause();
-							rendGr(pSy);
-						}else{
-							for(var i=mGrphs.length-1,j=mGrphs.length-4;i>j;i--){
-								inMap.graphics.remove(mGrphs[i]);
-								mGrphs.pop();
-							}
-
-							
-						}
-						});
-					}
-					rendGr=function(sy){                					// 0.3048 meters in a foot 1.272 WM meters for normal meters at this latitude
-						var p1x=p1.x,p1y=p1.y,dx=p1x-p2.x,dy=p1y-p2.y,M=Math,wmm=0.3048*1.272,len=M.sqrt(dx*dx+dy*dy),ftlen=len/wmm,rateLimitCorrection=Math.ceil(ftlen/600)*3,ftlCorr=Math.ceil(ftlen/rateLimitCorrection),
-						sym,defCo=0,resCo=0,rCou=15,char,graphMin=-30,sR=inMap.spatialReference,
-						grArr=[],ii=0,curP= new inEG.Point(p1x,p1y,sR),makeReq,xng,yng,
-						charDiv=DJ.create("div", null, poCon);
-						console.log(rateLimitCorrection);
-						ang=M.atan(dy/dx);
-						if(dx<0){
-							xng=rateLimitCorrection*wmm*M.cos(ang);
-							yng=rateLimitCorrection*wmm*M.sin(ang);
-						}else if(dx>0){
-							xng=-rateLimitCorrection*wmm*M.cos(ang);
-							yng=-rateLimitCorrection*wmm*M.sin(ang);
-						}else{
-							yng=-rateLimitCorrection*wmm*M.sin(ang);
-							xng=0;
-						}
-						char = new Chrt(charDiv);
-						char.addPlot("default", {type: chLin});
-						char.addAxis("x",{min:-1,max:M.ceil(ftlen),title:"(ft)",titleGap:8,titleOrientation:"away"});
-						char.addAxis("y", {vertical: true,min:graphMin,max:5,title:"(ft)",titleGap:8});
-					    char.title="Profile "+crosscount+++": "+chartId;
-					    char.titleFont="normal normal normal 16pt SSP";
-					    chThem.setMarkers({ CIRCLE:        "m-4,0 c0,-6 9,-6 9,0 m-9,0 c0,6 9,6 9,0",
-											SQUARE:        "m-4,-4 l0,9 9,0 0,-9 z",
-											DIAMOND:    "m0,-4 l4,4 -4,4 -4,-4 z",
-											CROSS:        "m0,-4 l0,9 m-4,-4 l9,0",
-											X:        "m-4,-4 l9,9 m0,-9 l-9,9",
-											TRIANGLE:    "m-4,4 l4,-9 4,9 z",
-											TRIANGLE_INVERTED:"m-4,-4 l4,9 4,-9 z"}); 
-					    char.setTheme(chThem);
-					    char.render();
-					    poCon.scrollTop=poCon.scrollHeight;
-					    charts[charts.length]=char; 
-					    makeReq=function(st,en){
-						for(var i=st;i<en;i++){
-							var def=runIT(curP);
-							defCo++;
-							def.then(function(v){ //returning geometry to put in proper order on the graph.. need to pass something to the deferred to get the xy points
-								var inPoi=v[0].feature.geometry,
-									xdiff=p1x-inPoi.x,ind;
-									ind=xng?M.abs(M.round(xdiff/xng)):M.abs(M.round((p1y-inPoi.y)/yng))
-								var k=0,j=v.length;
-								if(!grArr[j-1]){
-									for(;ii<j;ii++){//build array if not around
-										grArr[ii]=[];
-									}
+				var lSy=new eS.SimpleLineSymbol(sls,new inD.Color([0,0,0]),2),
+				pSy=new eS.SimpleMarkerSymbol(eS.SimpleMarkerSymbol.STYLE_CIRCLE,5,lSy,new inD.Color([0,0,0])),
+				hovSy=new eS.SimpleMarkerSymbol(eS.SimpleMarkerSymbol.STYLE_CIRCLE,15,lSy,new inD.Color([0,0,0])),
+				p1,p2,croMov,croInClick,chCo=0,gfxArr=inMap.graphics.graphics,gfxOffset=gfxArr.length+4,
+				crosscount=1,tls,updateReady=1,sR=inMap.spatialReference,tlin,
+				update= function(e){
+						tlin=new inEG.Polyline(sR)
+						tlin.addPath([p1, e.mapPoint]);
+						tls.setGeometry(tlin);
+						updateReady=0;
+						window.setTimeout(function(){//limit requests to framerate
+							updateReady=1;
+							},16);
+				},
+				inMov=function(e){
+					if(updateReady){							
+						console.log("reqqing")
+							update(e);	}
+				},
+				inClick=function(evt){
+					update(evt);
+					p2=evt.mapPoint;
+					addSymbol(pSy,p2,mGrphs);
+					console.log(p2);
+					inD.disconnect(croMove);
+					inD.disconnect(croInClick);
+					croClick=inD.connect(inMap,"onMouseDown",conFun);
+					findLayerIds();
+				},
+				conFun=function(e){
+						console.log("fired");
+						gfxOffset=gfxArr.length+4;
+						p1=e.mapPoint;
+						addSymbol(pSy,p1,mGrphs);
+						tls=addSymbol(lSy,null,mGrphs);
+						croMove=inD.connect(inMap,"onMouseMove",inMov);
+						if(!currentHandlers[1])
+							currentHandlers[1]={type:"onMouseMove",func:inMov};
+						inD.disconnect(croClick);
+						croInClick=inD.connect(inMap,"onMouseDown",inClick);
+						if(!currentHandlers[2])
+							currentHandlers[2]={type:"onMouseDown",func:inClick};
+				},
+		//		do below on first click
+				findLayerIds=function(e){
+					var sR=inMap.spatialReference,curP= new inEG.Point(p1.x,p1.y,sR),lids=[],
+					lDef=runIT(curP,true).then(function(v){ //v is an array with an layerIds and one of values
+								if(v){
+									v[2].layerIds=v[0];
+									return v[0];
 								}
-								for (;k<j;k++){ //logic for multiple layers
-									if(v[k].value!=="NoData"){
-										grArr[k].push({y:M.round(v[k].value*10)/10,x:ind*rateLimitCorrection});
-										if(v[k].value<graphMin){
-											graphMin=(v[k].value-10)>>0;
-										}
-									}										
-								}
-								resCo++; //rescount bug fixed by findlayerids&geometry fix
-								if(v[0].value!=="NoData")
-									createSymbol(inPoi);
-								if(grArr[0].length>0){
-									var i=0,j=grArr.length;
-								    if(resCo>rCou){
-										for(;i<j;i++){
-											char.addSeries(i, grArr[i]);
-				    					}
-				    					char.addAxis("y", {vertical:true,min:graphMin,max:5,title:"(ft)",titleGap:8});
-								    	char.render();
-								    	rCou+=15;
-							    	}
-								    if(defCo==resCo){
-								    	console.log(currentHandlers);
-								    	poCon.scrollTop=poCon.scrollHeight;
-								    	for(;i<j;i++){
-				    						char.addSeries(i, grArr[i]);
-				    					}
-				    					var tip = new Ttip(char, "default"); //edits in the module for positioning/height tooltip.js
-				    					var mag = new Mag(char, "default");
-								    	char.render();
-								    	console.log(char);
-								    	addSwellHandlers(gOffset,gfxOffset,gfxArr,hovSy,pSy);
-								    	croClo.resume();
-								    	unGraph.resume();
-								    }
-								}
-							});
-							curP.x+=xng;
-							curP.y+=yng;
-						}
-					}
-					//git is amazing
-
-					function createSymbol(poi){
-						sym=new inE.Graphic();
-							sym.setSymbol(sy);
-							sym.setGeometry(new inEG.Point(poi.x,poi.y,sR));
-							inMap.graphics.add(sym);
-							mGrphs.push(sym);
-					}
-					var txtsym=new inE.symbol.TextSymbol(crosscount-1),//0.87 radians = ~50degrees
-					sympoi=new inEG.Point(curP.x+10*M.cos(0.87+ang),curP.y+10*M.sin(0.87+ang),sR),
-					gra=new E.Graphic(sympoi,txtsym);
-					inMap.graphics.add(gra);
-					mGrphs.push(gra);
-
-					(function sendReq(){
-					if(reqqing){					//prevent simultaneous requests
-						W.setTimeout(sendReq,250);
+							   });
+					lDef.then(function(v){
+					if(v){
+						chartId=outlines.graphics[v[0]].attributes.Project;
+						croClo.pause();
+						unGraph.pause();
+						rendGr(pSy);
 					}else{
-						reqqing=1;
-						for(var wy=0;wy<ftlCorr;wy+=20){ //send out deferreds in groups of 20, every 100ms
-							if (wy+20>=ftlCorr){
-								W.setTimeout(makeReq,100,wy,ftlCorr)
-								reqqing=0;
-								continue;
-							}
-							W.setTimeout(makeReq,100,wy,wy+20)
+						for(var i=mGrphs.length-1,j=mGrphs.length-4;i>j;i--){
+							inMap.graphics.remove(mGrphs[i]);
+							mGrphs.pop();
 						}
-					}
-					})();
 
-					
-					//,{plot: "default", stroke: {color:"blue"}, fill: "lightblue"});
-					/*, styleFunc: function(item){
-				 						  if(item.y < 10){
-				    							  return { fontColor : "red" };
-				   						 }else if(item.y > 60){
-				    						  return { fill: "green" };
-				    					}
-				   						 return {};
-				 						 }*/
+						
+					}
+					});
+				}
+				rendGr=function(sy){                					// 0.3048 meters in a foot 1.272 WM meters for normal meters at this latitude
+					var p1x=p1.x,p1y=p1.y,dx=p1x-p2.x,dy=p1y-p2.y,M=Math,wmm=0.3048*1.272,len=M.sqrt(dx*dx+dy*dy),ftlen=len/wmm,rateLimitCorrection=Math.ceil(ftlen/600)*3,ftlCorr=Math.ceil(ftlen/rateLimitCorrection),
+					sym,defCo=0,resCo=0,rCou=15,char,graphMin=-30,sR=inMap.spatialReference,
+					grArr=[],ii=0,curP= new inEG.Point(p1x,p1y,sR),makeReq,xng,yng,
+					charDiv=DJ.create("div", null, poCon);
+					console.log(rateLimitCorrection);
+					ang=M.atan(dy/dx);
+					if(dx<0){
+						xng=rateLimitCorrection*wmm*M.cos(ang);
+						yng=rateLimitCorrection*wmm*M.sin(ang);
+					}else if(dx>0){
+						xng=-rateLimitCorrection*wmm*M.cos(ang);
+						yng=-rateLimitCorrection*wmm*M.sin(ang);
+					}else{
+						yng=-rateLimitCorrection*wmm*M.sin(ang);
+						xng=0;
+					}
+					char = new Chrt(charDiv);
+					char.addPlot("default", {type: chLin});
+					char.addAxis("x",{min:-1,max:M.ceil(ftlen),title:"(ft)",titleGap:8,titleOrientation:"away"});
+					char.addAxis("y", {vertical: true,min:graphMin,max:5,title:"(ft)",titleGap:8});
+				    char.title="Profile "+crosscount+++": "+chartId;
+				    char.titleFont="normal normal normal 16pt SSP";
+				    chThem.setMarkers({ CIRCLE:        "m-4,0 c0,-6 9,-6 9,0 m-9,0 c0,6 9,6 9,0",
+										SQUARE:        "m-4,-4 l0,9 9,0 0,-9 z",
+										DIAMOND:    "m0,-4 l4,4 -4,4 -4,-4 z",
+										CROSS:        "m0,-4 l0,9 m-4,-4 l9,0",
+										X:        "m-4,-4 l9,9 m0,-9 l-9,9",
+										TRIANGLE:    "m-4,4 l4,-9 4,9 z",
+										TRIANGLE_INVERTED:"m-4,-4 l4,9 4,-9 z"}); 
+				    char.setTheme(chThem);
+				    char.render();
+				    poCon.scrollTop=poCon.scrollHeight;
+				    charts[charts.length]=char; 
+				    makeReq=function(st,en){
+					for(var i=st;i<en;i++){
+						var def=runIT(curP);
+						defCo++;
+						def.then(function(v){ //returning geometry to put in proper order on the graph.. need to pass something to the deferred to get the xy points
+							var inPoi=v[0].feature.geometry,
+								xdiff=p1x-inPoi.x,ind;
+								ind=xng?M.abs(M.round(xdiff/xng)):M.abs(M.round((p1y-inPoi.y)/yng))
+							var k=0,j=v.length;
+							if(!grArr[j-1]){
+								for(;ii<j;ii++){//build array if not around
+									grArr[ii]=[];
+								}
+							}
+							for (;k<j;k++){ //logic for multiple layers
+								if(v[k].value!=="NoData"){
+									grArr[k].push({y:M.round(v[k].value*10)/10,x:ind*rateLimitCorrection});
+									if(v[k].value<graphMin){
+										graphMin=(v[k].value-10)>>0;
+									}
+								}										
+							}
+							resCo++; //rescount bug fixed by findlayerids&geometry fix
+							if(v[0].value!=="NoData")
+								createSymbol(inPoi);
+							if(grArr[0].length>0){
+								var i=0,j=grArr.length;
+							    if(resCo>rCou){
+									for(;i<j;i++){
+										char.addSeries(i, grArr[i]);
+			    					}
+			    					char.addAxis("y", {vertical:true,min:graphMin,max:5,title:"(ft)",titleGap:8});
+							    	char.render();
+							    	rCou+=15;
+						    	}
+							    if(defCo==resCo){
+							    	console.log(currentHandlers);
+							    	poCon.scrollTop=poCon.scrollHeight;
+							    	for(;i<j;i++){
+			    						char.addSeries(i, grArr[i]);
+			    					}
+			    					var tip = new Ttip(char, "default"); //edits in the module for positioning/height tooltip.js
+			    					var mag = new Mag(char, "default");
+							    	char.render();
+							    	console.log(char);
+							    	addSwellHandlers(gOffset,gfxOffset,gfxArr,hovSy,pSy);
+							    	croClo.resume();
+							    	unGraph.resume();
+							    }
+							}
+						});
+						curP.x+=xng;
+						curP.y+=yng;
+					}
+				}
+				//git is amazing
+
+				function createSymbol(poi){
+					sym=new inE.Graphic();
+						sym.setSymbol(sy);
+						sym.setGeometry(new inEG.Point(poi.x,poi.y,sR));
+						inMap.graphics.add(sym);
+						mGrphs.push(sym);
+				}
+				var txtsym=new inE.symbol.TextSymbol(crosscount-1),//0.87 radians = ~50degrees
+				sympoi=new inEG.Point(curP.x+10*M.cos(0.87+ang),curP.y+10*M.sin(0.87+ang),sR),
+				gra=new E.Graphic(sympoi,txtsym);
+				inMap.graphics.add(gra);
+				mGrphs.push(gra);
+
+				(function sendReq(){
+				if(reqqing){					//prevent simultaneous requests
+					W.setTimeout(sendReq,250);
+				}else{
+					reqqing=1;
+					for(var wy=0;wy<ftlCorr;wy+=20){ //send out deferreds in groups of 20, every 100ms
+						if (wy+20>=ftlCorr){
+							W.setTimeout(makeReq,100,wy,ftlCorr)
+							reqqing=0;
+							continue;
+						}
+						W.setTimeout(makeReq,100,wy,wy+20)
+					}
+				}
+				})();
+
+				
+				//,{plot: "default", stroke: {color:"blue"}, fill: "lightblue"});
+				/*, styleFunc: function(item){
+			 						  if(item.y < 10){
+			    							  return { fontColor : "red" };
+			   						 }else if(item.y > 60){
+			    						  return { fill: "green" };
+			    					}
+			   						 return {};
+			 						 }*/
 			};
-				posMd=O(poS,"mousedown",function(e){mdToSlide(poCon,charts,W)});
-				crossHandler.pause();
-				croClick=inD.connect(inMap,"onMouseDown",conFun);
-				if(!currentHandlers[0])
-					currentHandlers[0]={type:"onMouseDown",func:conFun};
-				croClo=O.pausable(poClo,"click",crossWipe);
-				unGraph=O.pausable(cros,"mousedown",crossWipe);
-			}else{
-				whyNoClick();
-			}
-		};
+			posMd=O(poS,"mousedown",function(e){mdToSlide(poCon,charts,W)});
+			crossHandler.pause();
+			croClick=inD.connect(inMap,"onMouseDown",conFun);
+			if(!currentHandlers[0])
+				currentHandlers[0]={type:"onMouseDown",func:conFun};
+			croClo=O.pausable(poClo,"click",crossWipe);
+			unGraph=O.pausable(cros,"mousedown",crossWipe);
+		}else{
+			whyNoClick();
+		}
+	};
 		crossTool.start=cross;
 		crossHandler=O.pausable(cros,"mousedown",cross);
 
@@ -1093,37 +1098,71 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		};
 		O.once(mea,"mousedown",meaTool.init);
 
-		runIdent=function(e){ 										//id handling, when initialized
-			if(domcl.contains(ident,"clickable")){
-				
+		function clearGraphics(arr){
+			var mg=MAP.graphics;
+			for(var i=0,j=arr.length;i<j;i++)
+						mg.remove(arr[i]);
+		}
 
-				start
-					outlines.disableMouseEvents();
-					MAP.setMapCursor("help");
+		identTool={ 						//id handling, when initialized
+				handlers:[],
+				graphics:[],
+				init:function(){
+					if(!identifyUp)
+						initId();
+					O(ident,"mousedown",function(e){
+						if(domcl.contains(ident,"clickable"))
+							return toolToggle(e,identTool);
+						whyNoClick();
+					});		
+				},							
+				start:function(){
+					this.revive();
+					rpCon.scrollTop=rpCon.scrollHeight;
 					idCon.style.top=irP.offsetHeight+35+"px";
 					idCon.style.display="block";
-					rpCon.scrollTop=rpCon.scrollHeight;
 					if(rP.style.marginRight=="-16.9%")
 						clSh();
-					dHan=DJ.connect(MAP, "onMouseDown", runIT);
-					identOff=0;
-
-				stop
+				},
+				idle:function(){
 					outlines.enableMouseEvents();
 					MAP.setMapCursor("default");
-					idCon.style.display="none";
-					DJ.disconnect(dHan);
+					DJ.disconnect(this.handlers[0]);
 					identOff=1;
+				},
+				revive:function(){
+					outlines.disableMouseEvents();
+					MAP.setMapCursor("help");
+					this.handlers[0]=DJ.connect(MAP, "onMouseDown", function(e){runIT(e.mapPoint,true).then(renderIdent);});
+					identOff=0;
+				},
+				stop:function(){
+					this.idle();
+					idCon.style.display="none";
 					clearNode(resCon);
-					for(var i=0,j=identGfx.length;i<j;i++){
-						MAP.graphics.remove(identGfx[i]);
-					}
+					clearGraphics(this.graphics);
+					this.graphics=[];
 					idCount=0;
-				
-			}else{
-				whyNoClick();
-			}
+				}	
 		};
+
+			function renderIdent(pr){
+					if(pr&&pr[0]){
+						idCount++;
+						addSymbol(pSy,mPoint,identGfx);
+						var txtsym=new eS.TextSymbol(idCount),
+						sympoi=new E.geometry.Point(mPoint.x+10,mPoint.y+10,MAP.spatialReference),
+						gra=new E.Graphic(sympoi,txtsym);
+						MAP.graphics.add(gra);
+						identGfx.push(gra);
+
+					pr[0].forEach(function(v,i){
+					resCon.innerHTML=resCon.innerHTML+idCount+".&nbsp;"+outlines.graphics[v].attributes.Project+": "+(pr[1][i].value!=="NoData"?Math.round(pr[1][i].value*10)/10+ " ft<br/>":"No Data<br/>");
+					});		
+					rpCon.scrollTop=rpCon.scrollHeight;
+					idCon.style.top=irP.offsetHeight+35+"px";
+					}
+					}
 		DJ.connect(MAP,"onMouseDragEnd",function(e){console.log("DRAG ENDS")});
 		O(mapDiv,"mousedown",function(){
 			var d1=+(new Date());
@@ -1132,15 +1171,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			O.once(mapDiv,"mouseup",function(){var d2=(new Date())-d1;console.log("mouseup. CYCLE COMPLETE in",d2,"ms.");mm.remove();});
 		})
 
-	/*	O(ident,"mousedown",
-			function(e){
-				if(domcl.contains(ident,"clickable")){
-					return toolToggle(e,identTool);
-				}else{
-					whyNoClick();
-				}
-		});*/
-		O(ident,"mousedown",runIdent);
+		O.once(ident,"mousedown",identTool.init);
 
 		asp.after(grid,"set",function(gr){     //maintain state after grid update INEFFICIENT! USE HASH
 			var inGrid=gr.bodyNode.firstChild.childNodes;
@@ -1347,9 +1378,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					v.firstChild.checked=true;
 					checkTrack[i]=true;
 				});
-				if(!idT){
-					initId();
-				}
 				dL.setVisibleLayers(["-1",13, 1, 11, 15, 0, 3, 77, 80, 83, 86, 26, 97, 91, 88, 74, 103, 71, 66, 65, 54, 44, 34, 32, 29, 100, 6, 5, 2, 12, 61, 62, 79, 53, 82, 76, 43, 25, 85, 90, 93, 96, 33, 99, 31, 28, 73, 102, 4, 14, 7,17, 55, 45, 46, 37, 56, 18, 78, 75, 95, 98, 92, 87, 70, 72, 67, 94, 69, 47, 57, 19, 81, 84, 89, 101, 35, 36, 30, 27, 8, 106, 20, 58, 38, 48, 10, 9, 16, 21, 59, 49, 39, 104, 40, 22, 50, 60, 63, 23, 51, 41, 52, 24, 42, 64, 68, 107, 105]);
 				if(!MAP.layerIds[2]){
 					MAP.addLayer(dL);
@@ -1359,10 +1387,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			}
 		});
 
-		O(grid,".dgrid-input:change",function(e){                             //actual display/clear logic
-			if(!idT){ //initialize the id task
-				initId();
-			}			
+		O(grid,".dgrid-input:change",function(e){                             //actual display/clear logic	
 			if(!MAP.layerIds[2]){ //if the raster has not been added, add it.
 				dynamicLayer.setVisibleLayers(["-1"]);
 				MAP.addLayer(dynamicLayer);
@@ -1601,7 +1626,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			var def=tA.execute(pA);
 				return def.then(function(v){
 					if(v.length>0){
-					var lids=[],inpArr=dque(".field-Image",ilP),output=[[],[]];
+					var lids=[],inpArr=dque(".field-Image",ilP),output=[[],[],pA];
 					for (var i=0,j=v.length;i<j;i++){ //logic for multiple layers
 						lids[i]={lI:v[i].layerId,v:v[i]};//array of objects with OBJECTID and it's ident data
 					}
@@ -1624,62 +1649,29 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			reqq(["esri/tasks/identify"],function(ide){
 				var lSy=new eS.SimpleLineSymbol(sls,new DJ.Color([0,0,0]),2),
 					pSy=new eS.SimpleMarkerSymbol(eS.SimpleMarkerSymbol.STYLE_CIRCLE,5,lSy,new DJ.Color([0,0,0])),
-					lotsOfLayers=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106];
-				idT= new eT.IdentifyTask("http://mrsbmapp00642/ArcGIS/rest/services/BATH/Web_Rr/MapServer");
+					lotsOfLayers=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106],
+				idT= new eT.IdentifyTask("http://mrsbmapp00642/ArcGIS/rest/services/BATH/Web_Rr/MapServer"),
 				idP= new eT.IdentifyParameters();
 				idP.layerOption=eT.IdentifyParameters.LAYER_OPTION_VISIBLE;
 				idP.layerIds=lotsOfLayers;
 				idP.tolerance=1;
 				idP.returnGeometry=true;
 				idP.mapExtent=MAP.extent;
-				runIT=makeIT(idT,idP);
+				identifyUp=true;
 
-				function renderIdent(pr){
-					if(pr&&pr[0]){
-						addSymbol(pSy,mPoint,identGfx);
-						var txtsym=new eS.TextSymbol(idCount),
-						sympoi=new E.geometry.Point(mPoint.x+10,mPoint.y+10,MAP.spatialReference),
-						gra=new E.Graphic(sympoi,txtsym);
-						MAP.graphics.add(gra);
-						identGfx.push(gra);
-
-					pr[0].forEach(function(v,i){
-					resCon.innerHTML=resCon.innerHTML+idCount+".&nbsp;"+outlines.graphics[v].attributes.Project+": "+(pr[1][i].value!=="NoData"?Math.round(pr[1][i].value*10)/10+ " ft<br/>":"No Data<br/>");
-					});		
-					rpCon.scrollTop=rpCon.scrollHeight;
-					idCon.style.top=irP.offsetHeight+35+"px";
+				runIT=function(e,query){
+					idP.height = MAP.height;
+					idP.width  = MAP.width;
+					idP.geometry=e;
+					if(query){
+						idP.layerIds=lotsOfLayers;
+						return processId(idT,idP);
 					}
-					}
-										//structured with closure for lazy load pass in id and execute the task
-				function makeIT(tA,pA){//if cross section, return, otherwise handle and display
-					return function (e,queryy){
-						pA.height = MAP.height;
-						pA.width  = MAP.width;
-						if(e.mapPoint){
-							var mPoint=e.mapPoint;
-							pA.geometry=mPoint;
-						}else{
-							pA.geometry=e;
-							if(queryy){
-								pA.layerIds=lotsOfLayers;
-								var lays=processId(tA,pA);
-								return lays.then(function(v){ //v is an array with an layerIds and one of values
-										if(v){
-											pA.layerIds=v[0];
-											return v[0];
-										}
-									   });
-							}
-							return tA.execute(pA);
-						}
-						idCount++;
-						var pro=processId(tA,pA);
-						pro.then(renderIdent);
-					};
-				}
+					return idT.execute(idP);
+				};	
 			});
 		}
-		window.setTimeout(clSh,300);
+	window.setTimeout(clSh,300);
 	});
 
 	});

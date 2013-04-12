@@ -91,7 +91,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		measur=dom.byId("measur"),mea=dom.byId("mea"),ident=dom.byId("ident"),zoomEnd,grCon,croClick,lPar,tsNode,timeDiv=dom.byId('timeDiv'),paneIsShowing=0,
 		BC=dijit.byId("mainWindow"),bmaps=dom.byId("bmaps"),shoP=dom.byId("shoP"),outlines,spl=dom.byId("lP_splitter"),clSh,idCount=0,mdLink=dom.byId("mdLink"),currentMeaTool,
 		fex=dom.byId("fex"),imOn=0,maOn=1,zFun,imON,maON,laOff,phys=dom.byId("phys"),imag=dom.byId("imag"),lC,cGr,daGrid,sLev=8,geoSer,crossTool={},identTool={},meaTool={},
-		movers=dque(".mov"),tiout,esav,firstHan,rpCon=dom.byId("rpCon"),tiload,outBounds=[],crossOpen=0,reqqing=0,croMove,crossHandler,runIdent,runMea,lastActiveNode,lastActiveTool,
+		movers=dque(".mov"),tiout,esav,firstHan,rpCon=dom.byId("rpCon"),tiload,outBounds=[],crossOpen=0,reqqing=0,croMove,crossHandler,runIdent,runMea,lastActives=[],
 		helpBod=dom.byId("helpbod"),helpPane=dom.byId("helppane"),helpHead=dom.byId("helphead"),foot=dom.byId("foot"),currButt,helpClo=dom.byId("helpclo"),
 		cTex="padding:5px 4px 3px 4px;color:#111;box-shadow: inset 0 1px 2px 0 #857ca5;background-image:-webkit-linear-gradient(top,#a0bce5,#f0f5fd);background-image:-moz-linear-gradient(top,#a0bce5,#f0f5fd);",
 		helpText="<p>Zoom in and out with the <b>Zoom buttons</b> or the mousewheel. Shift and drag on the map to zoom to a selected area.</p><p>Go to the full extent of the data with the <b>Globe</b>.</p><p>Select map or satellite view with the <b>Basemap buttons</b>.</p><p>Browse through projects in the table. Sort the table with the column headers and collapse it with the <b>Slider</b>.</p><p>Turn on a raster by double-clicking it in the table or map, or checking its checkbox in the table.</p><ul>When a raster is displayed:<br/><li>With the <b>Identify</b> tool, click to display NAVD88 elevation at any point.</li><li>Draw a cross-section graph with the <b>Profile tool</b>. Click the start and end points of the line to generate a graph in a draggable window. Hover over points to display elevation.</li></ul><p>Use the <b>Measure tool</b> to calculate distance, area, or geographic location.</p><p>Project information and Identify results are displayed in the right pane. Toggle this pane with the <b>Arrow button</b>.</p><p>Use the <b>Time slider</b> to filter the display of features by date. Drag the start and end thumbs or click a year to only display data from that year.</p>",
@@ -1032,28 +1032,35 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		});
 
 		function toolToggle(e,tool){
-			var active=dque(".activeTool")[0],targ=e.target;
+			var active=dque(".activeTool")[0],idle=dque(".activeTool")[0],targ=e.target;
 			if(targ===active){
+				console.log("The target is active, stopping tool.");
 				tool.stop();
 				domcl.remove(targ,"activeTool");
-				if (lastActiveNode){
-					domcl.add(lastActiveNode,"activeTool");
-					lastActiveTool.revive();
+				lastActives.length=lastActives.length-1;
+				if(lastActives.length){
+					console.log("Reenabling last active tool.");
+					domcl.replace(lastActives[lastActives.length-1].node,"activeTool","idle");
+					lastActives[lastActives.length-1].tool.revive();
 				}
 			}else{
 				if(active){
+					console.log("There is a different active tool,idling it.")
 					domcl.replace(active,"idle","activeTool"); //swap in idle
-					lastActiveTool.idle();
+					lastActives[lastActives.length-1].tool.idle();
 				}
 				if(domcl.contains(targ,"idle")){
+					console.log("Reviving the idle target.");
 					domcl.replace(targ,"activeTool","idle"); //activate
 					tool.revive();
 				}else{
+					console.log("Activating the target.");
 					domcl.add(targ,"activeTool");
 					tool.start();
 				}
-				lastActiveNode=targ;
-				lastActiveTool=tool;
+				lastActives[lastActives.length]={node:targ,tool:tool};
+				if(lastActives.length>3)
+					lastActives.shift();
 			}
 		}
 		
@@ -1074,6 +1081,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					mmt.show();
 					outlines.disableMouseEvents();
 					DJ.connect(mmt,"onMeasureEnd",function(e){currentMeaTool=e;});
+					toolToggle(e,meaTool)
 					O(mea,"mousedown",function(e){toolToggle(e,meaTool)});
 				});
 			},
@@ -1087,12 +1095,14 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					mmt.setTool(currentMeaTool,false);
 			},
 			revive:function(){
-				mmt.setTool(currentMeaTool,true);
 				outlines.disableMouseEvents();
+				if(currentMeaTool)
+					mmt.setTool(currentMeaTool,true);
 			},
 			stop:function(){
 				this.idle();
 				mmt.clearResult();
+				currentMeaTool=null;
 				mmt.hide();
 			}
 		};
@@ -1107,9 +1117,10 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		identTool={ 						//id handling, when initialized
 				handlers:[],
 				graphics:[],
-				init:function(){
+				init:function(e){
 					if(!identifyUp)
 						initId();
+					toolToggle(e,identTool);
 					O(ident,"mousedown",function(e){
 						if(domcl.contains(ident,"clickable"))
 							return toolToggle(e,identTool);
@@ -1146,30 +1157,29 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				}	
 		};
 
-			function renderIdent(pr){
-					if(pr&&pr[0]){
-						idCount++;
-						addSymbol(pSy,mPoint,identGfx);
-						var txtsym=new eS.TextSymbol(idCount),
-						sympoi=new E.geometry.Point(mPoint.x+10,mPoint.y+10,MAP.spatialReference),
-						gra=new E.Graphic(sympoi,txtsym);
-						MAP.graphics.add(gra);
-						identGfx.push(gra);
-
-					pr[0].forEach(function(v,i){
-					resCon.innerHTML=resCon.innerHTML+idCount+".&nbsp;"+outlines.graphics[v].attributes.Project+": "+(pr[1][i].value!=="NoData"?Math.round(pr[1][i].value*10)/10+ " ft<br/>":"No Data<br/>");
-					});		
-					rpCon.scrollTop=rpCon.scrollHeight;
-					idCon.style.top=irP.offsetHeight+35+"px";
-					}
-					}
-		DJ.connect(MAP,"onMouseDragEnd",function(e){console.log("DRAG ENDS")});
+			function renderIdent(idArr){
+				if(idArr&&idArr[0]){
+					idCount++;
+					addSymbol(idArr[4],idArr[3],identTool.graphics);
+					var txtsym=new eS.TextSymbol(idCount),
+					sympoi=new E.geometry.Point(idArr[3].x+10,idArr[3].y+10,MAP.spatialReference),
+					gra=new E.Graphic(sympoi,txtsym);
+					MAP.graphics.add(gra);
+					identTool.graphics.push(gra);
+				idArr[0].forEach(function(v,i){
+				resCon.innerHTML=resCon.innerHTML+idCount+".&nbsp;"+outlines.graphics[v].attributes.Project+": "+(idArr[1][i].value!=="NoData"?Math.round(idArr[1][i].value*10)/10+ " ft<br/>":"No Data<br/>");
+				});		
+				rpCon.scrollTop=rpCon.scrollHeight;
+				idCon.style.top=irP.offsetHeight+35+"px";
+				}
+			}	
+	/*	DJ.connect(MAP,"onMouseDragEnd",function(e){console.log("DRAG ENDS")});
 		O(mapDiv,"mousedown",function(){
 			var d1=+(new Date());
 			console.log("mousedown. CYCLE START");
 			var mm=O(mapDiv,"mousemove",function(){console.log("MOUSEMOVE")});
 			O.once(mapDiv,"mouseup",function(){var d2=(new Date())-d1;console.log("mouseup. CYCLE COMPLETE in",d2,"ms.");mm.remove();});
-		})
+		})*/
 
 		O.once(ident,"mousedown",identTool.init);
 
@@ -1622,11 +1632,11 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				trackingArr.push(sym);
 				return sym;
 		}
-		function processId(tA,pA){
+		function processId(tA,pA,e,pSy){
 			var def=tA.execute(pA);
 				return def.then(function(v){
 					if(v.length>0){
-					var lids=[],inpArr=dque(".field-Image",ilP),output=[[],[],pA];
+					var lids=[],inpArr=dque(".field-Image",ilP),output=[[],[],pA,e,pSy];
 					for (var i=0,j=v.length;i<j;i++){ //logic for multiple layers
 						lids[i]={lI:v[i].layerId,v:v[i]};//array of objects with OBJECTID and it's ident data
 					}
@@ -1665,10 +1675,10 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					idP.geometry=e;
 					if(query){
 						idP.layerIds=lotsOfLayers;
-						return processId(idT,idP);
+						return processId(idT,idP,e,pSy);
 					}
 					return idT.execute(idP);
-				};	
+				};
 			});
 		}
 	window.setTimeout(clSh,300);

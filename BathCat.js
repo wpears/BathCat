@@ -1032,17 +1032,12 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		});
 
 		function toolToggle(e,tool){
-			var active=dque(".activeTool")[0],idle=dque(".activeTool")[0],targ=e.target;
+			var active=dque(".activeTool")[0],targ=e.target;
 			if(targ===active){
 				console.log("The target is active, stopping tool.");
 				tool.stop();
 				domcl.remove(targ,"activeTool");
 				lastActives.length=lastActives.length-1;
-				if(lastActives.length){
-					console.log("Reenabling last active tool.");
-					domcl.replace(lastActives[lastActives.length-1].node,"activeTool","idle");
-					lastActives[lastActives.length-1].tool.revive();
-				}
 			}else{
 				if(active){
 					console.log("There is a different active tool,idling it.")
@@ -1063,7 +1058,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					lastActives.shift();
 			}
 		}
-		
 		meaTool={
 			init:function (e){           //start the measurement tool lazily when first clicked, less to load at once
 				measur.style.display="block";
@@ -1078,16 +1072,23 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					domcl.add(measur,"mov");
 					movers=dque(".mov")
 					measur.style.marginRight=mea.style.marginRight;
-					mmt.show();
-					outlines.disableMouseEvents();
-					DJ.connect(mmt,"onMeasureEnd",function(e){currentMeaTool=e;});
 					toolToggle(e,meaTool)
 					O(mea,"mousedown",function(e){toolToggle(e,meaTool)});
+					asp.after(mmt,"setTool",function(tool,flag){
+						console.log(tool,flag);
+											if(flag!==false){
+											currentMeaTool=tool;
+											outlines.disableMouseEvents();
+											if(domcl.contains(mea,"idle")){
+												domcl.replace(mea,"activeTool","idle");
+												meaTool.revive();
+											}
+										}
+										},true);
 				});
 			},
 			start:function(){
 					mmt.show();
-					outlines.disableMouseEvents();
 			},
 			idle:function(){
 				outlines.enableMouseEvents();
@@ -1095,7 +1096,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					mmt.setTool(currentMeaTool,false);
 			},
 			revive:function(){
-				outlines.disableMouseEvents();
 				if(currentMeaTool)
 					mmt.setTool(currentMeaTool,true);
 			},

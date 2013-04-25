@@ -156,14 +156,14 @@ margin-right:-285px;
   position:absolute;
   bottom:34px;
   left:4px;
-  font-size:14px;
+  font-size:16px;
   line-height: 1.4em;
 }
 #mdLink{
   position:absolute;
   bottom:34px;
   right:4px;
-  font-size:14px;
+  font-size:16px;
   line-height: 1.4em;
 }
 #foot{
@@ -351,11 +351,16 @@ user-select: text;
   border-bottom:1px solid #aad6ff;
 }
 #resCon{
+	margin-left:5px;
    -webkit-transition:none;
   -moz-transition:none;
    transition:none;
   -o-transition:none;
   padding-bottom:15px;
+}
+#resCon>p{
+	display:block;
+	margin:7px 0;
 }
 
 #mea{

@@ -553,6 +553,8 @@ th:hover{
   margin-left:1%;
 }
 #popu{
+top:50px;
+left:50px;
   opacity:0;
  height:400px;
  width:600px; 

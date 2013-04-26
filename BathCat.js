@@ -83,9 +83,9 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				  ]};
 
 	dojo.connect(qt,"onComplete",function(fs){ //declare most variables upfront for fewer vars/hoisting trouble
-	var grStore=null, rowStore, erow, i=0, W=fs.features,j=W.length,mmt,identifyUp,eS=E.symbol,eD=E.dijit,on=O,runIT,ghd,mGrphs=[],graphHandlers=[],gOffset,
-	lph,cros=dom.byId("cros"),phsp=dom.byId("pohsplit"),popu=dom.byId("popu"),arro=dom.byId("arro"),poH=dom.byId("pohead"),cross,graphList=[],
-	pst=dom.byId("pst"),dockedx="",dockedy="",poS=dom.byId("posplit"),poCon=dom.byId("pocon"), DJ=dojo,poClo=dom.byId("poclo"),zSlid=dom.byId("mapDiv_zoom_slider"),
+	var grStore=null, rowStore, erow, i=0, W=fs.features,j=W.length,mmt,identifyUp,eS=E.symbol,eD=E.dijit,on=O,runIT,ghd,
+	lph,cros=dom.byId("cros"),arro=dom.byId("arro"),cross,graphList=[],
+	pst=dom.byId("pst"),dockedx="",dockedy="", DJ=dojo,zSlid=dom.byId("mapDiv_zoom_slider"),
 		stopCroClick,identOff=1,meC=null,lP=dom.byId("lP"),linArr,imHead,currentOID=null,MAP=map,noClick=dom.byId("noClick"),cHead,boxSave,dScroll,dlLink=dom.byId("dlLink"),
 		rP=dom.byId("rP"),idCon=dom.byId("idCon"),grid,irP=dom.byId("irP"),ilP=dom.byId("ilP"),drP=dijit.byId("rP"),resCon=dom.byId("resCon"), checkTrack=[],
 		measur=dom.byId("measur"),mea=dom.byId("mea"),ident=dom.byId("ident"),identHandle,zoomEnd,grCon,croClick,lPar,tsNode,timeDiv=dom.byId('timeDiv'),paneIsShowing=0,
@@ -228,10 +228,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		lHead=dque(".dgrid-header")[0];
 		grCon=dque(".dgrid-content")[0];
 		dScroll=dque(".dgrid-scroller")[0];
-		popu.style.top="50px";
-		popu.style.left="50px";
-		popu.style.width="600px";
-		popu.style.height="400px";
 		imHead=dque(".dgrid-resize-header-container",lph)[3];
 
 		var tCount, timeSlider, sliderDiv, timeExtent = new E.TimeExtent();
@@ -273,22 +269,38 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 
 
 		crossTool=function(evt){						//cross section function!
-			var inMap=MAP,inE=E, inD=dojo,inEG=inE.geometry,croClo,unGraph,W=window,ang,chartId,posMd,currentHandlers=[],charts=[];
-			
-
-			mGrphs=[];
-			popu.style.zIndex=200;
-			popu.style.opacity=1;
-	
-			inMap.setMapCursor("default");
-			outlines.disableMouseEvents();
-			gOffset=3;
-
-			var lSy=new eS.SimpleLineSymbol(sls,new inD.Color([0,0,0]),2),
+			var self,inMap=MAP,inE=E,inD=dojo,inEG=inE.geometry,W=window,croClo,unGraph,popUp,
+			ang,chartId,posMd,charts=[],graphics,gOffset=3,p1,p2,croMov,croInClick,chCo=0,
+			gfxArr=inMap.graphics.graphics,gfxOffset=gfxArr.length+4,
+			crosscount=1,tls,updateReady=1,sR=inMap.spatialReference,tlin,
+			lSy=new eS.SimpleLineSymbol(sls,new inD.Color([0,0,0]),2),
 			pSy=new eS.SimpleMarkerSymbol({"size":6,"color":new DJ.Color([0,0,0])}),
 			hovSy=new eS.SimpleMarkerSymbol(eS.SimpleMarkerSymbol.STYLE_CIRCLE,15,lSy,new inD.Color('#4879bc')),
-			p1,p2,croMov,croInClick,chCo=0,gfxArr=inMap.graphics.graphics,gfxOffset=gfxArr.length+4,
-			crosscount=1,tls,updateReady=1,sR=inMap.spatialReference,tlin,
+			showPopup=function(){
+				if(!popUp){
+					popUp=dCon.place({'<div id="popUp">
+						    <div id="popHeader" class="panehead">
+						       <span id="popTitle">Profile Tool</span>
+						        <div id="popClose"class="closebox">X</div>
+						      </div>
+						      <div id="popContainer"></div>
+						      <div id="popVerticalSplitter">
+						        <div id="popVerticalLine"></div>
+						      </div>
+						      <div id="popHorizontalSplitter">
+						        <div id="popHorizontalLine"></div>
+						      </div>
+						    </div>',body});
+				}
+				popUp.style.zIndex=200;
+				popUp.style.opacity=1;
+				attachPopupHandlers();
+			},
+			hidePopup=function(){
+				popu.style.zIndex=-100;
+				popu.style.opacity=0;
+				removePopupHandlers();
+			},
 			update= function(e){
 					tlin=new inEG.Polyline(sR)
 					tlin.addPath([p1, e.mapPoint]);
@@ -301,12 +313,13 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			inMov=function(e){
 				if(updateReady){							
 					console.log("reqqing")
-						update(e);	}
+					update(e);	
+				}
 			},
 			inClick=function(evt){
 				update(evt);
 				p2=evt.mapPoint;
-				addSymbol(pSy,p2,mGrphs);
+				addSymbol(p2,pSy,graphics);
 				console.log(p2);
 				inD.disconnect(croMove);
 				inD.disconnect(croInClick);
@@ -317,8 +330,8 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					console.log("fired");
 					gfxOffset=gfxArr.length+4;
 					p1=e.mapPoint;
-					addSymbol(pSy,p1,mGrphs);
-					tls=addSymbol(lSy,null,mGrphs);
+					addSymbol(p1,pSy,graphics);
+					tls=addSymbol(null,lSy,graphics);
 					croMove=inD.connect(inMap,"onMouseMove",inMov);
 					if(!currentHandlers[1])
 						currentHandlers[1]={type:"onMouseMove",func:inMov};
@@ -343,19 +356,19 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					unGraph.pause();
 					rendGr(pSy);
 				}else{
-					for(var i=mGrphs.length-1,j=mGrphs.length-4;i>j;i--){
-						inMap.graphics.remove(mGrphs[i]);
-						mGrphs.pop();
+					for(var i=graphics.length-1,j=graphics.length-4;i>j;i--){
+						inMap.graphics.remove(graphics[i]);
+						graphics.pop();
 					}
 
 					
 				}
 				});
-			}
+			},
 			rendGr=function(sy){                					// 0.3048 meters in a foot 1.272 WM meters for normal meters at this latitude
 				var p1x=p1.x,p1y=p1.y,dx=p1x-p2.x,dy=p1y-p2.y,M=Math,wmm=0.3048*1.272,len=M.sqrt(dx*dx+dy*dy),ftlen=len/wmm,rateLimitCorrection=Math.ceil(ftlen/600)*3,ftlCorr=Math.ceil(ftlen/rateLimitCorrection),
 				sym,defCo=0,resCo=0,rCou=15,char,graphMin=-30,sR=inMap.spatialReference,
-				grArr=[],ii=0,curP= new inEG.Point(p1x,p1y,sR),makeReq,xng,yng,
+				grArr=[],ii=0,curP= new inEG.Point(p1x,p1y,sR),makeReq,xng,yng,addSymb=addSymbol,
 				charDiv=DJ.create("div", null, poCon);
 				console.log(rateLimitCorrection);
 				ang=M.atan(dy/dx);
@@ -369,6 +382,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					yng=-rateLimitCorrection*wmm*M.sin(ang);
 					xng=0;
 				}
+				addTextSymbol(crosscount,p1,10*M.cos(0.87+ang),10*M.sin(0.87+ang),graphics);
 				char = new Chrt(charDiv);
 				char.addPlot("default", {type: chLin});
 				char.addAxis("x",{min:-1,max:M.ceil(ftlen),title:"(ft)",titleGap:8,titleOrientation:"away"});
@@ -387,6 +401,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			    poCon.scrollTop=poCon.scrollHeight;
 			    charts[charts.length]=char; 
 			    makeReq=function(st,en){
+			    var gfx=graphicss,sy=pSy;
 				for(var i=st;i<en;i++){
 					var def=runIT(curP);
 					defCo++;
@@ -410,7 +425,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 						}
 						resCo++; //rescount bug fixed by findlayerids&geometry fix
 						if(v[0].value!=="NoData")
-							createSymbol(inPoi);
+							addSymb(inPoi,sy,gfx);
 						if(grArr[0].length>0){
 							var i=0,j=grArr.length;
 						    if(resCo>rCou){
@@ -439,110 +454,8 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					curP.x+=xng;
 					curP.y+=yng;
 				}
-			}
-
-			function createSymbol(poi){
-				sym=new inE.Graphic();
-					sym.setSymbol(sy);
-					sym.setGeometry(new inEG.Point(poi.x,poi.y,sR));
-					inMap.graphics.add(sym);
-					mGrphs.push(sym);
-			}
-			var txtsym=new inE.symbol.TextSymbol(crosscount-1),//0.87 radians = ~50degrees
-			sympoi=new inEG.Point(curP.x,curP.y,sR),gra;
-			txtsym.setOffset(10*M.cos(0.87+ang),10*M.sin(0.87+ang));
-			gra=new E.Graphic(sympoi,txtsym);
-			inMap.graphics.add(gra);
-			mGrphs.push(gra);
-
-			(function sendReq(){
-			if(reqqing){					//prevent simultaneous requests
-				W.setTimeout(sendReq,250);
-			}else{
-				reqqing=1;
-				for(var wy=0;wy<ftlCorr;wy+=20){ //send out deferreds in groups of 20, every 100ms
-					if (wy+20>=ftlCorr){
-						W.setTimeout(makeReq,100,wy,ftlCorr)
-						reqqing=0;
-						continue;
-					}
-					W.setTimeout(makeReq,100,wy,wy+20)
-				}
-			}
-			})();
-
-			
-			//,{plot: "default", stroke: {color:"blue"}, fill: "lightblue"});
-			/*, styleFunc: function(item){
-		 						  if(item.y < 10){
-		    							  return { fontColor : "red" };
-		   						 }else if(item.y > 60){
-		    						  return { fill: "green" };
-		    					}
-		   						 return {};
-		 						 }*/
-		};
-		posMd=O(poS,"mousedown",function(e){mdToSlide(poCon,charts,W)});
-		crossHandler.pause();
-		croClick=inD.connect(inMap,"onMouseDown",conFun);
-		if(!currentHandlers[0])
-			currentHandlers[0]={type:"onMouseDown",func:conFun};
-		croClo=O.pausable(poClo,"click",crossWipe);
-		unGraph=O.pausable(cros,"mousedown",crossWipe);
-		
-		return{
-			handlers:[],
-			graphics=[],
-			labels=[],
-			init:function(e){
-				if(!identifyUp){
-				initId();
-			}
-			},
-			start:function(){
-
-			},
-			idle:function(){
-					for(var i=0,j=mGrphs.length;i<j;i++){    //wipe any cross gfx/lbls    //functions that connect/disconnect
-						inMap.graphics.remove(mGrphs[i]);
-					}
-					charts.forEach(function(v){v.destroy();});
-					clearNode(poCon);
-					popu.style.zIndex=-100;
-					popu.style.opacity=0;
-			},
-			revive:function(){
-					for(var i=0,len=currentHandlers.length;i<len;i++){
-						DJ.connect(inMap,currentHandlers[i].type,currentHandlers[i].func);
-					}
-			},
-			stop:function(){
-					unAttach();
-					inD.disconnect(croClick);
-					inD.disconnect(croMove);
-					if(posMd)
-						posMd.remove();
-					if(croClo){
-						croClo.remove();
-						unGraph.remove();
-					}
-					outlines.enableMouseEvents();
-					crossHandler.resume(); 
-			}
-		};
-	};
-	crossHandler=O(cros,"mousedown",function(e){
-		if (domcl.contains(cros,"clickable")){
-			crossHandler.remove();
-			crossHandler=null;
-			crossTool=crossTool();
-			crossTool.init(e);
-		}else
-			whyNoClick();
-					
-	});
-
-		function addSwellHandlers(gOff,inGfx,gfxArr,hovSy){
+			};
+			function addSwellHandlers(gOff,inGfx,gfxArr,hovSy){
 			var currNum,gTags=document.getElementsByTagName("g"),
 			graphh=gTags[gOff],pathArr=[],pathss,pathObj={};
 			if(graphh){
@@ -559,7 +472,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		    				currNum=pathObj[et];
 		    		}
 		    		if(currNum!==undefined) //used to be setSymbol ->hovSy ->pSy
-		    			addSymbol(hovSy,gfxArr[inGfx+currNum].geometry,gfxArr);
+		    			addSymbol(gfxArr[inGfx+currNum].geometry,hovSy,gfxArr);
 
 		    	}));
 		    	graphHandlers.push(O(graphh,"mouseout",function(e){
@@ -601,6 +514,93 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				mup.remove();
 			});
 		}
+
+			(function sendReq(){
+			if(reqqing){					//prevent simultaneous requests
+				W.setTimeout(sendReq,250);
+			}else{
+				reqqing=1;
+				for(var wy=0;wy<ftlCorr;wy+=20){ //send out deferreds in groups of 20, every 100ms
+					if (wy+20>=ftlCorr){
+						W.setTimeout(makeReq,100,wy,ftlCorr)
+						reqqing=0;
+						continue;
+					}
+					W.setTimeout(makeReq,100,wy,wy+20)
+				}
+			}
+			})();
+		};
+		posMd=O(poS,"mousedown",function(e){mdToSlide(poCon,charts,W)});
+		crossHandler.pause();
+		croClick=inD.connect(inMap,"onMouseDown",conFun);
+		if(!currentHandlers[0])
+			currentHandlers[0]={type:"onMouseDown",func:conFun};
+		croClo=O.pausable(poClo,"click",crossWipe);
+		unGraph=O.pausable(cros,"mousedown",crossWipe);
+		
+		return{
+			handlers:[],
+			graphics=[],
+			labels=[],
+			init:function(e){
+				if(!identifyUp)
+					initId();
+				self=this;
+				graphics=self.graphics;
+				toolToggle(e,self);
+				O(cros,"mousedown",function(e){
+						if(domcl.contains(cros,"clickable"))
+							return toolToggle(e,self);
+						else whyNoClick();
+				});		
+
+			},
+			start:function(){
+				this.revive();
+				showPopup();
+			},
+			idle:function(){
+					for(var i=0,j=graphics.length;i<j;i++){    //wipe any cross gfx/lbls    //functions that connect/disconnect
+						inMap.graphics.remove(graphics[i]);
+					}
+					charts.forEach(function(v){v.destroy();});
+					clearNode(poCon);
+					hidePopup();
+			},
+			revive:function(){
+				inMap.setMapCursor("default");
+				outlines.disableMouseEvents();
+				this.handlers
+					
+			},
+			stop:function(){
+					unAttach();
+					inD.disconnect(croClick);
+					inD.disconnect(croMove);
+					if(posMd)
+						posMd.remove();
+					if(croClo){
+						croClo.remove();
+						unGraph.remove();
+					}
+					outlines.enableMouseEvents();
+					crossHandler.resume(); 
+			}
+		};
+	};
+	crossHandler=O(cros,"mousedown",function(e){
+		if (domcl.contains(cros,"clickable")){
+			crossHandler.remove();
+			crossHandler=null;
+			crossTool=crossTool();
+			crossTool.init(e);
+		}else
+			whyNoClick();
+					
+	});
+
+		
 
 		clSh=function(e){
 			if(paneIsShowing){//close button logic
@@ -1129,25 +1129,18 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			var lSy=new eS.SimpleLineSymbol(sls,new DJ.Color([180,180,180]),1),
 				pSy=new eS.SimpleMarkerSymbol({"size":6,"color":new DJ.Color([0,0,0])}),
 				graySy=new eS.SimpleMarkerSymbol({"size":6,"color":new DJ.Color([140,140,140]),"outline":lSy}),
-				fontSymbol=new E.symbol.Font("14px","STYLE_NORMAL","VARIANT_NORMAL","WEIGHT_BOLDER"),redText,
-				idCount=0,mouseDownX,mouseDownY,self;
+				redText,idCount=0,mouseDownX,mouseDownY,self;
 
 			function addIdentGraphic(point){
-				addSymbol(pSy,point,self.graphics);
 				idCount++;
-				var txtsym=new eS.TextSymbol(idCount),gra;
-				txtsym.setOffset(12,12);
-				txtsym.setFont(fontSymbol);
-				redText=txtsym;
-				gra=new E.Graphic(point,txtsym);
-				MAP.graphics.add(gra);
-				self.labels.push(gra);
+				addSymbol(point,pSy,self.graphics);
+				redText=addTextSymbol(idCount,point,12,12,self.labels);
 			}
 			function setNoData(){
 				redText.setColor(new DJ.Color([180,180,180]));
-					resCon.innerHTML=resCon.innerHTML+idCount+".&nbsp;"+"No Data<br/>";
-					self.graphics[self.graphics.length-1].setSymbol(graySy);
-					self.labels[self.labels.length-1].setSymbol(redText);
+				resCon.innerHTML=resCon.innerHTML+idCount+".&nbsp;"+"No Data<br/>";
+				self.graphics[self.graphics.length-1].setSymbol(graySy);
+				self.labels[self.labels.length-1].setSymbol(redText);
 			}	
 			function renderIdent(idArr){
 				if(idArr){
@@ -1676,14 +1669,23 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				node.removeChild(node.firstChild);
 			}
 		}
-		function addSymbol(sy,geom,trackingArr){
-			var sym=new E.Graphic();
-				sym.setSymbol(sy);
-				sym.setGeometry(geom);
+		function addSymbol(geom,sy,trackingArr){
+			console.log("passing in null for the line");
+			var sym=new E.Graphic(geom,sy);
 				MAP.graphics.add(sym);
 				trackingArr.push(sym);
 				return sym;
 		}
+		function addTextSymbol(text,geom,x,y,trackingArr){
+			var txtsym=new E.symbol.TextSymbol(text),gra;
+			txtsym.setOffset(x,y);
+			txtsym.setFont=addTextSymbol.font;
+			gra=new E.Graphic(geom,txtsym);
+			MAP.graphics.add(gra);
+			trackingArr.push(gra);
+			return txtsym;
+		}
+		addTextSymbol.font=new E.symbol.Font("14px","STYLE_NORMAL","VARIANT_NORMAL","WEIGHT_BOLDER");
 		function processId(tA,pA){
 			var def=tA.execute(pA);
 				return def.then(function(v){
@@ -1739,3 +1741,12 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 
 //return from the require
 });
+		//,{plot: "default", stroke: {color:"blue"}, fill: "lightblue"});
+			/*, styleFunc: function(item){
+		 						  if(item.y < 10){
+		    							  return { fontColor : "red" };
+		   						 }else if(item.y > 60){
+		    						  return { fill: "green" };
+		    					}
+		   						 return {};
+		 						 }*/

@@ -269,8 +269,10 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 
 		Popup=function(){
 			var popupHandlers=[],popUp,popStyle,popHeader,headStyle,popContainer,conStyle,
-				popSplitterV,splitStyleV,popSplitterH,splitStyleH,popClose,popHeight,popWidth,
-				docked={x:null,y:null};
+				popSplitterV,splitStyleV,popSplitterH,splitStyleH,popClose,
+				popHeight,popWidth,edges={left:0,right:600,top:0,bottom:400},
+				W=window,BS=body.style,px="px",innerWidth=W.innerWidth,innerHeight=W.innerHeight,
+				docked={width:null,height:null},
 			showPopup=function(){
 				if(!popUp){
 					dCon.place({'<link rel="stylesheet" href="popup.css">',dque('head')[0]});
@@ -313,9 +315,9 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				popupHandlers=[
 				O(popSplitterH,"mousedown",function(e){mdToSlide(poCon,charts,W)})),
 				O(popClose,"click",crossWipe),
-				O(popHeader,"mousedown",movePopup),//e,dim,eventDim,offsetDim,maxDim,oppositeSplitter
-				O(popSplitterV,"mousedown",function(e){popResize(e,"width","pageX","offsetX","innerWidth",popSplitterH,popWidth)}),
-				O(popSplitterH,"mousedown",function(e){popResize(e,"height","pageY","offsetY","innerHeight",popSplitterV,popHeight)})
+				O(popHeader,"mousedown",movePopup),//e,dim,pageDim,max,otherSplitStyle,dimTracker,edgeTracker,oppositeEdge
+				O(popSplitterV,"mousedown",function(e){popResize(e,"width","pageX",innerWidth,splitStyleV,popWidth,edges.left,"right")}),
+				O(popSplitterH,"mousedown",function(e){popResize(e,"height","pageY",innerHeight,splitStyleH,popHeight,edges.top,"bottom")})
 				];
 			},
 
@@ -326,12 +328,9 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			},
 
 			movePopup=function(e){//adjustable graph popup.. a thing of beauty
-			var popStyle=popUp.style,W=window,inH=W.innerHeight,inW=W.innerWidth,splitStyleV=popSplitterV.style,
-			splitStyleH=popSplitterH.style,headStyle=popHeader.style,conStyle=popContainer.style,bMax=inH-75,
-			rMax=inW-75,popHeight=+popStyle.height.slice(0,-2),popWidth=+popStyle.width.slice(0,-2),pcS=poCon.style,
-			et=e.target,offsetX=e.offsetX,offsetY=e.offsetY,px="px";
-			body.style["-webkit-user-select"]="none";//when the width is collapsed, the offset changes according to the
-			body.style["-moz-user-select"]="none";	//the direction of collapse
+			var et=e.target,offsetX=e.offsetX,offsetY=e.offsetY;
+			BS["-webkit-user-select"]="none";//when the width is collapsed, the offset changes according to the
+			BS["-moz-user-select"]="none";	//the direction of collapse
 			conStyle.display="none";
 			popStyle.boxShadow="0 0 0";
 			popStyle.opacity="0.7";
@@ -342,147 +341,190 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				offsetX+=et.offsetLeft,offsetY+=et.offsetTop; //adjust offset if on title div 
 
 			var mM=O(W,"mousemove",function(e){
-				var pageX=e.pageX,pageY=e.pageY,leftEdge=pageX-offsetX,rightEdge=leftEdge+popWidth,
-					topEdge=pageY-offsetY,bottomEdge=topEdge+popHeight,nWid,nHe;
-				if(leftEdge<=0){
-					if(rightEdge>=75){//if right corner is over 75px away from left
-						if(!dockedx)
-							dockedx=pSW; //set pre-docked width if not already docked
-						popStyle.left="0";
-						popStyle.width=rightEdge+pxx;
-						pcS.width=rightEdge-7+pxx;
-						pHs.width=rightEdge-2+pxx;      //exx=eventx leftpoint= event minus the offset rightEdge is this point
-						pSW=rightEdge;				//plus the width if the left corner moves offscreen, and the box is
-						exx<0?oxL=0:oxL=exx;	//wider than 75, set the undocked width at the original width
-					}							//reset the left corner at 0, set the width to be the value of the
-				}else if(rightEdge>=inW){				//right point, reset the width tracker, reset the offset(spanfix)
-					if(leftEdge<=rMax){
+				var pageX=e.pageX,pageY=e.pageY,newLeftEdge=pageX-offsetX,newRightEdge=newLeftEdge+popWidth,
+					newTopEdge=pageY-offsetY,newBottomEdge=newTopEdge+popHeight,nWid,nHe;
+
+			if(newLeftEdge<0){
+				newLeftEdge=0;
+				if(!docked.width)
+					docked.width=popWidth;
+			}else if(newRightEdge>inW){
+				newRightEdge=inW;
+				if(!docked.width)
+					docked.width=popWidth;
+			}
+			if(newTopEdge<0){
+				newTopEdge=0;
+				if(!docked.height)
+					docked.height=popHeight;
+			}else if(newBottomEdge>inH){
+				newBottomEdge=inH;
+				if(!docked.height)
+					docked.height=popHeight;
+			}
+
+			nWid=newRightEdge-newLeftEdge;
+			nHei=stateTop-newBottomEdge;
+			if(docked.width&&nWid>=docked.width)docked.width=null;
+			if(docked.height&&nHei>=docked.height)docked.height=null;
+
+			if(popWidth!==nWid&&newRightEdge>=75&&newLeftEdge<=inW-75){
+				popStyle.width=nWid+px;
+				conStyle.width=nWid-7+px;
+				splitStyleH.width=nWid-2+px;
+				popWidth=nWid;
+						//epx/exx nonsense
+			}
+			if(popHeight!==nHei&&newBottomEdge>=75&&newTopEdge<=inH-75){
+				popStyle.height=nHei+px;
+				splitStyleV.height=nHei-2+px;
+				conStyle.height=nHei-34+px;
+				popHeight=nHei;	
+			}
+			popStyle.["transform"]="3dtranslate("+newLeftEdge+"px,"+stateTop+"px,0)";
+			popStyle.["-webkit-transform"]="3dtranslate("+newLeftEdge+"px,"+stateTop+"px,0)";
+			edges.left=newLeftEdge;
+			edges.right=newRightEdge;
+			edges.top=newTopEdge;
+			edges.bottom=newBottomEdge;
+
+
+
+			/*	if(newLeftEdge<=0){ //set up docking and shrink the width if new left edge offscreen
+					if(newRightEdge>=75){
+						//if(!docked.width)
+						//	docked.width=popWidth; //set pre-docked width if not already docked
+						//popStyle.left="0";
+						popStyle.width=newRightEdge+px;
+						pcS.width=newRightEdge-7+px;
+						pHs.width=newRightEdge-2+px;    
+						pSW=newRightEdge;				
+						exx<0?oxL=0:oxL=exx;	
+					}							
+				}else if(newRightEdge>=inW){ //set up docking and shrink the width if new right edge offscreen			
+					if(newLeftEdge<=innerWidth-75){
 						if(!dockedx)
 							dockedx=pSW;
-						nWid=pSW-rightEdge+inW;
-						pS.left=inW-nWid+pxx;
-						pS.width=nWid+pxx;
-						pcS.width=nWid-7+pxx;
-						pHs.width=nWid-2+pxx;
+						nWid=pSW-newRightEdge+inW;
+						pS.left=inW-nWid+px;
+						pS.width=nWid+px;
+						pcS.width=nWid-7+px;
+						pHs.width=nWid-2+px;
 						pSW=nWid;
 					}
-				}else{
-					if(dockedx){
-						if(rightEdge<=dockedx){
+				}else{ //if both new edges are on screen
+					if(dockedx){ //if docked
+						if(newRightEdge<=dockedx){// expand width to predocked width, left
 							pS.left="0";
-							pS.width=rightEdge+pxx;
-							pcS.width=rightEdge-7+pxx;
-							pHs.width=rightEdge-2+pxx;
-							pSW=rightEdge;
+							pS.width=newRightEdge+px;
+							pcS.width=newRightEdge-7+px;
+							pHs.width=newRightEdge-2+px;
+							pSW=newRightEdge;
 							oxL=exx;
-						}else if(leftEdge>=inW-dockedx){
-							var rdoc=inW-leftEdge;
-							pS.left=leftEdge+pxx;
-							pS.width=rdoc+pxx;
-							pcS.width=rdoc-7+pxx;
-							pHs.width=rdoc-2+pxx;
+						}else if(newLeftEdge>=inW-dockedx){ //expand width to predocked width, right
+							var rdoc=inW-newLeftEdge;
+							pS.left=newLeftEdge+px;
+							pS.width=rdoc+px;
+							pcS.width=rdoc-7+px;
+							pHs.width=rdoc-2+px;
 							pSW=rdoc;		
-						}else{
-							pS.left=leftEdge+pxx;
-							pS.width=dockedx+pxx;
-							pcS.width=dockedx-7+pxx;
-							pHs.width=dockedx-2+pxx;
+						}else{                        
+							pS.left=newLeftEdge+px; //get to the predocked width
+							pS.width=dockedx+px;
+							pcS.width=dockedx-7+px;
+							pHs.width=dockedx-2+px;
 							pSW=dockedx;
 							dockedx="";
 						}
-					}else{
-						pS.left=leftEdge+pxx;
+					}else{ //both edges on screen, undocked
+						pS.left=newLeftEdge+px; //change left edge position
 					}
-				}
-				if(topEdge<=0){
-					if(bottomEdge>=75){
+				}                         //end X dim checks
+				if(newTopEdge<=0){
+					if(newBottomEdge>=75){
 						if(!dockedy)
 							dockedy=pSH;
 						pS.top="0";
-						pS.height=bottomEdge+pxx;
-						pSs.height=bottomEdge-2+pxx;
-						pcS.height=bottomEdge-34+pxx;
-						pSH=bottomEdge;
+						pS.height=newBottomEdge+px;
+						pSs.height=newBottomEdge-2+px;
+						pcS.height=newBottomEdge-34+px;
+						pSH=newBottomEdge;
 						eyy<0?oyT=0:oyT=eyy;
 					}
-				}else if(bottomEdge>=inH){
-					if(topEdge<=bMax){
+				}else if(newBottomEdge>=inH){
+					if(newTopEdge<=innerHeight-75){
 						if(!dockedy)
 							dockedy=pSH;
-						nHe=pSH-bottomEdge+inH;
-						pS.height=nHe+pxx;
-						pSs.height=nHe-2+pxx;
-						pcS.height=nHe-34+pxx;
-						pS.top=topEdge+pxx;
+						nHe=pSH-newBottomEdge+inH;
+						pS.height=nHe+px;
+						pSs.height=nHe-2+px;
+						pcS.height=nHe-34+px;
+						pS.top=newTopEdge+px;
 						pSH=nHe;
 					}
 				}else{
 					if(dockedy){
-						if(bottomEdge<=dockedy){
+						if(newBottomEdge<=dockedy){
 							pS.top="0";
-							pS.height=bottomEdge+pxx;
-							pcS.height=bottomEdge-34+pxx;
-							pSs.height=bottomEdge-2+pxx;
-							pSH=bottomEdge;
+							pS.height=newBottomEdge+px;
+							pcS.height=newBottomEdge-34+px;
+							pSs.height=newBottomEdge-2+px;
+							pSH=newBottomEdge;
 							oyT=eyy;
-						}else if(topEdge>=inH-dockedy){
-							var bdoc=inH-topEdge;
-							pS.top=topEdge+pxx;
-							pS.height=bdoc+pxx;
-							pcS.height=bdoc-34+pxx;
-							pSs.height=bdoc-2+pxx;
+						}else if(newTopEdge>=inH-dockedy){
+							var bdoc=inH-newTopEdge;
+							pS.top=newTopEdge+px;
+							pS.height=bdoc+px;
+							pcS.height=bdoc-34+px;
+							pSs.height=bdoc-2+px;
 							pSH=bdoc;		
 						}else{
-							pS.top=topEdge+pxx;
-							pS.height=dockedy+pxx;
-							pcS.height=dockedy-34+pxx;
-							pSs.height=dockedy-2+pxx;
+							pS.top=newTopEdge+px;
+							pS.height=dockedy+px;
+							pcS.height=dockedy-34+px;
+							pSs.height=dockedy-2+px;
 							pSH=dockedy;
 							dockedy="";
 						}
 					}else{
-						pS.top=topEdge+pxx;
+						pS.top=newTopEdge+px;
 					}
-				}
+				}*/
 				});
 				on.once(W,"mouseup",function(e){
 					mM.remove();
-					poCon.style.display="block";
-					body.style["-webkit-user-select"]="text";
-					body.style["-moz-user-select"]="text";
-					pS.boxShadow="0 1px 2px 1px #a5b6e0,0px 0px 2px 0 #a5b6e0";
-					pohS.boxShadow="0px 2px 2px -1px #a5b6e0";
-					pSs.display="block";
-					pHs.display="block";
-					pS.opacity="1";
-				});
-			}),
-			popResize=function(e,dim,eventDim,offsetDim,maxDim,oppositeSplitter,tracker){
-				var BS=body.style, W=window, px="px", max=W[maxDim],
-					popStyle=popUp.style, popconStyle=popContainer.style,
-					splitStyle=oppositeSplitter.style,
-					psDim=+popStyle[dim].slice(0,-2),
-				    cornerDim=e[eventDim]-e[offsetDim]+5-psDim,
-				    popconDiff=(dim==="width"?7:34);
-
-					mM=O(W,"mousemove",function(e){
-						var moveLocation=e[eventDim],newDim;
-						if(pt<=max){
-							newDim=moveLocation-cornerDim;
-							popStyle[dim]=newDim+px;
-							popconStyle[dim]=newDim-popconDiff+px;
-							splitStyle[dim]=newDim-2+px;
-						}
-					});
-					BS["-webkit-user-select"]="none";
-					BS["-moz-user-select"]="none";
-				on.once(W,"mouseup",function(e){
-					mM.remove();
-					if(docked[dim])
-						docked[dim]=+popStyle[dim].slice(0,-2);
 					BS["-webkit-user-select"]="text";
 					BS["-moz-user-select"]="text";
+					popStyle.opacity="1";
+					popStyle.boxShadow="0 1px 2px 1px #a5b6e0,0px 0px 2px 0 #a5b6e0";
+					headStyle.boxShadow="0px 2px 2px -1px #a5b6e0";
+					conStyle.display="block";
+					splitStyleV.display="block";
+					splitStyleH.display="block";
 				});
+			}),
+			popResize=function(e,dim,pageDim,max,otherSplitStyle,dimTracker,edgeTracker,oppositeEdge){
+				BS["-webkit-user-select"]="none";
+				BS["-moz-user-select"]="none";	
+				var popconDiff=(dim==="width"?7:34),
+					mM=O(W,"mousemove",function(e){
+						var moveLocation=e[pageDim],newDim;
+						if(moveLocation<=max){
+							newDim=moveLocation-edgeTracker;
+							popStyle[dim]=newDim+px;
+							conStyle[dim]=newDim-popconDiff+px;
+							otherSplitStyle[dim]=newDim-2+px;
+							dimTracker=newDim;
+							edges[oppositeEdge]=moveLocation;
+						}
+					});
+					on.once(W,"mouseup",function(e){
+						mM.remove();
+						if(docked[dim])
+							docked[dim]=dimTracker;
+						BS["-webkit-user-select"]="text";
+						BS["-moz-user-select"]="text";
+					});
 			};
 			return{
 				showPopup:showPopup,
@@ -491,7 +533,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				popResize:popResize
 			}
 		};
-
+/*
 		crossTool=function(){						//cross section function!
 			var self,inMap=MAP,inE=E,inD=dojo,inEG=inE.geometry,W=window,unGraph,
 			ang,chartId,charts=[],graphics,gOffset=3,p1,p2,croMov,croInClick,chCo=0,
@@ -792,7 +834,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			crossTool.init(e);
 		}else
 			whyNoClick();					
-	});
+	});*/
 
 		
 

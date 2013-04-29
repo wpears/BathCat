@@ -267,40 +267,240 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		linArr[linArr.length-1].style.cssText="text-shadow:0 0 1px #fff;color:rgb(0,0,0);";
 		phys.style.cssText=cTex;
 
-
-		crossTool=function(evt){						//cross section function!
-			var self,inMap=MAP,inE=E,inD=dojo,inEG=inE.geometry,W=window,croClo,unGraph,popUp,
-			ang,chartId,posMd,charts=[],graphics,gOffset=3,p1,p2,croMov,croInClick,chCo=0,
-			gfxArr=inMap.graphics.graphics,gfxOffset=gfxArr.length+4,
-			crosscount=1,tls,updateReady=1,sR=inMap.spatialReference,tlin,
-			lSy=new eS.SimpleLineSymbol(sls,new inD.Color([0,0,0]),2),
-			pSy=new eS.SimpleMarkerSymbol({"size":6,"color":new DJ.Color([0,0,0])}),
-			hovSy=new eS.SimpleMarkerSymbol(eS.SimpleMarkerSymbol.STYLE_CIRCLE,15,lSy,new inD.Color('#4879bc')),
+		Popup=function(){
+			var popupHandlers=[],popUp,popStyle,popHeader,headStyle,popContainer,conStyle,
+				popSplitterV,splitStyleV,popSplitterH,splitStyleH,popClose,popHeight,popWidth,
+				docked={x:null,y:null};
 			showPopup=function(){
 				if(!popUp){
+					dCon.place({'<link rel="stylesheet" href="popup.css">',dque('head')[0]});
 					popUp=dCon.place({'<div id="popUp">
 						    <div id="popHeader" class="panehead">
 						       <span id="popTitle">Profile Tool</span>
 						        <div id="popClose"class="closebox">X</div>
 						      </div>
 						      <div id="popContainer"></div>
-						      <div id="popVerticalSplitter">
-						        <div id="popVerticalLine"></div>
+						      <div id="popSplitterV">
+						        <div id="popLineV"></div>
 						      </div>
-						      <div id="popHorizontalSplitter">
-						        <div id="popHorizontalLine"></div>
+						      <div id="popSplitterH">
+						        <div id="popLineH"></div>
 						      </div>
 						    </div>',body});
+					popStyle=popUp.style;
+					popHeader=dom.byId("popHeader");
+					headStyle=popHeader.style;
+					popContainer=dom.byId("popContainer");
+					conStyle=popContainer.style;
+					popSplitterV=dom.byId("popSplitterV");
+					splitStyleV=popSplitterV.style;
+					popSplitterH=dom.byId("popSplitterH");
+					splitStyleH=popSplitterH.style;
+					popClose=dom.byId("popClose");
 				}
-				popUp.style.zIndex=200;
-				popUp.style.opacity=1;
+				popStyle.zIndex=200;
+				popStyle.opacity=1;
 				attachPopupHandlers();
 			},
+
 			hidePopup=function(){
-				popu.style.zIndex=-100;
-				popu.style.opacity=0;
+				popStyle.zIndex=-100;
+				popStyle.opacity=0;
 				removePopupHandlers();
 			},
+
+			attachPopupHandlers=function(){
+				popupHandlers=[
+				O(popSplitterH,"mousedown",function(e){mdToSlide(poCon,charts,W)})),
+				O(popClose,"click",crossWipe),
+				O(popHeader,"mousedown",movePopup),//e,dim,eventDim,offsetDim,maxDim,oppositeSplitter
+				O(popSplitterV,"mousedown",function(e){popResize(e,"width","pageX","offsetX","innerWidth",popSplitterH,popWidth)}),
+				O(popSplitterH,"mousedown",function(e){popResize(e,"height","pageY","offsetY","innerHeight",popSplitterV,popHeight)})
+				];
+			},
+
+			removePopupHandlers=function(){
+				darr.forEach(popupHandlers,function(v){
+					v.remove();
+				});
+			},
+
+			movePopup=function(e){//adjustable graph popup.. a thing of beauty
+			var popStyle=popUp.style,W=window,inH=W.innerHeight,inW=W.innerWidth,splitStyleV=popSplitterV.style,
+			splitStyleH=popSplitterH.style,headStyle=popHeader.style,conStyle=popContainer.style,bMax=inH-75,
+			rMax=inW-75,popHeight=+popStyle.height.slice(0,-2),popWidth=+popStyle.width.slice(0,-2),pcS=poCon.style,
+			et=e.target,offsetX=e.offsetX,offsetY=e.offsetY,px="px";
+			body.style["-webkit-user-select"]="none";//when the width is collapsed, the offset changes according to the
+			body.style["-moz-user-select"]="none";	//the direction of collapse
+			conStyle.display="none";
+			popStyle.boxShadow="0 0 0";
+			popStyle.opacity="0.7";
+			splitStyleH.display="none";
+			splitStyleV.display="none";
+			headStyle.boxShadow="0 0 0";
+			if(et.id!=="popHeader")
+				offsetX+=et.offsetLeft,offsetY+=et.offsetTop; //adjust offset if on title div 
+
+			var mM=O(W,"mousemove",function(e){
+				var pageX=e.pageX,pageY=e.pageY,leftEdge=pageX-offsetX,rightEdge=leftEdge+popWidth,
+					topEdge=pageY-offsetY,bottomEdge=topEdge+popHeight,nWid,nHe;
+				if(leftEdge<=0){
+					if(rightEdge>=75){//if right corner is over 75px away from left
+						if(!dockedx)
+							dockedx=pSW; //set pre-docked width if not already docked
+						popStyle.left="0";
+						popStyle.width=rightEdge+pxx;
+						pcS.width=rightEdge-7+pxx;
+						pHs.width=rightEdge-2+pxx;      //exx=eventx leftpoint= event minus the offset rightEdge is this point
+						pSW=rightEdge;				//plus the width if the left corner moves offscreen, and the box is
+						exx<0?oxL=0:oxL=exx;	//wider than 75, set the undocked width at the original width
+					}							//reset the left corner at 0, set the width to be the value of the
+				}else if(rightEdge>=inW){				//right point, reset the width tracker, reset the offset(spanfix)
+					if(leftEdge<=rMax){
+						if(!dockedx)
+							dockedx=pSW;
+						nWid=pSW-rightEdge+inW;
+						pS.left=inW-nWid+pxx;
+						pS.width=nWid+pxx;
+						pcS.width=nWid-7+pxx;
+						pHs.width=nWid-2+pxx;
+						pSW=nWid;
+					}
+				}else{
+					if(dockedx){
+						if(rightEdge<=dockedx){
+							pS.left="0";
+							pS.width=rightEdge+pxx;
+							pcS.width=rightEdge-7+pxx;
+							pHs.width=rightEdge-2+pxx;
+							pSW=rightEdge;
+							oxL=exx;
+						}else if(leftEdge>=inW-dockedx){
+							var rdoc=inW-leftEdge;
+							pS.left=leftEdge+pxx;
+							pS.width=rdoc+pxx;
+							pcS.width=rdoc-7+pxx;
+							pHs.width=rdoc-2+pxx;
+							pSW=rdoc;		
+						}else{
+							pS.left=leftEdge+pxx;
+							pS.width=dockedx+pxx;
+							pcS.width=dockedx-7+pxx;
+							pHs.width=dockedx-2+pxx;
+							pSW=dockedx;
+							dockedx="";
+						}
+					}else{
+						pS.left=leftEdge+pxx;
+					}
+				}
+				if(topEdge<=0){
+					if(bottomEdge>=75){
+						if(!dockedy)
+							dockedy=pSH;
+						pS.top="0";
+						pS.height=bottomEdge+pxx;
+						pSs.height=bottomEdge-2+pxx;
+						pcS.height=bottomEdge-34+pxx;
+						pSH=bottomEdge;
+						eyy<0?oyT=0:oyT=eyy;
+					}
+				}else if(bottomEdge>=inH){
+					if(topEdge<=bMax){
+						if(!dockedy)
+							dockedy=pSH;
+						nHe=pSH-bottomEdge+inH;
+						pS.height=nHe+pxx;
+						pSs.height=nHe-2+pxx;
+						pcS.height=nHe-34+pxx;
+						pS.top=topEdge+pxx;
+						pSH=nHe;
+					}
+				}else{
+					if(dockedy){
+						if(bottomEdge<=dockedy){
+							pS.top="0";
+							pS.height=bottomEdge+pxx;
+							pcS.height=bottomEdge-34+pxx;
+							pSs.height=bottomEdge-2+pxx;
+							pSH=bottomEdge;
+							oyT=eyy;
+						}else if(topEdge>=inH-dockedy){
+							var bdoc=inH-topEdge;
+							pS.top=topEdge+pxx;
+							pS.height=bdoc+pxx;
+							pcS.height=bdoc-34+pxx;
+							pSs.height=bdoc-2+pxx;
+							pSH=bdoc;		
+						}else{
+							pS.top=topEdge+pxx;
+							pS.height=dockedy+pxx;
+							pcS.height=dockedy-34+pxx;
+							pSs.height=dockedy-2+pxx;
+							pSH=dockedy;
+							dockedy="";
+						}
+					}else{
+						pS.top=topEdge+pxx;
+					}
+				}
+				});
+				on.once(W,"mouseup",function(e){
+					mM.remove();
+					poCon.style.display="block";
+					body.style["-webkit-user-select"]="text";
+					body.style["-moz-user-select"]="text";
+					pS.boxShadow="0 1px 2px 1px #a5b6e0,0px 0px 2px 0 #a5b6e0";
+					pohS.boxShadow="0px 2px 2px -1px #a5b6e0";
+					pSs.display="block";
+					pHs.display="block";
+					pS.opacity="1";
+				});
+			}),
+			popResize=function(e,dim,eventDim,offsetDim,maxDim,oppositeSplitter,tracker){
+				var BS=body.style, W=window, px="px", max=W[maxDim],
+					popStyle=popUp.style, popconStyle=popContainer.style,
+					splitStyle=oppositeSplitter.style,
+					psDim=+popStyle[dim].slice(0,-2),
+				    cornerDim=e[eventDim]-e[offsetDim]+5-psDim,
+				    popconDiff=(dim==="width"?7:34);
+
+					mM=O(W,"mousemove",function(e){
+						var moveLocation=e[eventDim],newDim;
+						if(pt<=max){
+							newDim=moveLocation-cornerDim;
+							popStyle[dim]=newDim+px;
+							popconStyle[dim]=newDim-popconDiff+px;
+							splitStyle[dim]=newDim-2+px;
+						}
+					});
+					BS["-webkit-user-select"]="none";
+					BS["-moz-user-select"]="none";
+				on.once(W,"mouseup",function(e){
+					mM.remove();
+					if(docked[dim])
+						docked[dim]=+popStyle[dim].slice(0,-2);
+					BS["-webkit-user-select"]="text";
+					BS["-moz-user-select"]="text";
+				});
+			};
+			return{
+				showPopup:showPopup,
+				hidePopup:hidePopup,
+				movePopup:movePopup,
+				popResize:popResize
+			}
+		};
+
+		crossTool=function(){						//cross section function!
+			var self,inMap=MAP,inE=E,inD=dojo,inEG=inE.geometry,W=window,unGraph,
+			ang,chartId,charts=[],graphics,gOffset=3,p1,p2,croMov,croInClick,chCo=0,
+			gfxArr=inMap.graphics.graphics,gfxOffset=gfxArr.length+4,
+			crosscount=1,tls,updateReady=1,sR=inMap.spatialReference,tlin,
+			lSy=new eS.SimpleLineSymbol(sls,new inD.Color([0,0,0]),2),
+			pSy=new eS.SimpleMarkerSymbol({"size":6,"color":new DJ.Color([0,0,0])}),
+			hovSy=new eS.SimpleMarkerSymbol(eS.SimpleMarkerSymbol.STYLE_CIRCLE,15,lSy,new inD.Color('#4879bc')),
+			
 			update= function(e){
 					tlin=new inEG.Polyline(sR)
 					tlin.addPath([p1, e.mapPoint]);
@@ -492,7 +692,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				arr.length=i;
 			}
 		}
-		function reAttachGraph(gList){
+		function reattachGraph(gList){
 			var len=gList.length,i=len-1,twolen=len*2;
 			while(len<twolen){
 				var curr=gList[i];
@@ -503,6 +703,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		}
 
 		function mdToSlide(con,chars,W){      //make sure to check ordering.. graph to symbol tie in seems off
+			add some advice here on Popup.popResize, receiveArgs to check if width
 			clearGraphHandlers(graphHandlers);
 			var mup=O(W,"mouseup",function(e){
 				var charDivs=con.childNodes;
@@ -510,7 +711,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					charDivs[i].style.width=poCon.style.width.slice(0,-2)-25+"px";
 						chars[i].resize();
 				}
-				reAttachGraph(graphList);
+				reattachGraph(graphList);
 				mup.remove();
 			});
 		}
@@ -531,12 +732,10 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			}
 			})();
 		};
-		posMd=O(poS,"mousedown",function(e){mdToSlide(poCon,charts,W)});
 		crossHandler.pause();
 		croClick=inD.connect(inMap,"onMouseDown",conFun);
 		if(!currentHandlers[0])
 			currentHandlers[0]={type:"onMouseDown",func:conFun};
-		croClo=O.pausable(poClo,"click",crossWipe);
 		unGraph=O.pausable(cros,"mousedown",crossWipe);
 		
 		return{
@@ -578,14 +777,10 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					unAttach();
 					inD.disconnect(croClick);
 					inD.disconnect(croMove);
-					if(posMd)
-						posMd.remove();
-					if(croClo){
-						croClo.remove();
+					if(unGraph){
 						unGraph.remove();
 					}
 					outlines.enableMouseEvents();
-					crossHandler.resume(); 
 			}
 		};
 	};
@@ -596,8 +791,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			crossTool=crossTool();
 			crossTool.init(e);
 		}else
-			whyNoClick();
-					
+			whyNoClick();					
 	});
 
 		
@@ -823,183 +1017,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			MAP.setExtent(inExt);
 		});
 
-		O(poH,"mousedown",function(e){//adjustable graph popup.. a thing of beauty
-			var pS=popu.style,W=window,inH=W.innerHeight,inW=W.innerWidth,pSs=poS.style,pHs=phsp.style,pxx="px",pohS=poH.style,
-			rMax=inW-75,pSH=+pS.height.slice(0,-2),pSW=+pS.width.slice(0,-2),pcS=poCon.style,bMax=inH-75,
-			et=e.target,oxL=e.offsetX,oyT=e.offsetY;
-			body.style["-webkit-user-select"]="none";//when the width is collapsed, the offset changes according to the
-			body.style["-moz-user-select"]="none";	//the direction of collapse
-			poCon.style.display="none";
-			pS.boxShadow="0 0 0";
-			pS.opacity="0.7";
-			pSs.display="none";
-			pHs.display="none";
-			pohS.boxShadow="0 0 0";
-			if(et.id!="pohead")
-				oxL+=et.offsetLeft,oyT+=et.offsetTop;
-			var mM=O(W,"mousemove",function(evt){
-				var exx=evt.pageX,eyy=evt.pageY,exL=exx-oxL,exR=exL+pSW,eyT=eyy-oyT,eyB=eyT+pSH,nWid,nHe;
-				if(exL<=0){//if left corner is offscreen
-					if(exR>=75){//if right corner is over 75px away from left
-						if(!dockedx)
-							dockedx=pSW; //set pre-docked width if not already docked
-						pS.left="0";
-						pS.width=exR+pxx;
-						pcS.width=exR-7+pxx;
-						pHs.width=exR-2+pxx;      //exx=eventx leftpoint= event minus the offset exR is this point
-						pSW=exR;				//plus the width if the left corner moves offscreen, and the box is
-						exx<0?oxL=0:oxL=exx;	//wider than 75, set the undocked width at the original width
-					}							//reset the left corner at 0, set the width to be the value of the
-				}else if(exR>=inW){				//right point, reset the width tracker, reset the offset(spanfix)
-					if(exL<=rMax){
-						if(!dockedx)
-							dockedx=pSW;
-						nWid=pSW-exR+inW;
-						pS.left=inW-nWid+pxx;
-						pS.width=nWid+pxx;
-						pcS.width=nWid-7+pxx;
-						pHs.width=nWid-2+pxx;
-						pSW=nWid;
-					}
-				}else{
-					if(dockedx){
-						if(exR<=dockedx){
-							pS.left="0";
-							pS.width=exR+pxx;
-							pcS.width=exR-7+pxx;
-							pHs.width=exR-2+pxx;
-							pSW=exR;
-							oxL=exx;
-						}else if(exL>=inW-dockedx){
-							var rdoc=inW-exL;
-							pS.left=exL+pxx;
-							pS.width=rdoc+pxx;
-							pcS.width=rdoc-7+pxx;
-							pHs.width=rdoc-2+pxx;
-							pSW=rdoc;		
-						}else{
-							pS.left=exL+pxx;
-							pS.width=dockedx+pxx;
-							pcS.width=dockedx-7+pxx;
-							pHs.width=dockedx-2+pxx;
-							pSW=dockedx;
-							dockedx="";
-						}
-					}else{
-						pS.left=exL+pxx;
-					}
-				}
-				if(eyT<=0){
-					if(eyB>=75){
-						if(!dockedy)
-							dockedy=pSH;
-						pS.top="0";
-						pS.height=eyB+pxx;
-						pSs.height=eyB-2+pxx;
-						pcS.height=eyB-34+pxx;
-						pSH=eyB;
-						eyy<0?oyT=0:oyT=eyy;
-					}
-				}else if(eyB>=inH){
-					if(eyT<=bMax){
-						if(!dockedy)
-							dockedy=pSH;
-						nHe=pSH-eyB+inH;
-						pS.height=nHe+pxx;
-						pSs.height=nHe-2+pxx;
-						pcS.height=nHe-34+pxx;
-						pS.top=eyT+pxx;
-						pSH=nHe;
-					}
-				}else{
-					if(dockedy){
-						if(eyB<=dockedy){
-							pS.top="0";
-							pS.height=eyB+pxx;
-							pcS.height=eyB-34+pxx;
-							pSs.height=eyB-2+pxx;
-							pSH=eyB;
-							oyT=eyy;
-						}else if(eyT>=inH-dockedy){
-							var bdoc=inH-eyT;
-							pS.top=eyT+pxx;
-							pS.height=bdoc+pxx;
-							pcS.height=bdoc-34+pxx;
-							pSs.height=bdoc-2+pxx;
-							pSH=bdoc;		
-						}else{
-							pS.top=eyT+pxx;
-							pS.height=dockedy+pxx;
-							pcS.height=dockedy-34+pxx;
-							pSs.height=dockedy-2+pxx;
-							pSH=dockedy;
-							dockedy="";
-						}
-					}else{
-						pS.top=eyT+pxx;
-					}
-				}
-			});
-			on.once(W,"mouseup",function(e){
-				mM.remove();
-				poCon.style.display="block";
-				body.style["-webkit-user-select"]="text";
-				body.style["-moz-user-select"]="text";
-				pS.boxShadow="0 1px 2px 1px #a5b6e0,0px 0px 2px 0 #a5b6e0";
-				pohS.boxShadow="0px 2px 2px -1px #a5b6e0";
-				pSs.display="block";
-				pHs.display="block";
-				pS.opacity="1";
-			});
-		});
-		O(poS,"mousedown",function(e){
-			for(var i in e)
-				console.log(i,e[i]);
-			body.style["-webkit-user-select"]="none";
-			body.style["-moz-user-select"]="none";
-			var pS=popu.style,pSW=+pS.width.slice(0,-2),pcS=poCon.style,pxx="px",
-				oX=e.pageX-e.offsetX+5-pSW,W=window,xMax=W.innerWidth,psP=phsp.style;
-				console.log(pSW," ",oX," ",xMax," e.pageX = ",e.pageX," e.offsetX= ",e.offsetX);
-				var mM=O(W,"mousemove",function(e){
-					var ex=e.pageX;
-					console.log(ex);
-					if(ex<=xMax){
-						var wid=ex-oX//batch update?
-						pS.width=wid+pxx;
-						pcS.width=wid-7+pxx;
-						psP.width=wid-2+pxx;
-					}
-				});
-			on.once(W,"mouseup",function(e){
-				mM.remove();
-				if(dockedx)
-					dockedx=+pS.width.slice(0,-2);
-				body.style["-webkit-user-select"]="text";
-				body.style["-moz-user-select"]="text";
-			});
-		});
-		O(phsp,"mousedown",function(e){
-			body.style["-webkit-user-select"]="none";
-			body.style["-moz-user-select"]="none";
-			var pS=popu.style,pSH=+pS.height.slice(0,-2),pcS=poCon.style,pxx="px",
-				oY=e.pageY-e.offsetY+5-pSH,W=window,yMax=W.innerHeight,psP=poS.style,
-				mM=O(W,"mousemove",function(e){
-					var ey=e.pageY;
-					if(ey<=yMax){
-						var hei=ey-oY;
-						pS.height=hei+pxx;
-						pcS.height=hei-34+pxx;
-						psP.height=hei-2+pxx;
-					}
-				});
-			on.once(W,"mouseup",function(e){
-				mM.remove();
-				if(dockedy)
-					dockedy=+pS.height.slice(0,-2);
-				body.style["-webkit-user-select"]="text";
-				body.style["-moz-user-select"]="text";
-			});
-		});
 		O(bmaps,"mousedown",function(e){                            //basemap handling
 			var et=e.target,typ=et.innerHTML;
 			if(typ=="Satellite"&&!imOn){

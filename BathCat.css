@@ -552,26 +552,7 @@ th:hover{
 .dgrid-input{
   margin-left:1%;
 }
-#popu{
-top:50px;
-left:50px;
-  opacity:0;
- height:400px;
- width:600px; 
- z-index:-100;
-background-image:url(images/bg.png);
- position:absolute;
- border-radius:6px;
-  box-shadow: 0 1px 2px 1px #a5b6e0,
-             0px 0px 2px 0 #a5b6e0;
-}
-#pocon{
-  position:absolute;
-  overflow-y:scroll;
-  height:370px;
-  width:595px;
-  top:27px;
-}
+
 .panehead{
 -webkit-touch-callout: none;
 -webkit-user-select: none;
@@ -586,20 +567,6 @@ user-select: none;
  background-color:#E1EBFB;
   background-image:-webkit-linear-gradient(top, #f3f3f3,#E1EBFB);
   background-image:-moz-linear-gradient(top, #f3f3f3,#E1EBFB);        
-}
-#pohead{
-  cursor:all-scroll;
-}
-#pohead:active{
-  background-color:#f3f3f3;
-  background-image:-webkit-linear-gradient(top, #E1EBFB,#f3f3f3);
-  background-image:-moz-linear-gradient(top, #E1EBFB,#f3f3f3);  
-}
-#popti{
-  position:absolute;
-  top:2px;
-  left:4px;
-  overflow:hidden;
 }
 .closebox{
   height:12px;
@@ -626,48 +593,6 @@ user-select: none;
   line-height:2.2em;
 }
 
-#posplit{
-  position:absolute;
-  right:0;
-  top:1px;
-  height:397px;
-    width:7px;
-  background-color:#E1EBFB;
-  border-radius:6px;
-  cursor:e-resize;
-}
-#posplit:active{
-  background-color:#B0B0B0;
-}
-#pohsplit{
-  position:absolute;
-  bottom:0;
-  left:1px;
-  height:7px;
-  width:597px;
-  background-color:#E1EBFB;
-  border-radius:6px;
-  cursor:s-resize; 
-}
-#pohsplit:active{
-  background-color:#B0B0B0;
-}
-#pst{
-  position:absolute;
-  top:45%;
-  height:10%;
-  width:1px;
-  left:3px;
-  background-color:#B0B0B0;
-}
-#phs{
-  position:absolute;
-  top:3px;
-  height:1px;
-  width:10%;
-  left:45%;
-  background-color:#B0B0B0;
-}
 #shoP{
   background-image:url(images/bg.png);
   z-index:100;

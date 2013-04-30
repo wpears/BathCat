@@ -400,20 +400,20 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			edges.top=newTopEdge;
 			edges.bottom=newBottomEdge;
 
-		});
+			});
 
 				
-				on.once(W,"mouseup",function(e){
-					mM.remove();
-					BS["-webkit-user-select"]="text";
-					BS["-moz-user-select"]="text";
-					popStyle.opacity="1";
-					popStyle.boxShadow="0 1px 2px 1px #a5b6e0,0px 0px 2px 0 #a5b6e0";
-					headStyle.boxShadow="0px 2px 2px -1px #a5b6e0";
-					conStyle.display="block";
-					splitStyleV.display="block";
-					splitStyleH.display="block";
-				});
+			on.once(W,"mouseup",function(e){
+				mM.remove();
+				BS["-webkit-user-select"]="text";
+				BS["-moz-user-select"]="text";
+				popStyle.opacity="1";
+				popStyle.boxShadow="0 1px 2px 1px #a5b6e0,0px 0px 2px 0 #a5b6e0";
+				headStyle.boxShadow="0px 2px 2px -1px #a5b6e0";
+				conStyle.display="block";
+				splitStyleV.display="block";
+				splitStyleH.display="block";
+			});
 			},
 			popResize=function(e,dim,pageDim,max,otherSplitStyle,edgeTracker,oppositeEdge){
 				BS["-webkit-user-select"]="none";

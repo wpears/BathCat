@@ -84,7 +84,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 
 	dojo.connect(qt,"onComplete",function(fs){ //declare most variables upfront for fewer vars/hoisting trouble
 	var grStore=null, rowStore, erow, i=0, W=fs.features,j=W.length,mmt,identifyUp,eS=E.symbol,eD=E.dijit,on=O,runIT,ghd,
-	lph,cros=dom.byId("cros"),arro=dom.byId("arro"),cross,graphList=[],
+	lph,cros=dom.byId("cros"),arro=dom.byId("arro"),cross,graphList=[],Popup,
 	pst=dom.byId("pst"),dockedx="",dockedy="", DJ=dojo,zSlid=dom.byId("mapDiv_zoom_slider"),
 		stopCroClick,identOff=1,meC=null,lP=dom.byId("lP"),linArr,imHead,currentOID=null,MAP=map,noClick=dom.byId("noClick"),cHead,boxSave,dScroll,dlLink=dom.byId("dlLink"),
 		rP=dom.byId("rP"),idCon=dom.byId("idCon"),grid,irP=dom.byId("irP"),ilP=dom.byId("ilP"),drP=dijit.byId("rP"),resCon=dom.byId("resCon"), checkTrack=[],
@@ -270,25 +270,13 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		Popup=function(){
 			var popupHandlers=[],popUp,popStyle,popHeader,headStyle,popContainer,conStyle,
 				popSplitterV,splitStyleV,popSplitterH,splitStyleH,popClose,
-				popHeight,popWidth,edges={left:0,right:600,top:0,bottom:400},
+				popHeight=400,popWidth=600,edges={left:60,right:660,top:100,bottom:500},
 				W=window,BS=body.style,px="px",innerWidth=W.innerWidth,innerHeight=W.innerHeight,
 				docked={width:null,height:null},
 			showPopup=function(){
 				if(!popUp){
-					dCon.place({'<link rel="stylesheet" href="popup.css">',dque('head')[0]});
-					popUp=dCon.place({'<div id="popUp">
-						    <div id="popHeader" class="panehead">
-						       <span id="popTitle">Profile Tool</span>
-						        <div id="popClose"class="closebox">X</div>
-						      </div>
-						      <div id="popContainer"></div>
-						      <div id="popSplitterV">
-						        <div id="popLineV"></div>
-						      </div>
-						      <div id="popSplitterH">
-						        <div id="popLineH"></div>
-						      </div>
-						    </div>',body});
+					dCon.place('<link rel="stylesheet" href="popup.css">',dque('head')[0]);
+					popUp=dCon.place('<div id="popUp"><div id="popHeader"class="panehead"><span id="popTitle">Profile Tool</span><div id="popClose"class="closebox">X</div></div><div id="popContainer"></div><div id="popSplitterV"><div id="popLineV"></div></div><div id="popSplitterH"><div id="popLineH"></div></div></div>',body);
 					popStyle=popUp.style;
 					popHeader=dom.byId("popHeader");
 					headStyle=popHeader.style;
@@ -313,11 +301,11 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 
 			attachPopupHandlers=function(){
 				popupHandlers=[
-				O(popSplitterH,"mousedown",function(e){mdToSlide(poCon,charts,W)})),
-				O(popClose,"click",crossWipe),
+			//	O(popSplitterH,"mousedown",function(e){mdToSlide(poCon,charts,W)})),
+			//	O(popClose,"click",crossWipe),
 				O(popHeader,"mousedown",movePopup),//e,dim,pageDim,max,otherSplitStyle,dimTracker,edgeTracker,oppositeEdge
-				O(popSplitterV,"mousedown",function(e){popResize(e,"width","pageX",innerWidth,splitStyleV,popWidth,edges.left,"right")}),
-				O(popSplitterH,"mousedown",function(e){popResize(e,"height","pageY",innerHeight,splitStyleH,popHeight,edges.top,"bottom")})
+				O(popSplitterV,"mousedown",function(e){popResize(e,"width","pageX",innerWidth,splitStyleH,edges.left,"right")}),
+				O(popSplitterH,"mousedown",function(e){popResize(e,"height","pageY",innerHeight,splitStyleV,edges.top,"bottom")})
 				];
 			},
 
@@ -327,7 +315,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				});
 			},
 
-			movePopup=function(e){//adjustable graph popup.. a thing of beauty
+			movePopup=function(e){//adjustable graph popup
 			var et=e.target,offsetX=e.offsetX,offsetY=e.offsetY;
 			BS["-webkit-user-select"]="none";//when the width is collapsed, the offset changes according to the
 			BS["-moz-user-select"]="none";	//the direction of collapse
@@ -342,155 +330,79 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 
 			var mM=O(W,"mousemove",function(e){
 				var pageX=e.pageX,pageY=e.pageY,newLeftEdge=pageX-offsetX,newRightEdge=newLeftEdge+popWidth,
-					newTopEdge=pageY-offsetY,newBottomEdge=newTopEdge+popHeight,nWid,nHe;
+					newTopEdge=pageY-offsetY,newBottomEdge=newTopEdge+popHeight,nWid,nHei;
 
 			if(newLeftEdge<0){
 				newLeftEdge=0;
+				offsetX=pageX;
 				if(!docked.width)
 					docked.width=popWidth;
-			}else if(newRightEdge>inW){
-				newRightEdge=inW;
+			}else if(newRightEdge>innerWidth){
+				newRightEdge=innerWidth;
 				if(!docked.width)
 					docked.width=popWidth;
 			}
+			if(docked.width){
+				if(newRightEdge<innerWidth-newLeftEdge){
+					nWid=newRightEdge;
+					newLeftEdge=0;
+					offsetX=pageX;
+				}else{
+					nWid=innerWidth-newLeftEdge;
+					newRightEdge=innerWidth;
+				}	
+			}else nWid=newRightEdge-newLeftEdge;
+
 			if(newTopEdge<0){
 				newTopEdge=0;
 				if(!docked.height)
 					docked.height=popHeight;
-			}else if(newBottomEdge>inH){
-				newBottomEdge=inH;
+			}else if(newBottomEdge>innerHeight){
+				newBottomEdge=innerHeight;
 				if(!docked.height)
 					docked.height=popHeight;
 			}
+			if(docked.height){
+				if(newBottomEdge<innerHeight-newTopEdge){
+					newTopEdge=0;
+					nHei=newBottomEdge;
+				}else{
+					newBottomEdge=innerHeight;
+					nHei=newBottomEdge-newTopEdge;
+				}
+			}else nHei=newBottomEdge-newTopEdge;
 
-			nWid=newRightEdge-newLeftEdge;
-			nHei=stateTop-newBottomEdge;
+			console.log(nHei,newTopEdge);
 			if(docked.width&&nWid>=docked.width)docked.width=null;
 			if(docked.height&&nHei>=docked.height)docked.height=null;
 
-			if(popWidth!==nWid&&newRightEdge>=75&&newLeftEdge<=inW-75){
+			if(popWidth!==nWid&&nWid>=120){
 				popStyle.width=nWid+px;
 				conStyle.width=nWid-7+px;
 				splitStyleH.width=nWid-2+px;
 				popWidth=nWid;
 						//epx/exx nonsense
 			}
-			if(popHeight!==nHei&&newBottomEdge>=75&&newTopEdge<=inH-75){
+			if(popHeight!==nHei&&nHei>=120){
 				popStyle.height=nHei+px;
 				splitStyleV.height=nHei-2+px;
 				conStyle.height=nHei-34+px;
 				popHeight=nHei;	
 			}
-			popStyle.["transform"]="3dtranslate("+newLeftEdge+"px,"+stateTop+"px,0)";
-			popStyle.["-webkit-transform"]="3dtranslate("+newLeftEdge+"px,"+stateTop+"px,0)";
+			if(newTopEdge>innerHeight-120)
+				newTopEdge=innerHeight-120;
+			if(newLeftEdge>innerWidth-120)
+				newLeftEdge=innerWidth-120;
+			popStyle["transform"]="translate3d("+newLeftEdge+"px,"+newTopEdge+"px,0)";
+			popStyle["-webkit-transform"]="translate3d("+newLeftEdge+"px,"+newTopEdge+"px,0)";
 			edges.left=newLeftEdge;
 			edges.right=newRightEdge;
 			edges.top=newTopEdge;
 			edges.bottom=newBottomEdge;
 
+		});
 
-
-			/*	if(newLeftEdge<=0){ //set up docking and shrink the width if new left edge offscreen
-					if(newRightEdge>=75){
-						//if(!docked.width)
-						//	docked.width=popWidth; //set pre-docked width if not already docked
-						//popStyle.left="0";
-						popStyle.width=newRightEdge+px;
-						pcS.width=newRightEdge-7+px;
-						pHs.width=newRightEdge-2+px;    
-						pSW=newRightEdge;				
-						exx<0?oxL=0:oxL=exx;	
-					}							
-				}else if(newRightEdge>=inW){ //set up docking and shrink the width if new right edge offscreen			
-					if(newLeftEdge<=innerWidth-75){
-						if(!dockedx)
-							dockedx=pSW;
-						nWid=pSW-newRightEdge+inW;
-						pS.left=inW-nWid+px;
-						pS.width=nWid+px;
-						pcS.width=nWid-7+px;
-						pHs.width=nWid-2+px;
-						pSW=nWid;
-					}
-				}else{ //if both new edges are on screen
-					if(dockedx){ //if docked
-						if(newRightEdge<=dockedx){// expand width to predocked width, left
-							pS.left="0";
-							pS.width=newRightEdge+px;
-							pcS.width=newRightEdge-7+px;
-							pHs.width=newRightEdge-2+px;
-							pSW=newRightEdge;
-							oxL=exx;
-						}else if(newLeftEdge>=inW-dockedx){ //expand width to predocked width, right
-							var rdoc=inW-newLeftEdge;
-							pS.left=newLeftEdge+px;
-							pS.width=rdoc+px;
-							pcS.width=rdoc-7+px;
-							pHs.width=rdoc-2+px;
-							pSW=rdoc;		
-						}else{                        
-							pS.left=newLeftEdge+px; //get to the predocked width
-							pS.width=dockedx+px;
-							pcS.width=dockedx-7+px;
-							pHs.width=dockedx-2+px;
-							pSW=dockedx;
-							dockedx="";
-						}
-					}else{ //both edges on screen, undocked
-						pS.left=newLeftEdge+px; //change left edge position
-					}
-				}                         //end X dim checks
-				if(newTopEdge<=0){
-					if(newBottomEdge>=75){
-						if(!dockedy)
-							dockedy=pSH;
-						pS.top="0";
-						pS.height=newBottomEdge+px;
-						pSs.height=newBottomEdge-2+px;
-						pcS.height=newBottomEdge-34+px;
-						pSH=newBottomEdge;
-						eyy<0?oyT=0:oyT=eyy;
-					}
-				}else if(newBottomEdge>=inH){
-					if(newTopEdge<=innerHeight-75){
-						if(!dockedy)
-							dockedy=pSH;
-						nHe=pSH-newBottomEdge+inH;
-						pS.height=nHe+px;
-						pSs.height=nHe-2+px;
-						pcS.height=nHe-34+px;
-						pS.top=newTopEdge+px;
-						pSH=nHe;
-					}
-				}else{
-					if(dockedy){
-						if(newBottomEdge<=dockedy){
-							pS.top="0";
-							pS.height=newBottomEdge+px;
-							pcS.height=newBottomEdge-34+px;
-							pSs.height=newBottomEdge-2+px;
-							pSH=newBottomEdge;
-							oyT=eyy;
-						}else if(newTopEdge>=inH-dockedy){
-							var bdoc=inH-newTopEdge;
-							pS.top=newTopEdge+px;
-							pS.height=bdoc+px;
-							pcS.height=bdoc-34+px;
-							pSs.height=bdoc-2+px;
-							pSH=bdoc;		
-						}else{
-							pS.top=newTopEdge+px;
-							pS.height=dockedy+px;
-							pcS.height=dockedy-34+px;
-							pSs.height=dockedy-2+px;
-							pSH=dockedy;
-							dockedy="";
-						}
-					}else{
-						pS.top=newTopEdge+px;
-					}
-				}*/
-				});
+				
 				on.once(W,"mouseup",function(e){
 					mM.remove();
 					BS["-webkit-user-select"]="text";
@@ -502,8 +414,8 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					splitStyleV.display="block";
 					splitStyleH.display="block";
 				});
-			}),
-			popResize=function(e,dim,pageDim,max,otherSplitStyle,dimTracker,edgeTracker,oppositeEdge){
+			},
+			popResize=function(e,dim,pageDim,max,otherSplitStyle,edgeTracker,oppositeEdge){
 				BS["-webkit-user-select"]="none";
 				BS["-moz-user-select"]="none";	
 				var popconDiff=(dim==="width"?7:34),
@@ -514,14 +426,14 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 							popStyle[dim]=newDim+px;
 							conStyle[dim]=newDim-popconDiff+px;
 							otherSplitStyle[dim]=newDim-2+px;
-							dimTracker=newDim;
+							dim==="width"?popWidth=newDim:popHeight=newDim;
 							edges[oppositeEdge]=moveLocation;
 						}
 					});
 					on.once(W,"mouseup",function(e){
 						mM.remove();
 						if(docked[dim])
-							docked[dim]=dimTracker;
+							docked[dim]=(dim==="width"?popWidth:popHeight);
 						BS["-webkit-user-select"]="text";
 						BS["-moz-user-select"]="text";
 					});
@@ -533,6 +445,8 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				popResize:popResize
 			}
 		};
+		Popup=Popup();
+		O(cros,"mousedown",Popup.showPopup);
 /*
 		crossTool=function(){						//cross section function!
 			var self,inMap=MAP,inE=E,inD=dojo,inEG=inE.geometry,W=window,unGraph,

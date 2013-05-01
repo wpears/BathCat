@@ -4,7 +4,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		"dojox/charting/Chart","dojox/charting/themes/PurpleRain","dojox/charting/axis2d/Default", "dojox/charting/plot2d/MarkersOnly","dojox/charting/action2d/Tooltip",
 		"dojo/on","esri/dijit/TimeSlider","dojo/ready","esri/dijit/Scalebar","dojo/_base/lang","dojo/aspect","require","dojo/NodeList-fx"],
 		function(dijit,BorderContainer,CP,Grid,fx,easing,Keyb,edi,ColRe,dec,parser,dCon,dom,dque,
-				 domcl,FL,darr,qr,geom,Mag,Chrt,chThem,chAx,chLin,Ttip,O,tts,ready,sB,lang,asp,reqq){
+				 domcl,FL,darr,qr,geom,Mag,Chrt,chThem,chAx,chLin,Ttip,O,tts,ready,sB,lang,asp,require){
 
 	//esri.map,	esri.utils, alt infowin included compact
 
@@ -83,7 +83,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				  ]};
 
 	dojo.connect(qt,"onComplete",function(fs){ //declare most variables upfront for fewer vars/hoisting trouble
-	var grStore=null, rowStore, erow, i=0, W=fs.features,j=W.length,mmt,identifyUp,eS=E.symbol,eD=E.dijit,on=O,runIT,ghd,
+	var WIN=window,grStore=null, rowStore,erow,mmt,identifyUp,eS=E.symbol,eD=E.dijit,on=O,runIT,ghd,
 	lph,cros=dom.byId("cros"),arro=dom.byId("arro"),cross,graphList=[],Popup,
 	pst=dom.byId("pst"),dockedx="",dockedy="", DJ=dojo,zSlid=dom.byId("mapDiv_zoom_slider"),
 		stopCroClick,identOff=1,meC=null,lP=dom.byId("lP"),linArr,imHead,currentOID=null,MAP=map,noClick=dom.byId("noClick"),cHead,boxSave,dScroll,dlLink=dom.byId("dlLink"),
@@ -131,9 +131,10 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				showPane();
 		}
 		};
-		var feaColl={layerDefinition:layDef,featureSet:fs};
+		(function(){ //ALL KINDS OF SLOP, FIX ME
+		var i=0,fsFeats=fs.features,j=fsFeats.length;
 		for(;i<j;i++){
-			var intData={},gpr=W[i].attributes;
+			var intData={},gpr=fsFeats[i].attributes;
 			intData["__Date"]=gpr["Date"];	
 			var dte=new Date(gpr["Date"]),
 			dst=dte.toUTCString();
@@ -143,6 +144,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			intData["OBJECTID"]=gpr["OBJECTID"];
 			gdata.push(intData);
 		}
+	})();
 		var adGr= dec([Grid,Keyb,ColRe]);
 		grid= new adGr({
 			columns:{
@@ -155,6 +157,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		},"ilP");
 		gridLoaded=1;
 		grid.renderArray(gdata); //create grid
+	//	gdata=null;
 		lC=copColl(grid);
 		scal= new sB({map:MAP});
 		console.log("query completes");
@@ -182,7 +185,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					grehi: new eS.SimpleFillSymbol(sfs,new eS.SimpleLineSymbol(sls,new DJ.Color([24,211,48]),6),new DJ.Color([0,0,0,0])),
 			};
 
-		outlines = new FL(feaColl, {
+		outlines = new FL({layerDefinition:layDef,featureSet:fs}, {
 		  	id:"out",
        	 	mode: 0,
        	 	outFields: ["*"]
@@ -205,7 +208,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					console.log("ti on");
 					dojo.disconnect(tiload);
 				}else{
-				window.setTimeout(addLays,50);
+				WIN.setTimeout(addLays,50);
 				}
 			}
 			addLays();
@@ -271,9 +274,9 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			var popupHandlers=[],popUp,popStyle,popHeader,headStyle,popContainer,conStyle,
 				popSplitterV,splitStyleV,popSplitterH,splitStyleH,popClose,
 				popHeight=400,popWidth=600,edges={left:60,right:660,top:100,bottom:500},
-				W=window,BS=body.style,px="px",innerWidth=W.innerWidth,innerHeight=W.innerHeight,
+				W=WIN,BS=body.style,px="px",innerWidth=W.innerWidth,innerHeight=W.innerHeight,
 				docked={width:null,height:null},
-			showPopup=function(){
+			show=function(){
 				if(!popUp){
 					dCon.place('<link rel="stylesheet" href="popup.css">',dque('head')[0]);
 					popUp=dCon.place('<div id="popUp"><div id="popHeader"class="panehead"><span id="popTitle">Profile Tool</span><div id="popClose"class="closebox">X</div></div><div id="popContainer"></div><div id="popSplitterV"><div id="popLineV"></div></div><div id="popSplitterH"><div id="popLineH"></div></div></div>',body);
@@ -287,36 +290,41 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					popSplitterH=dom.byId("popSplitterH");
 					splitStyleH=popSplitterH.style;
 					popClose=dom.byId("popClose");
+					if(!W.requestAnimationFrame)(function(W){var eaf='equestAnimationFrame',raf='r'+eaf,Raf='R'+eaf;W[raf]=W['webkit'+Raf]||W['moz'+Raf]||W[raf]||(function(callback){setTimeout(callback,16)})})(W);
 				}
 				popStyle.zIndex=200;
 				popStyle.opacity=1;
-				attachPopupHandlers();
+				attachHandlers();
 			},
 
-			hidePopup=function(){
+			hide=function(){
 				popStyle.zIndex=-100;
 				popStyle.opacity=0;
-				removePopupHandlers();
+				removeHandlers();
 			},
 
-			attachPopupHandlers=function(){
-				popupHandlers=[
-			//	O(popSplitterH,"mousedown",function(e){mdToSlide(poCon,charts,W)})),
-			//	O(popClose,"click",crossWipe),
-				O(popHeader,"mousedown",movePopup),//e,dim,pageDim,max,otherSplitStyle,dimTracker,edgeTracker,oppositeEdge
-				O(popSplitterV,"mousedown",function(e){popResize(e,"width","pageX",innerWidth,splitStyleH,edges.left,"right")}),
-				O(popSplitterH,"mousedown",function(e){popResize(e,"height","pageY",innerHeight,splitStyleV,edges.top,"bottom")})
-				];
+			attachHandlers=function(){
+				if(!popupHandlers[0]){
+					popupHandlers=[
+					O(popClose,"mousedown",hide),
+					O(popHeader,"mousedown",move),             //e,dim,pageDim,max,otherSplitStyle,edgeTracker,oppositeEdge
+					O(popSplitterV,"mousedown",function(e){resize(e,"width","pageX",innerWidth,splitStyleH,edges.left,"right")}),
+					O(popSplitterH,"mousedown",function(e){resize(e,"height","pageY",innerHeight,splitStyleV,edges.top,"bottom")})
+					];
+				}
 			},
 
-			removePopupHandlers=function(){
+			removeHandlers=function(){
 				darr.forEach(popupHandlers,function(v){
 					v.remove();
 				});
+				popupHandlers=[];
 			},
 
-			movePopup=function(e){//adjustable graph popup
-			var et=e.target,offsetX=e.offsetX,offsetY=e.offsetY;
+			move=function(e){//adjustable graph popup
+			var et=e.target,offsetX=e.offsetX||e.layerX,offsetY=e.offsetY||e.layerY,minSize=120,moveReady=1,ie9;
+			if(W.getComputedStyle(popUp).getPropertyValue('transform')==="none")ie9=true;
+
 			BS["-webkit-user-select"]="none";//when the width is collapsed, the offset changes according to the
 			BS["-moz-user-select"]="none";	//the direction of collapse
 			conStyle.display="none";
@@ -328,81 +336,8 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			if(et.id!=="popHeader")
 				offsetX+=et.offsetLeft,offsetY+=et.offsetTop; //adjust offset if on title div 
 
-			var mM=O(W,"mousemove",function(e){
-				var pageX=e.pageX,pageY=e.pageY,newLeftEdge=pageX-offsetX,newRightEdge=newLeftEdge+popWidth,
-					newTopEdge=pageY-offsetY,newBottomEdge=newTopEdge+popHeight,nWid,nHei;
+			var mM=O(W,"mousemove",triggerMove);
 
-			if(newLeftEdge<0){
-				newLeftEdge=0;
-				offsetX=pageX;
-				if(!docked.width)
-					docked.width=popWidth;
-			}else if(newRightEdge>innerWidth){
-				newRightEdge=innerWidth;
-				if(!docked.width)
-					docked.width=popWidth;
-			}
-			if(docked.width){
-				if(newRightEdge<innerWidth-newLeftEdge){
-					nWid=newRightEdge;
-					newLeftEdge=0;
-					offsetX=pageX;
-				}else{
-					nWid=innerWidth-newLeftEdge;
-					newRightEdge=innerWidth;
-				}	
-			}else nWid=newRightEdge-newLeftEdge;
-
-			if(newTopEdge<0){
-				newTopEdge=0;
-				if(!docked.height)
-					docked.height=popHeight;
-			}else if(newBottomEdge>innerHeight){
-				newBottomEdge=innerHeight;
-				if(!docked.height)
-					docked.height=popHeight;
-			}
-			if(docked.height){
-				if(newBottomEdge<innerHeight-newTopEdge){
-					newTopEdge=0;
-					nHei=newBottomEdge;
-				}else{
-					newBottomEdge=innerHeight;
-					nHei=newBottomEdge-newTopEdge;
-				}
-			}else nHei=newBottomEdge-newTopEdge;
-
-			console.log(nHei,newTopEdge);
-			if(docked.width&&nWid>=docked.width)docked.width=null;
-			if(docked.height&&nHei>=docked.height)docked.height=null;
-
-			if(popWidth!==nWid&&nWid>=120){
-				popStyle.width=nWid+px;
-				conStyle.width=nWid-7+px;
-				splitStyleH.width=nWid-2+px;
-				popWidth=nWid;
-						//epx/exx nonsense
-			}
-			if(popHeight!==nHei&&nHei>=120){
-				popStyle.height=nHei+px;
-				splitStyleV.height=nHei-2+px;
-				conStyle.height=nHei-34+px;
-				popHeight=nHei;	
-			}
-			if(newTopEdge>innerHeight-120)
-				newTopEdge=innerHeight-120;
-			if(newLeftEdge>innerWidth-120)
-				newLeftEdge=innerWidth-120;
-			popStyle["transform"]="translate3d("+newLeftEdge+"px,"+newTopEdge+"px,0)";
-			popStyle["-webkit-transform"]="translate3d("+newLeftEdge+"px,"+newTopEdge+"px,0)";
-			edges.left=newLeftEdge;
-			edges.right=newRightEdge;
-			edges.top=newTopEdge;
-			edges.bottom=newBottomEdge;
-
-			});
-
-				
 			on.once(W,"mouseup",function(e){
 				mM.remove();
 				BS["-webkit-user-select"]="text";
@@ -414,22 +349,100 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				splitStyleV.display="block";
 				splitStyleH.display="block";
 			});
+
+			function triggerMove(e){
+				if(moveReady){
+					W.requestAnimationFrame(function(){movePopup(e)});//<1ms to run on chrome
+					moveReady=0; //debounce mousemove
+				}
+			}
+			function movePopup(e){
+				var newLeftEdge=e.pageX-offsetX,newRightEdge=newLeftEdge+popWidth,
+					newTopEdge=e.pageY-offsetY,newBottomEdge=newTopEdge+popHeight,nWid,nHei;
+				if(newLeftEdge<0){       //left width shrink setup and docking
+					newLeftEdge=0;
+					offsetX=e.pageX;
+					if(!docked.width)
+						docked.width=popWidth;
+				}else if(newRightEdge>innerWidth){ //right width shrink setup and docking
+					newRightEdge=innerWidth;
+					if(!docked.width)
+						docked.width=popWidth;
+				}
+				if(docked.width){                                     
+					if(newRightEdge<innerWidth-newLeftEdge){     //left width growth setup
+						nWid=newRightEdge;
+						newLeftEdge=0;
+						offsetX=e.pageX;
+					}else{                               //right width growth setup
+						newRightEdge=innerWidth;
+						nWid=newRightEdge-newLeftEdge;
+					}
+					if(nWid>=docked.width){				//undocking width
+						nWid=docked.width;
+						docked.width=null;
+					}
+				}          
+
+				if(newTopEdge<0){                //top height shrink setup and docking
+					newTopEdge=0;
+					if(!docked.height)
+						docked.height=popHeight;
+				}else if(newBottomEdge>innerHeight){ //bottom height shrink setup and docking
+					newBottomEdge=innerHeight;
+					if(!docked.height)
+						docked.height=popHeight;
+				}
+				if(docked.height){
+					if(newBottomEdge<innerHeight-newTopEdge){           //top height growth setup
+						newTopEdge=0;
+						nHei=newBottomEdge;
+					}else{                                      //bottom height growth setup
+						newBottomEdge=innerHeight;
+						nHei=newBottomEdge-newTopEdge;
+					}
+					if(nHei>=docked.height){                  //undocking height
+						nHei=docked.height;
+						docked.height=null;
+					}
+				}
+
+				if(popWidth!==nWid&&nWid>=minSize){    //actual width shrinking/growing
+					popStyle.width=nWid+px;
+					conStyle.width=nWid-7+px;
+					splitStyleH.width=nWid-2+px;
+					popWidth=nWid;
+				}
+				if(popHeight!==nHei&&nHei>=minSize){	//actual height shrinking/growing limited to 120
+					popStyle.height=nHei+px;
+					splitStyleV.height=nHei-2+px;
+					conStyle.height=nHei-34+px;
+					popHeight=nHei;	
+				}
+				if(newTopEdge>innerHeight-minSize)newTopEdge=innerHeight-minSize; //limit translate to
+				if(newLeftEdge>innerWidth-minSize)newLeftEdge=innerWidth-minSize; //minSize from edge
+				//move via translate3d then update edges
+				if(ie9){
+					popStyle.left=newLeftEdge+px;
+					popStyle.top=newTopEdge+px;
+				}else{
+					popStyle["transform"]="translate3d("+newLeftEdge+"px,"+newTopEdge+"px,0)";
+					popStyle["-webkit-transform"]="translate3d("+newLeftEdge+"px,"+newTopEdge+"px,0)";
+				}
+				edges.left=newLeftEdge;
+				edges.right=newRightEdge;
+				edges.top=newTopEdge;
+				edges.bottom=newBottomEdge;
+				moveReady=1;
+			}
+
 			},
-			popResize=function(e,dim,pageDim,max,otherSplitStyle,edgeTracker,oppositeEdge){
+			resize=function(e,dim,pageDim,max,otherSplitStyle,edgeTracker,oppositeEdge){
 				BS["-webkit-user-select"]="none";
 				BS["-moz-user-select"]="none";	
-				var popconDiff=(dim==="width"?7:34),
-					mM=O(W,"mousemove",function(e){
-						var moveLocation=e[pageDim],newDim;
-						if(moveLocation<=max){
-							newDim=moveLocation-edgeTracker;
-							popStyle[dim]=newDim+px;
-							conStyle[dim]=newDim-popconDiff+px;
-							otherSplitStyle[dim]=newDim-2+px;
-							dim==="width"?popWidth=newDim:popHeight=newDim;
-							edges[oppositeEdge]=moveLocation;
-						}
-					});
+				var popconDiff=(dim==="width"?7:34),resizeReady=1,min=120,
+					mM=O(W,"mousemove",triggerResize);
+
 					on.once(W,"mouseup",function(e){
 						mM.remove();
 						if(docked[dim])
@@ -437,19 +450,42 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 						BS["-webkit-user-select"]="text";
 						BS["-moz-user-select"]="text";
 					});
+
+					function resizePopup(e){
+						var moveLocation=e[pageDim],newDim;
+						if(moveLocation<=max){
+							newDim=moveLocation-edgeTracker;
+							if(newDim>=120){
+								popStyle[dim]=newDim+px;
+								conStyle[dim]=newDim-popconDiff+px;
+								otherSplitStyle[dim]=newDim-2+px;
+								dim==="width"?popWidth=newDim:popHeight=newDim;
+								edges[oppositeEdge]=moveLocation;
+							}
+						}
+						resizeReady=1;
+					};
+					function triggerResize(e){
+						if(resizeReady){
+							W.requestAnimationFrame(function(){resizePopup(e)});
+							resizeReady=0;
+						}
+					}
+					
 			};
 			return{
-				showPopup:showPopup,
-				hidePopup:hidePopup,
-				movePopup:movePopup,
-				popResize:popResize
+				show:show,
+				hide:hide,
+				move:move,
+				resize:resize
 			}
 		};
 		Popup=Popup();
-		O(cros,"mousedown",Popup.showPopup);
+	
+		O(cros,"mousedown",Popup.show);
 /*
 		crossTool=function(){						//cross section function!
-			var self,inMap=MAP,inE=E,inD=dojo,inEG=inE.geometry,W=window,unGraph,
+			var self,inMap=MAP,inE=E,inD=dojo,inEG=inE.geometry,W=WIN,unGraph,
 			ang,chartId,charts=[],graphics,gOffset=3,p1,p2,croMov,croInClick,chCo=0,
 			gfxArr=inMap.graphics.graphics,gfxOffset=gfxArr.length+4,
 			crosscount=1,tls,updateReady=1,sR=inMap.spatialReference,tlin,
@@ -462,7 +498,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					tlin.addPath([p1, e.mapPoint]);
 					tls.setGeometry(tlin);
 					updateReady=0;
-					window.setTimeout(function(){//limit requests to framerate
+					W.setTimeout(function(){//limit requests to framerate
 						updateReady=1;
 						},16);
 			},
@@ -688,6 +724,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			}
 			})();
 		};
+		//HMM asp.after(Popup,"popResize",mdToSlide)
 		crossHandler.pause();
 		croClick=inD.connect(inMap,"onMouseDown",conFun);
 		if(!currentHandlers[0])
@@ -712,8 +749,8 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 
 			},
 			start:function(){
+				Popup.show();
 				this.revive();
-				showPopup();
 			},
 			idle:function(){
 					for(var i=0,j=graphics.length;i<j;i++){    //wipe any cross gfx/lbls    //functions that connect/disconnect
@@ -748,9 +785,9 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			crossTool.init(e);
 		}else
 			whyNoClick();					
-	});*/
+	});
 
-		
+		*/
 
 		clSh=function(e){
 			if(paneIsShowing){//close button logic
@@ -782,7 +819,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			paneIsShowing=1;
 			fx.animateProperty({node:idCon,duration:150,properties:{top:irP.offsetHeight+35}}).play();
 			fx.animateProperty({node:rP,duration:300,easing:easing.quadOut,properties:{marginRight:0}}).play();
-			fx.animateProperty({node:shoP,duration:300,easing:easing.quadOut,properties:{right:285}}).play();
+			fx.animateProperty({node:shoP,duration:300,easing:easing.quadOut,properties:{right:290}}).play();
 			arro.style.backgroundPosition="-32px -16px";
 			movers.animateProperty({duration:300,easing:easing.quadOut,properties:{marginRight:285}}).play();
 		}
@@ -792,7 +829,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			fx.animateProperty({node:idCon,duration:150,properties:{top:irP.offsetHeight+35}}).play();
 			movers.animateProperty({duration:250,easing:easing.quadIn,properties:{marginRight:"0"}}).play();
 			fx.animateProperty({node:rP,duration:250,easing:easing.quadIn,properties:{marginRight:-285}}).play();
-			fx.animateProperty({node:shoP,duration:250,easing:easing.quadIn,properties:{right:8}}).play();
+			fx.animateProperty({node:shoP,duration:250,easing:easing.quadIn,properties:{right:5}}).play();
 			arro.style.backgroundPosition="-96px -16px";
 		}
 
@@ -997,18 +1034,29 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		});
 
 		O(spl, "mousedown",function(e){								//expand left pane
-			var mm=O(window,"mousemove",function(e){
-				grCon.style.width= lHead.style.width;
-			});
-			on.once(window,"mouseup",function(evt){
-				MAP.resize();
-				mm.remove();
-			});
+			var expandReady=1,mM,W=WIN;
+			if(!W.requestAnimationFrame)(function(W){var eaf='equestAnimationFrame',raf='r'+eaf,Raf='R'+eaf;W[raf]=W['webkit'+Raf]||W['moz'+Raf]||W[raf]||(function(callback){setTimeout(callback,16)})})(W);
 
+			mM=O(W,"mousemove",triggerExpand);
+
+			on.once(W,"mouseup",function(evt){
+				MAP.resize();
+				mM.remove();
+			});
+			function expand(e){
+				grCon.style.width= lHead.style.width;
+				expandReady=1;
+			}
+			function triggerExpand(e){
+				if(expandReady){
+					W.requestAnimationFrame(function(){expand(e)});
+					expandReady=0;
+				}
+			}
 		});
 
 
-		O(window, "resize",function(e){			//resize map on browser resize
+		O(WIN, "resize",function(e){			//resize map on browser resize
 			MAP.resize();
 			grid.resize();
 			rpCon.style.cssText="width:100%;height:"+(rP.scrollHeight-60)+"px;";
@@ -1045,7 +1093,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			init:function (e){           //start the measurement tool lazily when first clicked, less to load at once
 				measur.style.display="block";
 				var ismov;
-				reqq(["esri/dijit/Measurement"],function(mt){
+				require(["esri/dijit/Measurement"],function(mt){
 					var lSy=new eS.SimpleLineSymbol(sls,new DJ.Color([0,0,0]),2),
 						pSy=new eS.SimpleMarkerSymbol({"size":6,"color":new DJ.Color([0,0,0])});
 					mmt= new mt({
@@ -1512,7 +1560,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			noClick.style.zIndex="100";
 			fx.animateProperty({node:noClick,duration:75,properties:{opacity:1}}).play();
 
-			window.setTimeout(function(){fx.animateProperty({node:noClick,duration:150,properties:{opacity:0},
+			WIN.setTimeout(function(){fx.animateProperty({node:noClick,duration:150,properties:{opacity:0},
 				onEnd:function(){noClick.style.zIndex="-100"}}).play()},2000);
 		}
 
@@ -1684,7 +1732,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				});
 		}
 		function initId(e){ //id logic... cross section tool feeds here as well.. this gets set up lazily also
-			reqq(["esri/tasks/identify"],function(ide){
+			require(["esri/tasks/identify"],function(ide){
 				var lotsOfLayers=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106],
 				idT= new eT.IdentifyTask("http://mrsbmapp00642/ArcGIS/rest/services/BATH/Web_Rr/MapServer"),
 				idP= new eT.IdentifyParameters();
@@ -1707,7 +1755,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				};
 			});
 		}
-	window.setTimeout(clSh,300);
+	WIN.setTimeout(clSh,300);
 	});
 
 	});

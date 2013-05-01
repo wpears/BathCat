@@ -600,7 +600,7 @@ user-select: none;
   border: solid 1px #a5b6e0;
   width:21px;
   position:absolute;
-  right:0.3%;
+  right:5px;
   top:44%;
   cursor:default;
   height:32px;

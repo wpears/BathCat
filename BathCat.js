@@ -84,14 +84,14 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 
 	dojo.connect(qt,"onComplete",function(fs){ //declare most variables upfront for fewer vars/hoisting trouble
 	var WIN=window,grStore=null, rowStore,erow,mmt,identifyUp,eS=E.symbol,eD=E.dijit,on=O,runIT,ghd,
-	lph,cros=dom.byId("cros"),arro=dom.byId("arro"),cross,graphList=[],Popup,
+	lph,cros=dom.byId("cros"),arro=dom.byId("arro"),cross,graphList=[],Popup,ie9,
 	pst=dom.byId("pst"),dockedx="",dockedy="", DJ=dojo,zSlid=dom.byId("mapDiv_zoom_slider"),
 		stopCroClick,identOff=1,meC=null,lP=dom.byId("lP"),linArr,imHead,currentOID=null,MAP=map,noClick=dom.byId("noClick"),cHead,boxSave,dScroll,dlLink=dom.byId("dlLink"),
 		rP=dom.byId("rP"),idCon=dom.byId("idCon"),grid,irP=dom.byId("irP"),ilP=dom.byId("ilP"),drP=dijit.byId("rP"),resCon=dom.byId("resCon"), checkTrack=[],
 		measur=dom.byId("measur"),mea=dom.byId("mea"),ident=dom.byId("ident"),identHandle,zoomEnd,grCon,croClick,lPar,tsNode,timeDiv=dom.byId('timeDiv'),paneIsShowing=0,
 		BC=dijit.byId("mainWindow"),bmaps=dom.byId("bmaps"),shoP=dom.byId("shoP"),outlines,spl=dom.byId("lP_splitter"),clSh,mdLink=dom.byId("mdLink"),currentMeaTool,
 		fex=dom.byId("fex"),imOn=0,maOn=1,zFun,imON,maON,laOff,phys=dom.byId("phys"),imag=dom.byId("imag"),lC,cGr,daGrid,sLev=8,geoSer,crossTool={},identTool={},meaTool={},
-		movers=dque(".mov"),tiout,esav,firstHan,rpCon=dom.byId("rpCon"),tiload,outBounds=[],crossOpen=0,reqqing=0,croMove,crossHandler,runIdent,runMea,lastActive=null,
+		movers=dque(".mov"),tiout,esav,firstHan,rpCon=dom.byId("rpCon"),tiload,outBounds=[],crossOpen=0,reqqing=0,croMove,crossHandle,runIdent,runMea,lastActive=null,
 		helpBod=dom.byId("helpbod"),helpPane=dom.byId("helppane"),helpHead=dom.byId("helphead"),foot=dom.byId("foot"),currButt,helpClo=dom.byId("helpclo"),
 		cTex="padding:5px 4px 3px 4px;color:#111;box-shadow: inset 0 1px 2px 0 #857ca5;background-image:-webkit-linear-gradient(top,#a0bce5,#f0f5fd);background-image:-moz-linear-gradient(top,#a0bce5,#f0f5fd);",
 		helpText="<p>Zoom in and out with the <b>Zoom buttons</b> or the mousewheel. Shift and drag on the map to zoom to a selected area.</p><p>Go to the full extent of the data with the <b>Globe</b>.</p><p>Select map or satellite view with the <b>Basemap buttons</b>.</p><p>Browse through projects in the table. Sort the table with the column headers and collapse it with the <b>Slider</b>.</p><p>Turn on a raster by double-clicking it in the table or map, or checking its checkbox in the table.</p><ul>When a raster is displayed:<br/><li>With the <b>Identify</b> tool, click to display NAVD88 elevation at any point.</li><li>Draw a cross-section graph with the <b>Profile tool</b>. Click the start and end points of the line to generate a graph in a draggable window. Hover over points to display elevation.</li></ul><p>Use the <b>Measure tool</b> to calculate distance, area, or geographic location.</p><p>Project information and Identify results are displayed in the right pane. Toggle this pane with the <b>Arrow button</b>.</p><p>Use the <b>Time slider</b> to filter the display of features by date. Drag the start and end thumbs or click a year to only display data from that year.</p>",
@@ -219,7 +219,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
    	DJ.connect(tiout,"onUpdateEnd",function(e,f,g,h){ //called on every zoom (due to refresh). allows feature updating
    		creCov(tiout.graphics);							//setup an onupdatestart that sets the visibility to false to avoid _surface typeerrors if they come
     	});
-
+   		ie9=(document.all&&document.addEventListener&&!window.atob)?true:false;
 		lph=dom.byId("lP-header");
 		cHead=dom.byId("ilP-header");
 		ghd=dque("th",lph);
@@ -480,10 +480,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				resize:resize
 			}
 		};
-		Popup=Popup();
-	
-		O(cros,"mousedown",Popup.show);
-/*
+
 		crossTool=function(){						//cross section function!
 			var self,inMap=MAP,inE=E,inD=dojo,inEG=inE.geometry,W=WIN,unGraph,
 			ang,chartId,charts=[],graphics,gOffset=3,p1,p2,croMov,croInClick,chCo=0,
@@ -740,6 +737,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					initId();
 				self=this;
 				graphics=self.graphics;
+				Popup=Popup();
 				toolToggle(e,self);
 				O(cros,"mousedown",function(e){
 						if(domcl.contains(cros,"clickable"))
@@ -777,17 +775,17 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			}
 		};
 	};
-	crossHandler=O(cros,"mousedown",function(e){
+	crossHandle=O(cros,"mousedown",function(e){
 		if (domcl.contains(cros,"clickable")){
-			crossHandler.remove();
-			crossHandler=null;
-			crossTool=crossTool();
+			crossHandle.remove();
+			crossHandle=null;
+			crossTool=crossTool(Popup());
 			crossTool.init(e);
 		}else
 			whyNoClick();					
 	});
 
-		*/
+		
 
 		clSh=function(e){
 			if(paneIsShowing){//close button logic
@@ -816,21 +814,31 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		};
 
 		function showPane(){
+			var idPos=irP.offsetHeight+35;
 			paneIsShowing=1;
-			fx.animateProperty({node:idCon,duration:150,properties:{top:irP.offsetHeight+35}}).play();
-			fx.animateProperty({node:rP,duration:300,easing:easing.quadOut,properties:{marginRight:0}}).play();
-			fx.animateProperty({node:shoP,duration:300,easing:easing.quadOut,properties:{right:290}}).play();
 			arro.style.backgroundPosition="-32px -16px";
-			movers.animateProperty({duration:300,easing:easing.quadOut,properties:{marginRight:285}}).play();
+			if(ie9){
+				fx.animateProperty({node:idCon,duration:150,properties:{top:idPos}}).play();
+				fx.animateProperty({node:rP,duration:300,easing:easing.quadOut,properties:{marginRight:0}}).play();
+				movers.animateProperty({duration:300,easing:easing.quadOut,properties:{marginRight:285}}).play();
+			}else{
+				for(var i=0,j=movers.length;i<j;i++)
+					domcl.add(movers[i],"movd");
+			}
 		}
 
 		function hidePane(){
+			var idPos=irP.offsetHeight+35;
 			paneIsShowing=0;
-			fx.animateProperty({node:idCon,duration:150,properties:{top:irP.offsetHeight+35}}).play();
-			movers.animateProperty({duration:250,easing:easing.quadIn,properties:{marginRight:"0"}}).play();
-			fx.animateProperty({node:rP,duration:250,easing:easing.quadIn,properties:{marginRight:-285}}).play();
-			fx.animateProperty({node:shoP,duration:250,easing:easing.quadIn,properties:{right:5}}).play();
 			arro.style.backgroundPosition="-96px -16px";
+			if(ie9){
+				fx.animateProperty({node:idCon,duration:150,properties:{top:idPos}}).play();
+				movers.animateProperty({duration:250,easing:easing.quadIn,properties:{marginRight:0}}).play();
+				fx.animateProperty({node:rP,duration:250,easing:easing.quadIn,properties:{marginRight:-285}}).play();
+			}else{
+				for(var i=0,j=movers.length;i<j;i++)
+					domcl.remove(movers[i],"movd");
+			}
 		}
 
 		imON=function(){										//turn on imagery

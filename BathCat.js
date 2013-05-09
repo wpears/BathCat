@@ -481,7 +481,15 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			}
 		};
 
-		crossTool=function(){						//cross section function!
+
+
+
+/*
+
+
+
+
+		crossTool=function(container){						//cross section function!
 			var self,inMap=MAP,inE=E,inD=dojo,inEG=inE.geometry,W=WIN,unGraph,
 			ang,chartId,charts=[],graphics,gOffset=3,p1,p2,croMov,croInClick,chCo=0,
 			gfxArr=inMap.graphics.graphics,gfxOffset=gfxArr.length+4,
@@ -737,7 +745,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					initId();
 				self=this;
 				graphics=self.graphics;
-				Popup=Popup();
 				toolToggle(e,self);
 				O(cros,"mousedown",function(e){
 						if(domcl.contains(cros,"clickable"))
@@ -747,7 +754,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 
 			},
 			start:function(){
-				Popup.show();
+				container.show();
 				this.revive();
 			},
 			idle:function(){
@@ -756,7 +763,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					}
 					charts.forEach(function(v){v.destroy();});
 					clearNode(poCon);
-					hidePopup();
+					outlines.enableMouseEvents();
 			},
 			revive:function(){
 				inMap.setMapCursor("default");
@@ -765,13 +772,12 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					
 			},
 			stop:function(){
-					unAttach();
-					inD.disconnect(croClick);
-					inD.disconnect(croMove);
-					if(unGraph){
-						unGraph.remove();
+					this.idle();
+			//		inD.disconnect(croClick);
+			//		inD.disconnect(croMove);
+		//			if(unGraph){
+			//			unGraph.remove();
 					}
-					outlines.enableMouseEvents();
 			}
 		};
 	};
@@ -779,12 +785,12 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		if (domcl.contains(cros,"clickable")){
 			crossHandle.remove();
 			crossHandle=null;
-			crossTool=crossTool(Popup());
+			crossTool=crossTool(Popup=Popup());
 			crossTool.init(e);
 		}else
 			whyNoClick();					
 	});
-
+*/
 		
 
 		clSh=function(e){

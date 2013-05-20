@@ -100,7 +100,7 @@ user-select: text;
 }
 
 #heaR{
-  color: #aad6ff;
+  color: #99ceff;
   text-shadow:1px 1px 1px #007FDE;
   text-decoration:none;
   font-family:Harabara;
@@ -250,8 +250,8 @@ background-image:-webkit-linear-gradient(top, #e1ebfb, #b4cdf5);
   background-color:#5ADE6B;             
 }
 .activeTool{
-  box-shadow:0 0 16px 6px #aad6ff !important;
-   			 background-color:#aad6ff;
+  box-shadow:0 0 16px 6px #99ceff !important;
+   			 background-color:#99ceff;
 }
 #helppane{
   opacity:0;
@@ -378,7 +378,7 @@ user-select: none;
 user-select: text;
 }
 #idRes{
-  border-bottom:1px solid #aad6ff;
+  border-bottom:1px solid #99ceff;
 }
 #resCon{
 	margin-left:5px;
@@ -677,7 +677,7 @@ user-select: none;
   display:none !important;
  }
  strong{
-  color: #aad6ff;
+  color: #99ceff;
   text-shadow:1px 1px 1px #007FDE;
  }
 
@@ -687,7 +687,7 @@ user-select: none;
   cursor:default;
  }
  h2{
- color: #aad6ff;
+ color: #99ceff;
   text-shadow:1px 1px 1px #007FDE;
   font-family: Harabara;
   font-style:italic;

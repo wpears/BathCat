@@ -269,7 +269,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			}
 		}
 		setLinkColor();
-		linArr[linArr.length-1].style.cssText="text-shadow:0 0 1px #fff;color:rgb(0,0,0);";
+		linArr[linArr.length-1].style.cssText="text-shadow:1px 1px 1px #fff;color:rgb(0,0,0);";
 		phys.style.cssText=cTex;
 
 		Popup=function(){

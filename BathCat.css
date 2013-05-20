@@ -29,6 +29,21 @@
   transition:        all 0.1s ease;
  -o-transition:      all 0.1s ease;
 }
+
+.esriScalebar{
+  margin-left:10px;
+  margin-bottom:-10px;
+}
+.esriScalebarLabel{
+  margin-top:-28px;
+  font-family:SSP;
+  font-size:10pt;
+  font-weight:bold;
+  color: #333;
+}
+.whiteScaleLabels{
+  color:#fff;
+}
 .dijitSliderMoveable{
 	outline:none;
 }
@@ -657,18 +672,7 @@ user-select: none;
 .highlred{
   background-color:rgba(243,63,51,0.7);
 }
-.esriScalebar{
-  margin-left:10px;
-  margin-bottom:-10px;
-}
-.esriScalebarLabel{
-  margin-top:-28px;
-  font-family:SSP;
-  font-size:10pt;
-  font-weight:bold;
-  color: #333;
-  text-shadow:0 0 2px #fff;
-}
+
 .logo-med,.map.logo-sm {
   display:none !important;
  }

@@ -2,10 +2,9 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		"dgrid/Keyboard", "dgrid/editor","dgrid/extensions/ColumnResizer","dojo/_base/declare","dojo/parser","dojo/dom-construct","dojo/dom","dojo/query",
 		"dojo/dom-class","esri/layers/FeatureLayer","dojo/_base/array","esri/tasks/query","esri/tasks/geometry","dojox/charting/action2d/Magnify",
 		"dojox/charting/Chart","dojox/charting/themes/PurpleRain","dojox/charting/axis2d/Default", "dojox/charting/plot2d/MarkersOnly","dojox/charting/action2d/Tooltip",
-		"dojo/on","esri/dijit/TimeSlider","dojo/ready","esri/dijit/Scalebar","dojo/_base/lang","dojo/aspect","require","dojo/NodeList-fx"],
+		"dojo/on","esri/dijit/TimeSlider","dojo/ready","esri/dijit/Scalebar","esri/dijit/Measurement","dojo/aspect","require","dojo/NodeList-fx"],
 		function(dijit,BorderContainer,CP,Grid,fx,easing,Keyb,edi,ColRe,dec,parser,dCon,dom,dque,
-				 domcl,FL,darr,qr,geom,Mag,Chrt,chThem,chAx,chLin,Ttip,O,tts,ready,sB,lang,asp,require){
-
+				 domcl,FL,darr,qr,geom,Mag,Chrt,chThem,chAx,chLin,Ttip,O,tts,ready,sB,MT,asp,require){
 	//esri.map,	esri.utils, alt infowin included compact
 
   var parsedd= parser.parse(); //parse widgets
@@ -84,8 +83,8 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 
 	dojo.connect(qt,"onComplete",function(fs){ //declare most variables upfront for fewer vars/hoisting trouble
 	var WIN=window,grStore=null, rowStore,erow,mmt,identifyUp,eS=E.symbol,eD=E.dijit,on=O,runIT,ghd,
-	lph,cros=dom.byId("cros"),arro=dom.byId("arro"),cross,Popup,ie9,DOC=document,
-	pst=dom.byId("pst"),dockedx="",dockedy="", DJ=dojo,zSlid=dom.byId("mapDiv_zoom_slider"),
+	lph,cros=dom.byId("cros"),arro=dom.byId("arro"),cross,Popup,ie9,DOC=document,mouseDownTimeout,previousRecentTarget,
+	pst=dom.byId("pst"),dockedx="",dockedy="", DJ=dojo,zSlid=dom.byId("mapDiv_zoom_slider"),scaleBarLabels,
 		stopCroClick,identOff=1,meC=null,lP=dom.byId("lP"),linArr,imHead,currentOID=null,MAP=map,noClick=dom.byId("noClick"),cHead,boxSave,dScroll,dlLink=dom.byId("dlLink"),
 		rP=dom.byId("rP"),idCon=dom.byId("idCon"),grid,irP=dom.byId("irP"),ilP=dom.byId("ilP"),drP=dijit.byId("rP"),resCon=dom.byId("resCon"), checkTrack=[],
 		measur=dom.byId("measur"),mea=dom.byId("mea"),ident=dom.byId("ident"),identHandle,zoomEnd,grCon,croClick,lPar,tsNode,timeDiv=dom.byId('timeDiv'),paneIsShowing=0,
@@ -160,6 +159,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 	//	gdata=null;
 		lC=copColl(grid);
 		scal= new sB({map:MAP});
+		scaleBarLabels=dque('.esriScalebarLabel');
 		console.log("query completes");
 		var sls=eS.SimpleLineSymbol.STYLE_SOLID,
 			sfs=eS.SimpleFillSymbol.STYLE_SOLID,//define map symbols
@@ -255,15 +255,17 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		linArr=dque(".dijitRuleLabelH",tsNode);
 		function setLinkColor(){
 			if(imOn){
-				linArr[0].style.cssText="text-shadow:0 0 1px rgb(24,211,48);color:rgb(24,211,48);";
-				linArr[3].style.cssText="text-shadow:0 0 1px rgb(243,63,51);color:rgb(243,63,51);";
-				linArr[2].style.cssText="text-shadow:0 0 1px rgb(119,173,255);color:rgb(119,173,255);";
-				linArr[1].style.cssText="text-shadow:0 0 1px rgb(252,109,224);color:rgb(252,109,224);";
+				linArr[0].style.cssText="color:rgb(24,211,48);";
+				linArr[3].style.cssText="color:rgb(243,63,51);";
+				linArr[2].style.cssText="color:rgb(119,173,255);";
+				linArr[1].style.cssText="color:rgb(252,109,224);";
+				scaleBarLabels.forEach(function(v){domcl.add(v,"whiteScaleLabels")});
 			}else{
-				linArr[3].style.cssText="text-shadow:0 0 1px rgb(255,0,0);color:rgb(255,0,0);";
-				linArr[0].style.cssText="text-shadow:0 0 1px rgb(18,160,0);color:rgb(18,160,0);";
-				linArr[1].style.cssText="text-shadow:0 0 1px rgb(221,4,178);color:rgb(221,4,178);";
-				linArr[2].style.cssText="text-shadow:0 0 1px rgb(50,84,255);color:rgb(50,84,255);";
+				linArr[3].style.cssText="color:rgb(255,0,0);";
+				linArr[0].style.cssText="color:rgb(18,160,0);";
+				linArr[1].style.cssText="color:rgb(221,4,178);";
+				linArr[2].style.cssText="color:rgb(50,84,255);";
+				scaleBarLabels.forEach(function(v){domcl.remove(v,"whiteScaleLabels")});
 			}
 		}
 		setLinkColor();
@@ -1096,7 +1098,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			MAP.setExtent(inExt);
 		});
 
-	//	O(WIN,"mousedown",function(e){console.log(e.target.className)})
 
 		O(bmaps,"mousedown",function(e){                            //basemap handling
 			var et=e.target,typ=et.innerHTML;
@@ -1176,11 +1177,10 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		meaTool={
 			init:function (e){           //start the measurement tool lazily when first clicked, less to load at once
 				measur.style.display="block";
-				var ismov;
-				require(["esri/dijit/Measurement"],function(mt){
-					var lSy=new eS.SimpleLineSymbol(sls,new DJ.Color([0,0,0]),2),
-						pSy=new eS.SimpleMarkerSymbol({"size":6,"color":new DJ.Color([0,0,0])});
-					mmt= new mt({
+				var ismov,
+					lSy=new eS.SimpleLineSymbol(sls,new DJ.Color([0,0,0]),2),
+					pSy=new eS.SimpleMarkerSymbol({"size":6,"color":new DJ.Color([0,0,0])});
+					mmt= new MT({
 						 map:MAP, lineSymbol: lSy, pointSymbol: pSy},measur);
 			        mmt.startup();
 					measur=dom.byId("measur");
@@ -1202,7 +1202,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 											}
 										}
 										},true);
-				});
 			},
 			start:function(){
 					mmt.show();
@@ -1377,16 +1376,17 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		O(shoP,"mousedown",clSh);//handle close button click
 
 		grid.on(".dgrid-cell:mousedown",function(e){	//grid click handler
-			if(!e.target.firstChild)
-				return;					
-			if(domcl.contains(e.target.firstChild,"dgrid-resize-header-container"))
-				return;
-			if(domcl.contains(e.target,"dgrid-resize-header-container"))
-				return;
-			if(domcl.contains(e.target,"field-Image"))
-				return;
-			if(domcl.contains(e.target,"dgrid-input"))
-				return;
+			var et=e.target;
+			if(!et.firstChild||				
+				domcl.contains(et.firstChild,"dgrid-resize-header-container")||
+				domcl.contains(et,"dgrid-resize-header-container")||
+				domcl.contains(et,"field-Image")||
+				domcl.contains(et,"dgrid-input"))
+					return;
+			if(et!==previousRecentTarget){
+				window.clearTimeout(mouseDownTimeout);
+				previousRecentTarget=et;
+				mouseDownTimeout=WIN.setTimeout(function(){previousRecentTarget=null;},400);
 			var oid=getOBJECTID(e),
 				grPr=otg(oid),
 				eg=outlines.graphics[oid-1];
@@ -1406,7 +1406,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		 	grStore=oid; 	
 		 	rowStore=erow.element;
 		 	currentOID=oid;
-			
+		 }
 		});
 
 		grid.on(".dgrid-cell:dblclick",function(e){                 //grid dblclick handler
@@ -1414,7 +1414,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			if(oid){
 				var eg=outlines.graphics[oid-1],
 					gOe=otg(oid);
-				infoFunc(eg.attributes);
 				grStore=oid;
 				rowStore=erow.element;
 				currentOID=oid;
@@ -1480,7 +1479,11 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		});
 
 		DJ.connect(outlines, "onMouseDown", function(e){            //map click handler
-				var ega=e.graphic.attributes,oid=ega.OBJECTID,scroT=dScroll.scrollTop;;
+				var ega=e.graphic.attributes,oid=ega.OBJECTID,scroT=dScroll.scrollTop;
+				if(oid!==previousRecentTarget){
+				window.clearTimeout(mouseDownTimeout);
+				previousRecentTarget=oid;
+				mouseDownTimeout=WIN.setTimeout(function(){previousRecentTarget=null;},400);
 				if(!outBounds[oid]){
 					var teg=otg(oid),er=getGrid(e);
 					if(grStore&&MAP.getScale()>73000){ //don't clear when zoomed in
@@ -1501,6 +1504,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					rowStore=er;
 					currentOID=oid;
 				}
+			}
 		});
 
 		DJ.connect(outlines, "onDblClick", function(e){						//map dblclick handler
@@ -1510,7 +1514,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			rowStore=er;
 			currentOID=oid;
 			inpz=rowStore.childNodes[0].childNodes[3].childNodes[0];
-			infoFunc(ega);
 			if(MAP.getScale()>73000)
 				MAP.setExtent(e.graphic._extent.expand(1.3));
 			if(!inpz.checked){

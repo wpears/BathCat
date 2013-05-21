@@ -9,7 +9,7 @@ if (document.all && !window.setTimeout.isPolyfill) {
   };
   window.setTimeout.isPolyfill = true;
 }
-document.body.onselectstart=function(e){console.log("yo");e.preventDefault();e.stopPropagation();return false};
+document.body.onselectstart=function(e){console.log("ieselectstart");e.preventDefault();e.stopPropagation();return false};
 
 /*Try function makeUnselectable(node) {
     if (node.nodeType == 1) {

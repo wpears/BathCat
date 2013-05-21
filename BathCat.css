@@ -12,9 +12,24 @@
 /*columnresizer,removed css plugin from the js file*/
 .dgrid-column-resizer {position: absolute; height: 100%; width: 2px; background-color: #666; z-index: 1000; top: 0;}.dgrid-resize-handle {height: 100px; width: 0; position: absolute; right: -1px; top:-4px; cursor: e-resize; z-index: 999; border-left: 5px solid transparent; outline: none;}.dgrid-resize-header-container {height:100%;}html.has-touch .dgrid-resize-handle {border-left: 20px solid transparent;}html.has-touch .dgrid-column-resizer {width: 2px;}html.has-no-quirks .dgrid-resize-header-container {position: relative;}html.has-ie-6 .dgrid-resize-header-container {position: static;} .dgrid-header .dgrid-cell-padding {overflow: hidden; padding-right:0px;}html.has-ie-6 .dgrid-header .dgrid-cell-padding {margin-right: 4px;}html.has-ie-6 .dgrid-header .dgrid-sort-arrow {margin-right: 0;}html.has-quirks .dgrid-header .dgrid-cell-padding, html.has-ie-6 .dgrid-header .dgrid-cell {position:relative;}#dgrid-css-extensions-ColumnResizer-loaded {display: none;}
 
-.dijitTooltip {position: absolute; z-index: 2000; display: block; left: 0; top: -10000px; overflow: visible;background: transparent;}
-.dijitTooltipContainer {background-color: #f0f5fd; border:1px solid #cbcbcb; padding:0 0.4em;font-size:small;}
-.dijitTooltipRight {padding-left: 10px;}
+.dijitTooltip {
+   position: absolute;
+   z-index: 2000;
+   display: block;
+   left: 0;
+   top: -10000px;
+   overflow: visible;
+}
+.dijitTooltipContainer{
+    background-color: #f0f5fd;
+    border:1px solid #cbcbcb;
+    padding:0 0.4em;
+    width:32px;
+    font-size:small;
+}
+.dijitTooltip iframe{
+  display:none;
+}
 
 .dijitRuleLabelH{
   padding:0 4px 0 3px;
@@ -101,14 +116,17 @@ user-select: text;
 
 #heaR{
   color: #99ceff;
+  padding:10px 3px;
+  border-radius: 4px;
   text-shadow:1px 1px 1px #007FDE;
   text-decoration:none;
   font-family:Harabara;
-  width:357px;
+  width:379px;
   font-size:26pt; 
   font-style:italic;
-  top:8px;
-  right:25px;
+  top:-2px;
+  right:22px;
+  letter-spacing: 1px;
 }
 
 #heaR:hover{
@@ -316,7 +334,8 @@ user-select: none;
   background-size:"20px 20px";
 }
 .lab{
-  width:auto;
+  width:28px;
+  margin:0 auto;
 }
 #noClick{
   padding:3px 7px 7px 7px;
@@ -689,6 +708,7 @@ user-select: none;
  h2{
  color: #99ceff;
   text-shadow:1px 1px 1px #007FDE;
+  letter-spacing: 1px;
   font-family: Harabara;
   font-style:italic;
   font-size:28px;
@@ -756,7 +776,7 @@ user-select: none;
 .map .container .panLeft { background-position:-47px -16px; left:5px; }
 .map .container .panUpperLeft { background-position:-47px 0px; left:5px; top:5px; }
 
-.map .tooltip {
+/*.map .tooltip {
   width: 100px;
   position: absolute;
   border: 1px solid #7EABCD;
@@ -766,7 +786,7 @@ user-select: none;
   z-index: 9999;
   
   -o-border-radius: 4px; -moz-border-radius: 4px; -webkit-border-radius: 4px; border-radius: 4px; 
-}
+}*/
 
 .esriSimpleSlider {
   position: absolute;

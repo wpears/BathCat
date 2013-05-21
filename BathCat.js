@@ -82,14 +82,14 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				  ]};
 
 	dojo.connect(qt,"onComplete",function(fs){ //declare most variables upfront for fewer vars/hoisting trouble
-	var WIN=window,grStore=null, rowStore,erow,mmt,identifyUp,eS=E.symbol,eD=E.dijit,on=O,runIT,ghd,
+	var WIN=window,grStore=null, rowStore,erow,mmt,identifyUp,eS=E.symbol,eD=E.dijit,on=O,runIT,ghd,IE=!!document.all,
 	lph,cros=dom.byId("cros"),arro=dom.byId("arro"),cross,Popup,ie9,DOC=document,mouseDownTimeout,previousRecentTarget,
 	pst=dom.byId("pst"),dockedx="",dockedy="", DJ=dojo,zSlid=dom.byId("mapDiv_zoom_slider"),scaleBarLabels,
 		stopCroClick,identOff=1,meC=null,lP=dom.byId("lP"),linArr,imHead,currentOID=null,MAP=map,noClick=dom.byId("noClick"),cHead,boxSave,dScroll,dlLink=dom.byId("dlLink"),
 		rP=dom.byId("rP"),idCon=dom.byId("idCon"),grid,irP=dom.byId("irP"),ilP=dom.byId("ilP"),drP=dijit.byId("rP"),resCon=dom.byId("resCon"), checkTrack=[],
 		measur=dom.byId("measur"),mea=dom.byId("mea"),ident=dom.byId("ident"),identHandle,zoomEnd,grCon,croClick,lPar,tsNode,timeDiv=dom.byId('timeDiv'),paneIsShowing=0,
-		BC=dijit.byId("mainWindow"),bmaps=dom.byId("bmaps"),shoP=dom.byId("shoP"),outlines,spl=dom.byId("lP_splitter"),clSh,mdLink=dom.byId("mdLink"),currentMeaTool,
-		fex=dom.byId("fex"),imOn=0,maOn=1,zFun,imON,maON,laOff,phys=dom.byId("phys"),imag=dom.byId("imag"),lC,cGr,daGrid,sLev=8,geoSer,crossTool={},identTool={},meaTool={},
+		bmaps=dom.byId("bmaps"),shoP=dom.byId("shoP"),outlines,spl=dom.byId("lP_splitter"),clSh,mdLink=dom.byId("mdLink"),currentMeaTool,
+		fex=dom.byId("fex"),imOn=0,maOn=1,zFun,imON,maON,laOff,phys=dom.byId("phys"),imag=dom.byId("imag"),lC,processTimeUpdate,daGrid,sLev=8,geoSer,crossTool={},identTool={},meaTool={},
 		movers=dque(".mov"),tiout,esav,firstHan,rpCon=dom.byId("rpCon"),tiload,outBounds=[],crossOpen=0,crossHandle,runIdent,runMea,lastActive=null,
 		helpBod=dom.byId("helpbod"),helpPane=dom.byId("helppane"),helpHead=dom.byId("helphead"),foot=dom.byId("foot"),currButt,helpClo=dom.byId("helpclo"),
 		cTex="padding:5px 4px 3px 4px;color:#111;box-shadow: inset 0 1px 2px 0 #857ca5;background-image:-webkit-linear-gradient(top,#a0bce5,#f0f5fd);background-image:-moz-linear-gradient(top,#a0bce5,#f0f5fd);",
@@ -237,7 +237,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		timeExtent.startTime = new Date("01/01/2010 UTC");
 		timeExtent.endTime = new Date("12/31/2013 UTC");
 		MAP.setTimeExtent(timeExtent);
-		sliderDiv = DJ.create("div", null, timeDiv);
+		sliderDiv = dCon.create("div", null, timeDiv);
 		timeSlider = new tts({                                            //create TimeSlider
 			style:"width:300px;",
 			id: "timeSlider",
@@ -255,16 +255,16 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		linArr=dque(".dijitRuleLabelH",tsNode);
 		function setLinkColor(){
 			if(imOn){
-				linArr[0].style.cssText="color:rgb(24,211,48);";
-				linArr[3].style.cssText="color:rgb(243,63,51);";
-				linArr[2].style.cssText="color:rgb(119,173,255);";
-				linArr[1].style.cssText="color:rgb(252,109,224);";
+				linArr[0].style.cssText="text-shadow:0 0 1px #73ef83;color:rgb(24,211,48);";
+				linArr[3].style.cssText="text-shadow:0 0 1px #faa9a3;color:rgb(243,63,51);";
+				linArr[2].style.cssText="text-shadow:0 0 1px #eef5ff;color:rgb(119,173,255);";
+				linArr[1].style.cssText="text-shadow:0 0 1px #fee1f9;color:rgb(252,109,224);";
 				scaleBarLabels.forEach(function(v){domcl.add(v,"whiteScaleLabels")});
 			}else{
-				linArr[3].style.cssText="color:rgb(255,0,0);";
-				linArr[0].style.cssText="color:rgb(18,160,0);";
-				linArr[1].style.cssText="color:rgb(221,4,178);";
-				linArr[2].style.cssText="color:rgb(50,84,255);";
+				linArr[0].style.cssText="text-shadow:0 0 1px #0a5c00;color:rgb(18,160,0);";
+				linArr[1].style.cssText="text-shadow:0 0 1px #9a037c;color:rgb(221,4,178);";
+				linArr[2].style.cssText="text-shadow:0 0 1px #0027ed;color:rgb(50,84,255);";
+				linArr[3].style.cssText="text-shadow:0 0 1px #b00;color:rgb(255,0,0);";
 				scaleBarLabels.forEach(function(v){domcl.remove(v,"whiteScaleLabels")});
 			}
 		}
@@ -272,16 +272,29 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		linArr[linArr.length-1].style.cssText="text-shadow:1px 1px 1px #fff;color:rgb(0,0,0);";
 		phys.style.cssText=cTex;
 
+	/*	DJ.connect(MAP,"onMouseDragEnd",function(e){
+			var currImg=dque("#mapDiv_layer0 img")[0];
+			console.log(e,currImg);
+			if(currImg){
+				O(currImg,"click",function(e){console.log(e,"currImg")});
+			}
+	Looks like I'd need to ax click blockers..?
+		})*/
+
 		Popup=function(){
 			var popupHandlers=[],popUp,popStyle,popHeader,headStyle,popContainer,conStyle,
-				popSplitterV,splitStyleV,popSplitterH,splitStyleH,popClose,ie9,self,
+				popSplitterV,splitStyleV,popSplitterH,splitStyleH,popClose,self,
 				popHeight=400,popWidth=600,edges={left:60,right:660,top:100,bottom:500},
 				W=WIN,BS=body.style,px="px",innerWidth=W.innerWidth,innerHeight=W.innerHeight,
 				docked={width:null,height:null},
 			show=function(){
+				console.log("showing");
 				if(!popUp){
+					console.log("popup doesn't exist")
 					dCon.place('<link rel="stylesheet" href="popup.css">',dque('head')[0]);
+					console.log("placed");
 					popUp=dCon.place('<div id="popUp"><div id="popHeader"class="panehead"><span id="popTitle">Profile Tool</span><div id="popClose"class="closebox">X</div></div><div id="popContainer"></div><div id="popSplitterV"><div id="popLineV"></div></div><div id="popSplitterH"><div id="popLineH"></div></div></div>',body);
+					console.log("popUp made",popUp);
 					popStyle=popUp.style;
 					popHeader=dom.byId("popHeader");
 					headStyle=popHeader.style;
@@ -294,13 +307,15 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					popClose=dom.byId("popClose");
 					conStyle.width="593px";
 					self=this;
-					ie9=(W.getComputedStyle(popUp).getPropertyValue('transform')==="none"?true:false)
 					if(!W.requestAnimationFrame)(function(W){var eaf='equestAnimationFrame',raf='r'+eaf,Raf='R'+eaf;W[raf]=W['webkit'+Raf]||W['moz'+Raf]||W[raf]||(function(callback){setTimeout(callback,16)})})(W);
 				}
 				if(ie9){
+					console.log("ie9");
 					popStyle.left=edges.left+px;
 					popStyle.top=edges.top+px;
 				}else{
+					console.log("not ie9");
+					console.log(popUp.style.transform);
 					popStyle["transform"]="translate3d("+edges.left+"px,"+edges.top+"px,0)";
 					popStyle["-webkit-transform"]="translate3d("+edges.left+"px,"+edges.top+"px,0)";
 				}	
@@ -344,7 +359,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			},
 
 			move=function(e){//adjustable graph popup
-			var et=e.target,offsetX=e.offsetX||e.layerX,offsetY=e.offsetY||e.layerY,minSize=120,moveReady=1,IE=ie9;
+			var et=e.target,offsetX=e.offsetX||e.layerX,offsetY=e.offsetY||e.layerY,minSize=120,moveReady=1,IE9=ie9;
 
 			BS["-webkit-user-select"]="none";//when the width is collapsed, the offset changes according to the
 			BS["-moz-user-select"]="none";	//the direction of collapse
@@ -443,7 +458,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				if(newTopEdge>innerHeight-minSize)newTopEdge=innerHeight-minSize; //limit translate to
 				if(newLeftEdge>innerWidth-minSize)newLeftEdge=innerWidth-minSize; //minSize from edge
 				//move via translate3d then update edges
-				if(IE){
+				if(IE9){
 					popStyle.left=newLeftEdge+px;
 					popStyle.top=newTopEdge+px;
 				}else{
@@ -520,7 +535,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			sR=inMap.spatialReference, graphics=[[]], mapGfx=inMap.graphics,offsetStep=0,
 			gOffset=-1, gfxOffset=4, graphHandlers=[],graphList=[],mouseDownY,mouseDownX,
 			charts=[], chartId, chartCount=1, crossCount=0,p1, p2,reqQueue=[],freeToReq=1,
-			updateReady=1, tls, tlin, containerNode,layerIdsFound,
+			updateReady=1, tls, tlin, containerNode,layerIdsFound,exportHandlers=[],
 			lSy=new eS.SimpleLineSymbol(sls,new inD.Color([0,0,0]),2),
 			pSy=new eS.SimpleMarkerSymbol({"size":6,"color":new DJ.Color([0,0,0])}),
 			graylSy=new eS.SimpleLineSymbol(sls,new inD.Color([180,180,180]),2),
@@ -549,7 +564,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				crossCount++;
 			},
 			addSecondPoint=function(point){
-				console.log(chartCount,crossCount);
 				update(point);
 				p2=point;
 				addSymbol(p2,pSy,graphics[crossCount]);
@@ -560,7 +574,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				self.handlers[1]=inD.connect(inMap,"onMouseUp",function(e){
 					if(e.pageX<mouseDownX+10&&e.pageX>mouseDownX-10&&e.pageY<mouseDownY+10&&e.pageY>mouseDownY-10)
 						addFirstPoint(e.mapPoint)});
-				console.log(layerIdsFound);
 				if(!layerIdsFound)
 					findLayerIds(p2,true);
 				else reqWhenAble();
@@ -585,10 +598,8 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			findLayerIds=function(mapPoint,point2){
 				var lids=[],
 				lDef=runIT(mapPoint,true).then(function(v){ //v is an array with an layerIds and one of values
-						console.log(v[0].length)
 						if(v[0].length){
 							offsetStep=v[0].length-1;
-							console.log(v[0])
 							layerIdsFound=1;
 							v[2].layerIds=v[0];
 							chartId=outlines.graphics[v[0][0]].attributes.Project;
@@ -610,13 +621,14 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			},
 			createChart=function(xmax,ymin,chartCount){
 				gOffset+=4; //gOffset gets parent of current graph points, offset to skip axes, labels
-				var charDiv=inD.create("div", null, containerNode),exportLink,
+				var charDiv=dCon.create("div", {height:"350px"}, containerNode),
 					chart = new Chrt(charDiv);
 				chart.addPlot("default", {type: chLin});
 				chart.addAxis("x",{min:-1,max:Math.ceil(xmax),title:"(ft)",titleGap:8,titleOrientation:"away"});
 				chart.addAxis("y", {vertical: true,min:ymin,max:5,title:"(ft)",titleGap:8});
-			    chart.title="<strong>Profile "+chartCount+": "+chartId;
-			    chart.titleFont="normal normal normal 16pt SSP";
+			    chart.title="Profile "+chartCount+": "+chartId;
+			    chart.titleFont="italic bold normal 24px Harabara";
+			    chart.titleFontColor="#99ceff"
 			    chThem.setMarkers({ CIRCLE:        "m-3,0 c0,-5 7,-5 7,0 m-7,0 c0,5 7,5 7,0",
 									SQUARE:        "m-3,-3 l0,7 7,0 0,-7 z",
 									DIAMOND:    "m0,-3 l3,3 -3,3 -3,-3 z",
@@ -626,9 +638,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 									TRIANGLE_INVERTED:"m-3,-3 l3,7 3,-7 z"}); 
 			    chart.setTheme(chThem);
 			    chart.render();
-			    var exLink=DOC.createElement("a");
-			    exLink.textContent="Export";
-			    popContainer.appendChild(exLink);
 
 			    //exportLink=DOC.getElementsByClassName('exportChart')[0];
 			  //  exportLink.textContent="ALALALALALALALALA";
@@ -655,6 +664,9 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					pointsInProfile=M.ceil(ftlen/maxPointsCorrection),
 					chart,
 					chartMin=-30,
+					exLink,
+					dlString="x,y,z\r\n",
+					dlFileName=chartId+'_Profile'+chartCount+'_'+'WebMercator.txt',
 					deferredCount=0,
 					resultCount=0,
 					chartArr=[],
@@ -664,7 +676,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					addSymb=addSymbol,
 					makeReq;
 				freeToReq=0;
-				console.log(chartCount,crossCount);
 				addTextSymbol(chartCount,p1,10*M.cos(0.87+ang),10*M.sin(0.87+ang),graphics[crossCount]);
 
 				if(dx<0){
@@ -677,8 +688,14 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					yng=-maxPointsCorrection*fromWmm*M.sin(ang);
 					xng=0;
 				}
-
 				chart=createChart(ftlen,chartMin,chartCount);
+
+				exLink=DOC.createElement("a");
+			    exLink.textContent="Export";
+			    exLink.download=dlFileName;
+			    if(ie9)exLink.style.color="#FF0000";
+			    containerNode.appendChild(exLink);
+
 			    makeReq=function(start,end){
 			    var gfx=graphics[crossCount],sy=pSy;
 				for(;start<end;start++){
@@ -690,11 +707,11 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 							inPoi=v[0].feature.geometry,
 							xdiff=p1x-inPoi.x,
 							lengthForChart=xng?M.abs(M.round(xdiff/xng)):M.abs(M.round((p1y-inPoi.y)/yng));
-							console.log(inPoi,"add to this v[i].value. xyzArr.x=inPoi.x etc");
 						//build chartArr from result data
 						if(!chartArr[j-1])for(;ii<j;ii++)chartArr[ii]=[]; //build array if not built
 						for (;i<j;i++){ //logic for multiple layers
 							if(v[i].value!=="NoData"){ //for each layer add the corrected x value and 
+								dlString+=M.round(inPoi.x*10)/10+","+M.round(inPoi.y*10)/10+','+M.round(v[i].value*10)/10+"\r\n";
 								chartArr[i].push({x:lengthForChart*maxPointsCorrection, //depth to 
 												  y:M.round(v[i].value*10)/10});       //tenths place
 								if(v[i].value<chartMin)chartMin=(v[i].value-10)>>0; //adjust chart height
@@ -710,22 +727,34 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		    					chart.addAxis("y", {vertical:true,min:chartMin,max:5,title:"(ft)",titleGap:8});
 						    	chart.render();
 						    	requestStep+=15;
-					    	}
-						    if(deferredCount===resultCount){
-						    	console.log("need to fix starts in raster and goes out")
-						    	for(;i<j;i++)chart.addSeries(i, chartArr[i]);
-						    	chart.addAxis("y", {vertical:true,min:chartMin,max:5,title:"(ft)",titleGap:8});
-		    					var tip = new Ttip(chart, "default"); //edits in the module for positioning/height tooltip.js
-		    					var mag = new Mag(chart, "default");
-						    	chart.render();
-						    	console.log(chart);
-						    	addSwellHandlers(graphics[crossCount],gOffset,hovSy);
-						    	if(reqQueue.length)
-						    		execNextReq(reqQueue);
-						    	else freeToReq=1;
-						    }
+					    	} 
 						}
 					}else resultCount++;
+					if(deferredCount===resultCount&&chartArr[0].length>0){
+				    	for(;i<j;i++)chart.addSeries(i, chartArr[i]);
+				    	chart.addAxis("y", {vertical:true,min:chartMin,max:5,title:"(ft)",titleGap:8});
+    					var tip = new Ttip(chart, "default"); //edits in the module for positioning/height tooltip.js
+    					var mag = new Mag(chart, "default");
+    					if(W.Blob){
+    						if(W.navigator.msSaveBlob){
+    							exLink.onclick=function(){
+    								W.navigator.msSaveBlob(new W.Blob([dlString]),dlFileName)};
+    						}else
+    							exLink.href=W.URL.createObjectURL(new W.Blob([dlString]));
+    					}else{
+    						exLink.onclick=function(e){
+    							var noEx=dCon.create("div",{class:"ie9noexport"},exLink);
+    							noEx.textContent="Exporting is only supported in modern browsers."
+    							W.setTimeout(function(){exLink.removeChild(noEx)},1500);
+    						}
+    					}
+				    	chart.render();
+				    	console.log(chart);
+				    	addSwellHandlers(graphics[crossCount],gOffset,hovSy);
+				    	if(reqQueue.length)
+				    		execNextReq(reqQueue);
+				    	else freeToReq=1;
+				    }
 					});
 					curP.x+=xng;
 					curP.y+=yng;
@@ -787,12 +816,13 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				clearGraphHandlers(graphHandlers);
 				var conStyle=con.style,charDivs=con.childNodes,
 				mup=O(W,"mouseup",function(e){
-					var nextWid=conStyle.width.slice(0,-2)-16+"px";
+					var nextWid=conStyle.width.slice(0,-2)-18+"px";
 					conStyle.visibility="hidden";
-					for(var i=0;i<charDivs.length;i++){
+					for(var i=0;i<charDivs.length;i+=2){
 						charDivs[i].style.width=nextWid;
-						charts[i].resize();
+						charts[i/2].resize();
 					}
+
 					conStyle.visibility="visible";
 					reattachGraph(graphList);
 					mup.remove();
@@ -842,6 +872,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				gOffset=-1;
 				chartCount=1;
 				crossCount=0;
+				clearGraphHandlers[graphHandlers];
 				graphList=[];
 				charts.forEach(function(v){v.destroy();});
 				charts=[];
@@ -894,29 +925,35 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		};
 
 		function showPane(){
-			var idPos=irP.offsetHeight+35;
+			var idPos=irP.offsetHeight+35,i=0,j=movers.length;
 			paneIsShowing=1;
 			arro.style.backgroundPosition="-32px -16px";
 			if(ie9){
 				fx.animateProperty({node:idCon,duration:150,properties:{top:idPos}}).play();
-				fx.animateProperty({node:rP,duration:300,easing:easing.quadOut,properties:{marginRight:0}}).play();
-				movers.animateProperty({duration:300,easing:easing.quadOut,properties:{marginRight:285}}).play();
+				for(;i<j;i++){
+				if(movers[i]===rP)
+					fx.animateProperty({node:movers[i],duration:300,easing:easing.quadOut,properties:{marginRight:0}}).play();
+				else fx.animateProperty({node:movers[i],duration:300,easing:easing.quadOut,properties:{marginRight:285}}).play();
+				}
 			}else{
-				for(var i=0,j=movers.length;i<j;i++)
+				for(;i<j;i++)
 					domcl.add(movers[i],"movd");
 			}
 		}
 
 		function hidePane(){
-			var idPos=irP.offsetHeight+35;
+			var idPos=irP.offsetHeight+35,i=0,j=movers.length;
 			paneIsShowing=0;
 			arro.style.backgroundPosition="-96px -16px";
 			if(ie9){
 				fx.animateProperty({node:idCon,duration:150,properties:{top:idPos}}).play();
-				movers.animateProperty({duration:250,easing:easing.quadIn,properties:{marginRight:0}}).play();
-				fx.animateProperty({node:rP,duration:250,easing:easing.quadIn,properties:{marginRight:-285}}).play();
+				for(;i<j;i++){
+				if(movers[i]===rP)
+					fx.animateProperty({node:movers[i],duration:250,easing:easing.quadIn,properties:{marginRight:-285}}).play();
+				else fx.animateProperty({node:movers[i],duration:250,easing:easing.quadIn,properties:{marginRight:0}}).play();
+				}
 			}else{
-				for(var i=0,j=movers.length;i<j;i++)
+				for(;i<j;i++)
 					domcl.remove(movers[i],"movd");
 			}
 		}
@@ -966,10 +1003,12 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			}
 		}
 			sLev=lev;
-			var offs=MAP.extent.getWidth()/MAP.width;
+			var offs=MAP.extent.getWidth()/MAP.width,currTime=timeSlider.getCurrentTimeExtent();
 			offs=offs>10?offs:10;
 			tiout.setMaxAllowableOffset(offs);
 			tiout.refresh();
+			console.log(currTime);
+			processTimeUpdate(currTime);
 		}; 
 
    		zoomEnd=DJ.connect(MAP,"onZoomEnd",zFun);
@@ -1449,7 +1488,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				timeSlider.setThumbIndexes([6*(yr-2010),6*(yr-2010)+6]);
 		});
 
-
 		DJ.connect(outlines, "onMouseOver", function(e) {//map mouseover handler
 		var oid=e.graphic.attributes.OBJECTID;
 		if(!outBounds[oid]){
@@ -1598,7 +1636,8 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			});
 			return gr;
 		})();
-		cGr=function(e){  //grid logic on timechange INEFFICIENT Use hash. Sorting at end is poor
+		processTimeUpdate=function(e){  //grid logic on timechange INEFFICIENT Use hash. Sorting at end is poor
+			console.log(e);
 			var yoSt;	//somewhat convoluted due to sorting/highlighting/checkboxes
 			grid._lastCollection=[];
 			darr.forEach(daGrid,function(v,i){
@@ -1644,7 +1683,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			O.emit(ghd[1],"click",{bubbles:true});
 		};
 
-		DJ.connect(timeSlider, "onTimeExtentChange",cGr); //handle time extent change
+		DJ.connect(timeSlider, "onTimeExtentChange",processTimeUpdate); //handle time extent change
 
 		function whyNoClick(){
 			noClick.style.zIndex="100";
@@ -1832,7 +1871,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				idP.returnGeometry=true;
 				idP.mapExtent=MAP.extent;
 				identifyUp=true;
-
 				runIT=function(geom,query){
 					idP.height = MAP.height;
 					idP.width  = MAP.width;

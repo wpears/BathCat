@@ -14,7 +14,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
    	esri.config.defaults.io.corsDetection=false;
    	esri.config.defaults.io.corsEnabledServers.push("mrsbmapp00642");//enable cors for quicker queries
    	esri.config.defaults.geometryService = new esri.tasks.GeometryService("http://sampleserver3.arcgisonline.com/arcgis/rest/services/Geometry/GeometryServer");
-   	var gdata=[], grid, E=esri,eL=E.layers,url ="http://mrsbmapp00642/ArcGIS/rest/services/BATH/s_out2/MapServer/0?f=json",
+   	var grid, E=esri,eL=E.layers,url ="http://mrsbmapp00642/ArcGIS/rest/services/BATH/s_out2/MapServer/0?f=json",
 		eT=E.tasks,qt=new eT.QueryTask(url),qry= new eT.Query(),loadIt=dom.byId("loadingg"),dots=".",gridLoaded,
    		sr= new E.SpatialReference({wkid:102100}),
 		inExt = new E.geometry.Extent(-13612000,4519000,-13405000,4662600,sr),
@@ -89,8 +89,8 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		rP=dom.byId("rP"),idCon=dom.byId("idCon"),grid,irP=dom.byId("irP"),ilP=dom.byId("ilP"),drP=dijit.byId("rP"),resCon=dom.byId("resCon"), checkTrack=[],
 		measur=dom.byId("measur"),mea=dom.byId("mea"),ident=dom.byId("ident"),identHandle,zoomEnd,grCon,croClick,lPar,tsNode,timeDiv=dom.byId('timeDiv'),paneIsShowing=0,
 		bmaps=dom.byId("bmaps"),shoP=dom.byId("shoP"),outlines,spl=dom.byId("lP_splitter"),clSh,mdLink=dom.byId("mdLink"),currentMeaTool,
-		fex=dom.byId("fex"),imOn=0,maOn=1,zFun,imON,maON,laOff,phys=dom.byId("phys"),imag=dom.byId("imag"),lC,processTimeUpdate,daGrid,sLev=8,geoSer,crossTool={},identTool={},meaTool={},
-		movers=dque(".mov"),tiout,esav,firstHan,rpCon=dom.byId("rpCon"),tiload,outBounds=[],crossOpen=0,crossHandle,runIdent,runMea,lastActive=null,
+		legend,fex=dom.byId("fex"),imOn=0,maOn=1,zFun,imON,maON,laOff,phys=dom.byId("phys"),imag=dom.byId("imag"),lC,processTimeUpdate,projectTime=[],sLev=8,geoSer,crossTool={},identTool={},meaTool={},
+		movers=dque(".mov"),tiout,esav,firstHan,rpCon=dom.byId("rpCon"),tiload,outsideTimeBoundary=[],crossOpen=0,crossHandle,runIdent,runMea,lastActive=null,
 		helpBod=dom.byId("helpbod"),helpPane=dom.byId("helppane"),helpHead=dom.byId("helphead"),foot=dom.byId("foot"),currButt,helpClo=dom.byId("helpclo"),
 		cTex="padding:5px 4px 3px 4px;color:#111;box-shadow: inset 0 1px 2px 0 #857ca5;background-image:-webkit-linear-gradient(top,#a0bce5,#f0f5fd);background-image:-moz-linear-gradient(top,#a0bce5,#f0f5fd);",
 		helpText="<p>Zoom in and out with the <b>Zoom buttons</b> or the mousewheel. Shift and drag on the map to zoom to a selected area.</p><p>Go to the full extent of the data with the <b>Globe</b>.</p><p>Select map or satellite view with the <b>Basemap buttons</b>.</p><p>Browse through projects in the table. Sort the table with the column headers and collapse it with the <b>Slider</b>.</p><p>Turn on a raster by double-clicking it in the table or map, or checking its checkbox in the table.</p><ul>When a raster is displayed:<br/><li>With the <b>Identify</b> tool, click to display NAVD88 elevation at any point.</li><li>Draw a cross-section graph with the <b>Profile tool</b>. Click the start and end points of the line to generate a graph in a draggable window. Hover over points to display elevation.</li></ul><p>Use the <b>Measure tool</b> to calculate distance, area, or geographic location.</p><p>Project information and Identify results are displayed in the right pane. Toggle this pane with the <b>Arrow button</b>.</p><p>Use the <b>Time slider</b> to filter the display of features by date. Drag the start and end thumbs or click a year to only display data from that year.</p>",
@@ -130,34 +130,38 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				showPane();
 		}
 		};
-		(function(){ //ALL KINDS OF SLOP, FIX ME
-		var i=0,fsFeats=fs.features,j=fsFeats.length;
-		for(;i<j;i++){
-			var intData={},gpr=fsFeats[i].attributes;
-			intData["__Date"]=gpr["Date"];	
-			var dte=new Date(gpr["Date"]),
-			dst=dte.toUTCString();
-			dst=dst.charAt(6)===" "?dst.substring(0,5)+"0"+dst.substring(5):dst; //ieFix
-			intData["Date"]=dst.slice(12,16)+"-"+((1+dte.getUTCMonth())<10?"0"+(1+dte.getUTCMonth()):(1+dte.getUTCMonth()))+"-"+dst.slice(5,7);
-			intData["Project"]=(gpr["Project"].length<6?"Soil Sed. "+gpr.Project:gpr.Project);
-			intData["OBJECTID"]=gpr["OBJECTID"];
-			gdata.push(intData);
-		}
-	})();
-		var adGr= dec([Grid,Keyb,ColRe]);
-		grid= new adGr({
-			columns:{
-				Project:{label:"Project"},
-				Date:{label:"Date"},
-				OBJECTID:{label:"OBJECTID"},
-				Editor:edi({field: "Image",sortable:false}, "checkbox"),
-				__Date:{label:"_Date"}
-			},cellNavigation:0
-		},"ilP");
-		gridLoaded=1;
-		grid.renderArray(gdata); //create grid
-	//	gdata=null;
-		lC=copColl(grid);
+		(function(){
+			var fsFeats=fs.features,i=0,j=fsFeats.length,gdata=[],
+				intData,featureAttr,dte,dst,
+				adGr= dec([Grid,Keyb,ColRe]);
+			grid= new adGr({columns:{
+								Project:{label:"Project"},
+								Date:{label:"Date"},
+								OBJECTID:{label:"OBJECTID"},
+								Editor:edi({field: "Image",sortable:false}, "checkbox"),
+								__Date:{label:"_Date"}
+								},
+							cellNavigation:0
+							},
+							"ilP");
+			for(;i<j;i++){
+				intData={};
+				featureAttr=fsFeats[i].attributes;
+				projectTime[i]=featureAttr["Date"];	
+				dte=new Date(featureAttr["Date"]);
+				dst=dte.toUTCString();
+				dst=dst.charAt(6)===" "?dst.substring(0,5)+"0"+dst.substring(5):dst; //ieFix
+				intData["__Date"]=featureAttr["Date"];
+				intData["Date"]=dst.slice(12,16)+"-"+((1+dte.getUTCMonth())<10?"0"+(1+dte.getUTCMonth()):(1+dte.getUTCMonth()))+"-"+dst.slice(5,7);
+				intData["Project"]=(featureAttr["Project"].length<6?"Soil Sed. "+featureAttr.Project:featureAttr.Project);
+				intData["OBJECTID"]=featureAttr["OBJECTID"];
+				gdata.push(intData);
+			}
+			gridLoaded=1;
+			grid.renderArray(gdata);
+			gdata=null;
+			lC=copColl(grid);
+		})();
 		scal= new sB({map:MAP});
 		scaleBarLabels=dque('.esriScalebarLabel');
 		console.log("query completes");
@@ -216,9 +220,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
     	rpCon.style.cssText="width:100%;height:"+(rP.scrollHeight-60)+"px;";
     	helpPane.style.opacity=0;
 
-   	DJ.connect(tiout,"onUpdateEnd",function(e,f,g,h){ //called on every zoom (due to refresh). allows feature updating
-   		creCov(tiout.graphics);							//setup an onupdatestart that sets the visibility to false to avoid _surface typeerrors if they come
-    	});
    		ie9=(DOC.all&&DOC.addEventListener&&!window.atob)?true:false;
 		lph=dom.byId("lP-header");
 		cHead=dom.byId("ilP-header");
@@ -272,6 +273,138 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		linArr[linArr.length-1].style.cssText="text-shadow:1px 1px 1px #fff;color:rgb(0,0,0);";
 		phys.style.cssText=cTex;
 
+
+/****************CURRENT WORK******************/
+
+
+
+		processTimeUpdate=function(e){  //grid logic on timechange INEFFICIENT Use hash. Sorting at end is poor
+			console.log("processing timeupdate",e);
+			var yoSt,startTime=e.startTime,endTime=e.endTime;//somewhat convoluted due to sorting/highlighting/checkboxes
+			console.log(grid._lastCollection,"starting last collection");
+			grid._lastCollection=[];
+			darr.forEach(projectTime,function(v,i){ //every feature, checking against time boundary
+				var currGraphic=oidToGraphic(i+1);
+				if(v<startTime||v>endTime){
+					outsideTimeBoundary[i+1]=true; //if outside boundary, wipe outline and mark as outside
+					currGraphic.setSymbol(blank);
+				}else{								
+					outsideTimeBoundary[i+1]=null;
+					caCh(currGraphic,null,"");
+					grid._lastCollection.push(lC[i]);  
+				}                                               					
+			});
+			var aGrid=grid.bodyNode.firstChild.childNodes; //grab the showing grid nodes
+
+			darr.forEach(aGrid,function(v,i){
+				var par=v.firstChild,ieFix=par.childNodes[2]?par:par.firstChild,oid=ieFix.childNodes[2].innerHTML-1,
+				inp=ieFix.childNodes[3].firstChild;
+				if(inp.checked){
+					O.emit(inp, "change",{bubbles:true});  //save the check and remove the raster
+					checkTrack[oid]=true;
+				}
+			});
+				grStore=null;										 //wipe stores
+				rowStore=null;					//leave currentOID incase no selections made
+		//		grid.refresh();                                       //remove grid and rerender
+				grid.renderArray(grid._lastCollection); //SORT THIS BY DATE FIRST
+
+//apply checks 
+			var bGrid=grid.bodyNode.firstChild.childNodes;
+
+			darr.forEach(bGrid,function(v,i){
+				var par=v.firstChild,ieFix=par.childNodes[2]?par:par.firstChild,yO=ieFix.childNodes[2].innerHTML-1,
+				inp=ieFix.childNodes[3].firstChild;
+				if(checkTrack[yO]&&!inp.checked){
+					O.emit(inp, "change",{bubbles:true}); //this should be batch.. need to fix my data
+					inp.checked=true; 
+					checkTrack[yO]=true; //flip it back due to input:change handler
+				}	
+			});
+			O.emit(ghd[1],"click",{bubbles:true}); //sort.. this sucks. sort by date instead
+			O.emit(ghd[1],"click",{bubbles:true});
+		};
+
+		O(timeDiv, ".dijitRuleLabelH:mouseover",function(e){
+			var ets=e.target.style,col=ets.color;
+			ets.backgroundColor=col;
+			ets.color="#fff";
+		});
+
+		O(timeDiv, ".dijitRuleLabelH:mouseout",function(e){
+			var ets=e.target.style,back=ets.backgroundColor;
+			ets.color=back;
+			ets.backgroundColor="rgba(0,0,0,0)";
+		});
+
+		O(timeDiv, ".dijitRuleLabelH:mousedown", function(e){  //timeslider quicklinks handler
+			var yr=e.target.innerHTML;
+			if(yr.charAt(0)==="A")
+				timeSlider.setThumbIndexes([0,tCount]);
+			else
+				timeSlider.setThumbIndexes([6*(yr-2010),6*(yr-2010)+6]);
+		});
+
+		DJ.connect(timeSlider, "onTimeExtentChange",processTimeUpdate); //handle time extent change
+
+		DJ.connect(tiout,"onUpdateEnd",function(e,f,g,h){ //called on every zoom (due to refresh). allows feature updating
+   		console.log("crecoving");
+   		creCov(tiout.graphics);							//setup an onupdatestart that sets the visibility to false to avoid _surface typeerrors if they come
+    	console.log("crecoved")
+    	});
+
+		imON=function(){										//turn on imagery
+			maOn=0;
+			imOn=1;
+			liZ.setVisibility(true);                     //there is crud here. it is worked around at 1071 and 1097
+			liO.setVisibility(false);					//the layers aren't defined
+			phys.style.cssText="";
+			imag.style.cssText=cTex;
+			setLinkColor();
+			covZ();
+		};
+
+		maON=function(){
+			maOn=1;                                            //turn on he map
+			imOn=0;
+			liO.setVisibility(true);
+			liZ.setVisibility(false);
+			imag.style.cssText="";
+			phys.style.cssText=cTex;
+				setLinkColor();
+			covZ();
+		};
+		laOff=function(){
+			maOn=0;
+			imOn=0;                                          //turn off both
+			liO.setVisibility(false);
+			liZ.setVisibility(false);
+			imag.style.cssText="";
+			phys.style.cssText="";
+		};
+
+		zFun= function(ext,zF,anc,lev){	//logic on ZoomEnd	
+			console.log(MAP.getScale());
+			if(liZ&&liO){
+			if(lev>=15&&sLev<15)
+				imON();
+			else if(lev<15&&sLev>=15)
+				maON();
+			else if(!liO.visible&&!liZ.visible){
+				if(lev>=15)
+					imON();
+				else
+					maON();
+			}
+		}
+			sLev=lev;
+			var offs=MAP.extent.getWidth()/MAP.width;
+			offs=offs>10?offs:10;
+			tiout.setMaxAllowableOffset(offs);
+			tiout.refresh();
+		}; 
+		asp.after(tiout,"refresh",function(){console.log("refreshed")})
+   		zoomEnd=DJ.connect(MAP,"onZoomEnd",zFun);
 	/*	DJ.connect(MAP,"onMouseDragEnd",function(e){
 			var currImg=dque("#mapDiv_layer0 img")[0];
 			console.log(e,currImg);
@@ -279,8 +412,8 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				O(currImg,"click",function(e){console.log(e,"currImg")});
 			}
 	Looks like I'd need to ax click blockers..?
-		})*/
-
+	})*/
+/********Popup and cross*********************************************/
 		Popup=function(){
 			var popupHandlers=[],popUp,popStyle,popHeader,headStyle,popContainer,conStyle,
 				popSplitterV,splitStyleV,popSplitterH,splitStyleH,popClose,self,
@@ -310,12 +443,9 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					if(!W.requestAnimationFrame)(function(W){var eaf='equestAnimationFrame',raf='r'+eaf,Raf='R'+eaf;W[raf]=W['webkit'+Raf]||W['moz'+Raf]||W[raf]||(function(callback){setTimeout(callback,16)})})(W);
 				}
 				if(ie9){
-					console.log("ie9");
 					popStyle.left=edges.left+px;
 					popStyle.top=edges.top+px;
 				}else{
-					console.log("not ie9");
-					console.log(popUp.style.transform);
 					popStyle["transform"]="translate3d("+edges.left+"px,"+edges.top+"px,0)";
 					popStyle["-webkit-transform"]="translate3d("+edges.left+"px,"+edges.top+"px,0)";
 				}	
@@ -337,16 +467,11 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				if(!popupHandlers[0]){
 					popupHandlers=[
 					O(popClose,"mousedown",function(){
-						crossTool.stop();
-						if(domcl.contains(cros,"idle")){
-							domcl.remove(cros,"idle");
-							outlines.disableMouseEvents();
-					    }else if(domcl.contains(cros,"activeTool"))
-							domcl.remove(cros,"activeTool");
+						toolWipe(crossTool,cros);
 					}),
 					O(popHeader,"mousedown",move),             //e,dim,pageDim,max,otherSplitStyle,edgeTracker,oppositeEdge
-					O(popSplitterV,"mousedown",function(e){self.resize(e,"width","pageX",innerWidth,splitStyleH,edges.left,"right")}),
-					O(popSplitterH,"mousedown",function(e){self.resize(e,"height","pageY",innerHeight,splitStyleV,edges.top,"bottom")})
+					O(popSplitterV,"mousedown",function(e){self.resize(e,"width","pageX",innerWidth,edges.left,"right")}),
+					O(popSplitterH,"mousedown",function(e){self.resize(e,"height","pageY",innerHeight,edges.top,"bottom")})
 					];
 				}
 			},
@@ -446,12 +571,10 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				if(popWidth!==nWid&&nWid>=minSize){    //actual width shrinking/growing
 					popStyle.width=nWid+px;
 					conStyle.width=nWid-7+px;
-					splitStyleH.width=nWid-2+px;
 					popWidth=nWid;
 				}
 				if(popHeight!==nHei&&nHei>=minSize){	//actual height shrinking/growing limited to 120
 					popStyle.height=nHei+px;
-					splitStyleV.height=nHei-2+px;
 					conStyle.height=nHei-34+px;
 					popHeight=nHei;	
 				}
@@ -473,7 +596,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			}
 
 			},
-			resize=function(e,dim,pageDim,max,otherSplitStyle,edgeTracker,oppositeEdge){
+			resize=function(e,dim,pageDim,max,edgeTracker,oppositeEdge){
 				BS["-webkit-user-select"]="none";
 				BS["-moz-user-select"]="none";	
 				var popconDiff=(dim==="width"?7:34),resizeReady=1,min=120,
@@ -494,7 +617,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 							if(newDim>=120){
 								popStyle[dim]=newDim+px;
 								conStyle[dim]=newDim-popconDiff+px;
-								otherSplitStyle[dim]=newDim-2+px;
 								dim==="width"?popWidth=newDim:popHeight=newDim;
 								edges[oppositeEdge]=moveLocation;
 							}
@@ -907,7 +1029,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 						inp=rowStore.firstChild.childNodes[3].firstChild;
 					else
 						inp=inp=rowStore.firstChild.firstChild.childNodes[3].firstChild;
-					caCh(otg(grStore),rowStore,"");
+					caCh(oidToGraphic(grStore),rowStore,"");
 					if(inp.checked==true){
 						O.emit(inp,"change",{bubbles:true});
 						inp.checked=false;
@@ -924,12 +1046,14 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			}
 		};
 
+		console.log("animate idCon over 150 seconds.. = irp.offsetHeight+35... but work the px")
+
 		function showPane(){
-			var idPos=irP.offsetHeight+35,i=0,j=movers.length;
+			console.log("showPane");
+			var i=0,j=movers.length;
 			paneIsShowing=1;
 			arro.style.backgroundPosition="-32px -16px";
 			if(ie9){
-				fx.animateProperty({node:idCon,duration:150,properties:{top:idPos}}).play();
 				for(;i<j;i++){
 				if(movers[i]===rP)
 					fx.animateProperty({node:movers[i],duration:300,easing:easing.quadOut,properties:{marginRight:0}}).play();
@@ -942,11 +1066,10 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		}
 
 		function hidePane(){
-			var idPos=irP.offsetHeight+35,i=0,j=movers.length;
+			var i=0,j=movers.length;
 			paneIsShowing=0;
 			arro.style.backgroundPosition="-96px -16px";
 			if(ie9){
-				fx.animateProperty({node:idCon,duration:150,properties:{top:idPos}}).play();
 				for(;i<j;i++){
 				if(movers[i]===rP)
 					fx.animateProperty({node:movers[i],duration:250,easing:easing.quadIn,properties:{marginRight:-285}}).play();
@@ -958,60 +1081,27 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			}
 		}
 
-		imON=function(){										//turn on imagery
-			maOn=0;
-			imOn=1;
-			liZ.setVisibility(true);                     //there is crud here. it is worked around at 1071 and 1097
-			liO.setVisibility(false);					//the layers aren't defined
-			phys.style.cssText="";
-			imag.style.cssText=cTex;
-			setLinkColor();
-			covZ();
-		};
+		legend=function(){
+			var leg=dom.byId("legend");
 
-		maON=function(){
-			maOn=1;                                            //turn on he map
-			imOn=0;
-			liO.setVisibility(true);
-			liZ.setVisibility(false);
-			imag.style.cssText="";
-			phys.style.cssText=cTex;
-				setLinkColor();
-			covZ();
-		};
-		laOff=function(){
-			maOn=0;
-			imOn=0;                                          //turn off both
-			liO.setVisibility(false);
-			liZ.setVisibility(false);
-			imag.style.cssText="";
-			phys.style.cssText="";
-		};
-
-		zFun= function(ext,zF,anc,lev){	//logic on ZoomEnd	
-			console.log(MAP.getScale());
-			if(liZ&&liO){
-			if(lev>=15&&sLev<15)
-				imON();
-			else if(lev<15&&sLev>=15)
-				maON();
-			else if(!liO.visible&&!liZ.visible){
-				if(lev>=15)
-					imON();
-				else
-					maON();
-			}
+		function showLegend(){
+			if(ie9){
+				fx.animateProperty({node:leg,duration:200,properties:{right:30}}).play();
+			}else
+			domcl.replace(leg,"movd","legend")
 		}
-			sLev=lev;
-			var offs=MAP.extent.getWidth()/MAP.width,currTime=timeSlider.getCurrentTimeExtent();
-			offs=offs>10?offs:10;
-			tiout.setMaxAllowableOffset(offs);
-			tiout.refresh();
-			console.log(currTime);
-			processTimeUpdate(currTime);
-		}; 
-
-   		zoomEnd=DJ.connect(MAP,"onZoomEnd",zFun);
+		function hideLegend(){
+			if(ie9){
+				fx.animateProperty({node:leg,duration:200,properties:{right:-255}}).play();
+			}else
+			domcl.replace(leg,"legend","movd");
+		}
+		return{
+			node:leg,
+			show:showLegend,
+			hide:hideLegend
+		}
+	}();
 
    		O(helpBod, "mouseover", function(e){
    			if(e.target.tagName==="B"){
@@ -1085,7 +1175,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		   				break;
    				}
    			}
-   		});
+   		});//HELP CRUD
 
    		O(dlLink,"mouseover",function(e){  //remove spatial reference info from files
    			var pro=(irP.firstChild.textContent).split(" ").join(""),
@@ -1130,7 +1220,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
    			helpPane.style.zIndex="-1";
    		}
 
-   		O(helpClo,"click",closePane);
+   		O(helpClo,"mousedown",closePane);
 
 
 		O(fex,"mousedown",function(e){                  //go to initial extent
@@ -1191,7 +1281,14 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			fx.animateProperty({node:idCon,duration:150,properties:{top:irP.offsetHeight+35}}).play();
 
 		});
-
+		function toolWipe(tool,node){
+				tool.stop();
+				if(domcl.contains(node,"idle")){
+					domcl.remove(node,"idle");
+					outlines.disableMouseEvents(); //because another tool is still alive
+				}else if(domcl.contains(node,"activeTool"))
+					domcl.remove(node,"activeTool");
+		}
 		function toolToggle(e,tool){
 			var active=dque(".activeTool")[0],targ=e.target;
 			if(targ===active){
@@ -1212,7 +1309,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				}
 				lastActive={node:targ,tool:tool};
 			}
-		}
+		}//ToolToggle
 		meaTool={
 			init:function (e){           //start the measurement tool lazily when first clicked, less to load at once
 				measur.style.display="block";
@@ -1267,7 +1364,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			var mg=MAP.graphics;
 			for(var i=0,j=arr.length;i<j;i++)
 						mg.remove(arr[i]);
-		}
+		}//meaTool
 
 
 		identTool=function(){
@@ -1287,7 +1384,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				self.graphics[self.graphics.length-1].setSymbol(graySy);
 				self.labels[self.labels.length-1].setSymbol(grayText);
 			}	
-			function renderIdent(idArr){
+			function renderIdent(idArr,idCount){
 				if(idArr){
 					resCon.innerHTML=resCon.innerHTML+"<p></p>";
 					if(idArr[0][0]){
@@ -1306,8 +1403,9 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			}
 			function clickCallback(point){
 				addIdentGraphic(point);
+				var identCount=idCount;
 				runIT(point,true).then(function(idArr){
-					renderIdent(idArr);
+					renderIdent(idArr,identCount);
 				});
 			}
 
@@ -1371,9 +1469,10 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				identTool.init(e);
 			}else
 				whyNoClick();
-		});
+		}); //ident tool
 
 		asp.after(grid,"set",function(gr){     //maintain state after grid update INEFFICIENT! USE HASH
+			console.log("set twice")
 			var inGrid=gr.bodyNode.firstChild.childNodes;
 			for(var i=0;i<inGrid.length;i++){                  
 				var chil=inGrid[i].firstChild,ieF=chil.childNodes[3]?chil:chil.firstChild,inp=ieF.childNodes[3].firstChild,oid=+ieF.childNodes[2].innerHTML;
@@ -1390,7 +1489,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 
 
 		grid.on(".dgrid-cell:mouseover",function(e){                       //grid mouseover handler
-			var thGr=otg(getOBJECTID(e));
+			var thGr=oidToGraphic(getOBJECTID(e));
 			if(thGr){
 				erow=grid.row(e);
 				if(erow)
@@ -1404,7 +1503,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			if(rowStore==erow.element){
 				return;
 			}else{
-				var thGr=otg(getOBJECTID(e));
+				var thGr=oidToGraphic(getOBJECTID(e));
 				if(thGr)
 					caCh(thGr,erow.element,"");
 			}
@@ -1427,7 +1526,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				previousRecentTarget=et;
 				mouseDownTimeout=WIN.setTimeout(function(){previousRecentTarget=null;},400);
 			var oid=getOBJECTID(e),
-				grPr=otg(oid),
+				grPr=oidToGraphic(oid),
 				eg=outlines.graphics[oid-1];
 				erow=grid.row(e);
 			if(grStore){
@@ -1435,7 +1534,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					clSh();
 					return;
 				}else{
-					caCh(otg(grStore),rowStore,"");
+					caCh(oidToGraphic(grStore),rowStore,"");
 					infoFunc(eg.attributes);
 				}
 			}else{
@@ -1452,11 +1551,10 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			var iSt=e.target, inpz,oid=getOBJECTID(e);
 			if(oid){
 				var eg=outlines.graphics[oid-1],
-					gOe=otg(oid);
+					gOe=oidToGraphic(oid);
 				grStore=oid;
 				rowStore=erow.element;
 				currentOID=oid;
-				caCh(gOe,rowStore,"hi");
 				if(iSt.localName!="div"){
 					iSt.localName=="input"?inpz=iSt:inpz=iSt.parentNode.childNodes[3].childNodes[0];
 						MAP.setExtent(gOe._extent.expand(1.3));
@@ -1467,32 +1565,13 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				}
 			}
 		});
-	
-		O(timeDiv, ".dijitRuleLabelH:mouseover",function(e){
-			var ets=e.target.style,col=ets.color;
-			ets.backgroundColor=col;
-			ets.color="#fff";
-		});
 
-		O(timeDiv, ".dijitRuleLabelH:mouseout",function(e){
-			var ets=e.target.style,back=ets.backgroundColor;
-			ets.color=back;
-			ets.backgroundColor="rgba(0,0,0,0)";
-		});
-
-		O(timeDiv, ".dijitRuleLabelH:mousedown", function(e){  //timeslider quicklinks handler
-			var yr=e.target.innerHTML;
-			if(yr.charAt(0)==="A")
-				timeSlider.setThumbIndexes([0,tCount]);
-			else
-				timeSlider.setThumbIndexes([6*(yr-2010),6*(yr-2010)+6]);
-		});
 
 		DJ.connect(outlines, "onMouseOver", function(e) {//map mouseover handler
 		var oid=e.graphic.attributes.OBJECTID;
-		if(!outBounds[oid]){
+		if(!outsideTimeBoundary[oid]){
 				identOff?MAP.setMapCursor("pointer"):MAP.setMapCursor("help");
-				var teg=otg(oid),er=getGrid(e),scroT=dScroll.scrollTop;
+				var teg=oidToGraphic(oid),er=getGrid(e),scroT=dScroll.scrollTop;
 				if(teg&&grStore!=oid){
 					caCh(teg,er,"hi");
 					if(er.offsetTop>dScroll.clientHeight+scroT||er.offsetTop<scroT)
@@ -1504,9 +1583,9 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 
 		DJ.connect(outlines,"onMouseOut", function(e){		//map mouseout handler
 			var oid=e.graphic.attributes.OBJECTID;
-			if(!outBounds[oid]){												
+			if(!outsideTimeBoundary[oid]){												
 			identOff?MAP.setMapCursor("default"):MAP.setMapCursor("help");
-				var teg=otg(oid);
+				var teg=oidToGraphic(oid);
 					if(grStore==oid){
 						return;
 					}else{
@@ -1522,14 +1601,14 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				window.clearTimeout(mouseDownTimeout);
 				previousRecentTarget=oid;
 				mouseDownTimeout=WIN.setTimeout(function(){previousRecentTarget=null;},400);
-				if(!outBounds[oid]){
-					var teg=otg(oid),er=getGrid(e);
+				if(!outsideTimeBoundary[oid]){
+					var teg=oidToGraphic(oid),er=getGrid(e);
 					if(grStore&&MAP.getScale()>73000){ //don't clear when zoomed in
 						if(grStore===oid){
 							clSh();
 							return;
 						}else{
-							caCh(otg(grStore),rowStore,""); //clear stored graphic
+							caCh(oidToGraphic(grStore),rowStore,""); //clear stored graphic
 							infoFunc(ega);     //this graphic is already highlighted by the mouseover
 						}
 					}else{
@@ -1547,7 +1626,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 
 		DJ.connect(outlines, "onDblClick", function(e){						//map dblclick handler
 			var inpz,ega=e.graphic.attributes,oid=ega.OBJECTID,er=getGrid(e);
-			if(!outBounds[oid]){
+			if(!outsideTimeBoundary[oid]){
 			grStore=oid;                                    
 			rowStore=er;
 			currentOID=oid;
@@ -1562,23 +1641,24 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		});
 
 		O(imHead,"mousedown",function(e){      						//mass image display/clear
-			var inpArr=dque(".field-Image",ilP), somChk=0,dL=dynamicLayer;
+			var inpArr=dque(".dgrid-input",ilP), someChecked=0,dL=dynamicLayer;
 				darr.forEach(inpArr, function(v){
-					if(v.firstChild.checked){
-						somChk=1;
-						v.firstChild.checked=false;
+					if(v.checked){
+						someChecked=1;
+						v.checked=false;
 					}
 				});
-			if(somChk){
+			if(someChecked){
 				checkTrack=[];
 				dL.setVisibleLayers(["-1"]);
 				dL.suspend();
+				legend.hide();
 			}	
-			if(!somChk){
+			if(!someChecked){
 				if(dL.suspended)
 					dL.resume();
-				darr.forEach(inpArr,function(v,i){
-					v.firstChild.checked=true;
+				darr.forEach(inpArr,function(v,i){//check them all
+					v.checked=true;
 					checkTrack[i]=true;
 				});
 				dL.setVisibleLayers(["-1",13, 1, 11, 15, 0, 3, 77, 80, 83, 86, 26, 97, 91, 88, 74, 103, 71, 66, 65, 54, 44, 34, 32, 29, 100, 6, 5, 2, 12, 61, 62, 79, 53, 82, 76, 43, 25, 85, 90, 93, 96, 33, 99, 31, 28, 73, 102, 4, 14, 7,17, 55, 45, 46, 37, 56, 18, 78, 75, 95, 98, 92, 87, 70, 72, 67, 94, 69, 47, 57, 19, 81, 84, 89, 101, 35, 36, 30, 27, 8, 106, 20, 58, 38, 48, 10, 9, 16, 21, 59, 49, 39, 104, 40, 22, 50, 60, 63, 23, 51, 41, 52, 24, 42, 64, 68, 107, 105]);
@@ -1594,12 +1674,16 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			if(!MAP.layerIds[2]){ //if the raster has not been added, add it.
 				dynamicLayer.setVisibleLayers(["-1"]);
 				MAP.addLayer(dynamicLayer);
+				legend.node.src="images/leg_img.png"
+				legend.show();
 			}
 			
 			var dL=dynamicLayer,dLvis=dL.visibleLayers,i=dLvis.length,spli,
 			dLoid=+e.target.parentNode.parentNode.childNodes[2].innerHTML-1; ///get oid-1 to set layer visibility
-			if(dL.suspended) 												//attempt to prevent layer drawing might be a failure
+			if(dL.suspended){												//attempt to prevent layer drawing might be a failure
 				dL.resume();
+				legend.show();
+			}
 			checkTrack[dLoid]===true?checkTrack[dLoid]=null:checkTrack[dLoid]=true; //if some array index is true,set it to null/ otherwise set it to true
 			while(i--){
 				if(dLoid==dLvis[i]){
@@ -1612,6 +1696,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			dL.setVisibleLayers(dLvis); //and set the visibile layers
 			if(dLvis.length==1){
 						dL.suspend();
+						legend.hide();
 					}
 			if(dLvis.length>1){//working identify logic below
 				domcl.replace(ident,"clickable","unclick");
@@ -1626,64 +1711,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			}
 		});
 
-		daGrid=(function(){	//make a copy of the initial grid for use in grid logic,cloning the domnodes
-			var gr=[],j=grid.bodyNode.firstChild.childNodes;
-			darr.forEach(j,function(v,i){
-				var par=v.firstChild,ieFix=par.childNodes[2]?par:par.firstChild,yO=ieFix.childNodes[2].innerHTML-1,
-				vD=ieFix.childNodes[4];
-				gr[yO]=+vD.innerHTML;
-				outBounds[i+1]=null;
-			});
-			return gr;
-		})();
-		processTimeUpdate=function(e){  //grid logic on timechange INEFFICIENT Use hash. Sorting at end is poor
-			console.log(e);
-			var yoSt;	//somewhat convoluted due to sorting/highlighting/checkboxes
-			grid._lastCollection=[];
-			darr.forEach(daGrid,function(v,i){
-				var yOyO=otg(i+1);
-				if(v<e.startTime||v>e.endTime){ //prepare to cut
-					outBounds[i+1]=true;
-					yOyO.setSymbol(blank);
-				}else{								//prepare to rerender	
-					outBounds[i+1]=null;
-					caCh(yOyO,null,"");
-					grid._lastCollection.push(lC[i]);  
-				}                                               					
-			});
-			if(grid.bodyNode.firstChild.childNodes[0])
-				var aGrid=grid.bodyNode.firstChild.childNodes;
-
-			darr.forEach(aGrid,function(v,i){
-				var par=v.firstChild,ieFix=par.childNodes[2]?par:par.firstChild,yO=ieFix.childNodes[2].innerHTML-1,
-				inp=ieFix.childNodes[3].firstChild;
-				if(inp.checked){
-					O.emit(inp, "change",{bubbles:true});  //save the check and remove the raster
-					checkTrack[yO]=true;
-				}
-			});
-				grStore=null;										 //wipe stores
-				rowStore=null;					//leave currentOID incase no selections made
-				grid.refresh();                                       //remove grid and rerender
-				grid.renderArray(grid._lastCollection);
-
-			if(grid.bodyNode.firstChild.childNodes[0])
-				var bGrid=grid.bodyNode.firstChild.childNodes;
-
-			darr.forEach(bGrid,function(v,i){
-				var par=v.firstChild,ieFix=par.childNodes[2]?par:par.firstChild,yO=ieFix.childNodes[2].innerHTML-1,
-				inp=ieFix.childNodes[3].firstChild;
-				if(checkTrack[yO]&&!inp.checked){
-					O.emit(inp, "change",{bubbles:true});
-					inp.checked=true; 
-					checkTrack[yO]=true; //flip it back due to input:change handler
-				}	
-			});
-			O.emit(ghd[1],"click",{bubbles:true}); //sort
-			O.emit(ghd[1],"click",{bubbles:true});
-		};
-
-		DJ.connect(timeSlider, "onTimeExtentChange",processTimeUpdate); //handle time extent change
 
 		function whyNoClick(){
 			noClick.style.zIndex="100";
@@ -1702,6 +1729,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		}
 
 		function creCov(targ,Z){      //apply highlighting logic to an array
+			console.log("Applying highlighting logic with crecov");
 			if(Z){
 				darr.forEach(targ,function(val,ind){
 					if (val.swi&&val.swi.attributes.OBJECTID==grStore){
@@ -1723,7 +1751,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			var colArr=[],curEnt;
 			for (var i=0;i<grid._lastCollection.length;i++){
 				curEnt=grid._lastCollection[i];
-				colArr.push({swi:otg(curEnt.OBJECTID),gr:getGrid(curEnt.OBJECTID)}); //seems like I'm accessing stale grid
+				colArr.push({swi:oidToGraphic(curEnt.OBJECTID),gr:getGrid(curEnt.OBJECTID)}); //seems like I'm accessing stale grid
 			}
 			creCov(colArr,true);
 		}
@@ -1776,7 +1804,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			
 
 		}
-		function otg(oid){
+		function oidToGraphic(oid){
 			return tiout.graphics[oid-1];
 		}
 
@@ -1841,15 +1869,14 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				return def.then(function(v){
 					var output=[[],[],pA],lids=[],inpArr;
 					if(v.length>0){
-					lids=[],inpArr=dque(".field-Image",ilP);
+					lids=[],inpArr=dque(".dgrid-input",ilP);
 					for (var i=0,j=v.length;i<j;i++){ //logic for multiple layers
 						lids[i]={lI:v[i].layerId,v:v[i]};//array of objects with OBJECTID and it's ident data
 					}
 					darr.forEach(inpArr,function(val){
-						var chlo=val.firstChild;
-						if(chlo.checked){
+						if(val.checked){
 							for(var i=0,j=lids.length;i<j;i++){
-								if(+val.previousSibling.innerHTML==lids[i].lI+1){
+								if(+val.parentNode.previousSibling.innerHTML==lids[i].lI+1){
 									output[0].push(lids[i].lI);
 									output[1].push(lids[i].v);
 								}
@@ -1862,7 +1889,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		}
 		function initId(e){ //id logic... cross section tool feeds here as well.. this gets set up lazily also
 			require(["esri/tasks/identify"],function(ide){
-				var lotsOfLayers=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106],
+				var lotsOfLayers=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107],
 				idT= new eT.IdentifyTask("http://mrsbmapp00642/ArcGIS/rest/services/BATH/Web_Rr/MapServer"),
 				idP= new eT.IdentifyParameters();
 				idP.layerOption=eT.IdentifyParameters.LAYER_OPTION_VISIBLE;

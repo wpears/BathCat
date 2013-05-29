@@ -34,7 +34,7 @@
 .dijitRuleLabelH{
   padding:0 4px 0 3px;
   cursor:pointer;
-  border-radius:4px;
+  border-radius:2px;
   position:absolute;
   font-size:15px;
   font-weight:900;
@@ -46,8 +46,8 @@
 }
 
 .esriScalebar{
-  margin-left:10px;
-  margin-bottom:-10px;
+  margin-left:-5px;
+  margin-bottom:-5px;
 }
 .esriScalebarLabel{
   margin-top:-28px;
@@ -405,7 +405,7 @@ user-select: text;
   -moz-transition:none;
    transition:none;
   -o-transition:none;
-  padding-bottom:15px;
+  padding-bottom:75px;
 }
 #resCon>p{
 	display:block;
@@ -484,7 +484,7 @@ user-select: text;
   background-color:rgb(210,225,249);
   background-image:-webkit-linear-gradient(top, rgba(243,243,243,0.8), rgba(210,225,249,0.8));
   background-image:-moz-linear-gradient(top, rgba(243,243,243,0.8), rgba(210,225,249,0.8));
-  border-radius:4px;
+  border-radius:2px;
    box-shadow: 0px 1px 1px 0 #333,
              inset 0px 1px 1px 1px #eee;
 }
@@ -515,10 +515,29 @@ background-image:-moz-linear-gradient(top, rgba(243,243,243,1), rgba(210,225,249
 float:left;
 margin-left:2px;
 }
-
 #mapDiv_zoom_slider{
   left:5px;
   top:5px;
+}
+.legend{
+  transform:translate3d(0,0,0);
+ -webkit-transform:translate3d(0,0,0);
+}
+#legend{
+  background-image:url(images/bg.png);
+  z-index:300;
+  position:absolute;
+  width:240px;
+  height:55px;
+  bottom:70px;
+  right:-255px;
+  border-radius:4px;
+  box-shadow: 1px 1px 3px 0 #a5b6e0,
+              0   0   1px 1px #a5b6e0;
+ -webkit-transition: -webkit-transform 0.2s ease-out;
+ -moz-transition:    transform 0.2s ease-out;
+  transition:        transform 0.2s ease-out;
+ -o-transition:      transform 0.2s ease-out;
 }
  ::selection{
     background:rgba(110,235,110,0.7);
@@ -594,7 +613,7 @@ th:hover{
   margin-left:1%;
   background-color:inherit;
 }
-
+/*
 .panehead{
 -webkit-touch-callout: none;
 -webkit-user-select: none;
@@ -633,7 +652,7 @@ user-select: none;
   background:rgb(255,0,0);
   line-height:2.2em;
 }
-
+*/
 #shoP{
   background-image:url(images/bg.png);
   padding:15px 1px 1px 4px;
@@ -643,7 +662,7 @@ user-select: none;
   right:5px;
   cursor:default;
   height:32px;
-  border-radius:4px;
+  border-radius:2px;
 -webkit-touch-callout: none;
 -webkit-user-select: none;
 -moz-user-select: none;

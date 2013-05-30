@@ -82,14 +82,14 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				  ]};
 
 	dojo.connect(qt,"onComplete",function(fs){ //declare most variables upfront for fewer vars/hoisting trouble
-	var WIN=window,grStore=null, rowStore,erow,mmt,identifyUp,eS=E.symbol,eD=E.dijit,on=O,runIT,ghd,IE=!!document.all,
-	lph,cros=dom.byId("cros"),arro=dom.byId("arro"),cross,Popup,ie9,DOC=document,mouseDownTimeout,previousRecentTarget,
+	var WIN=window,grStore=null, rowStore,erow,mmt,identifyUp,eS=E.symbol,eD=E.dijit,on=O,runIT,IE=!!document.all,
+	cros=dom.byId("cros"),arro=dom.byId("arro"),cross,Popup,ie9,DOC=document,mouseDownTimeout,previousRecentTarget,
 	pst=dom.byId("pst"),dockedx="",dockedy="", DJ=dojo,zSlid=dom.byId("mapDiv_zoom_slider"),scaleBarLabels,
-		stopCroClick,identOff=1,meC=null,lP=dom.byId("lP"),linArr,imHead,currentOID=null,MAP=map,noClick=dom.byId("noClick"),cHead,boxSave,dScroll,dlLink=dom.byId("dlLink"),
+		gridNodes,stopCroClick,identOff=1,meC=null,lP=dom.byId("lP"),linArr,currentOID=null,MAP=map,noClick=dom.byId("noClick"),boxSave,dScroll,dlLink=dom.byId("dlLink"),
 		rP=dom.byId("rP"),idCon=dom.byId("idCon"),grid,irP=dom.byId("irP"),ilP=dom.byId("ilP"),drP=dijit.byId("rP"),resCon=dom.byId("resCon"), checkTrack=[],
-		measur=dom.byId("measur"),mea=dom.byId("mea"),ident=dom.byId("ident"),identHandle,zoomEnd,grCon,croClick,lPar,tsNode,timeDiv=dom.byId('timeDiv'),paneIsShowing=0,
+		measur=dom.byId("measur"),mea=dom.byId("mea"),ident=dom.byId("ident"),identHandle,zoomEnd,tsNode,timeDiv=dom.byId('timeDiv'),paneIsShowing=0,
 		bmaps=dom.byId("bmaps"),shoP=dom.byId("shoP"),outlines,spl=dom.byId("lP_splitter"),clSh,mdLink=dom.byId("mdLink"),currentMeaTool,
-		legend,fex=dom.byId("fex"),imOn=0,maOn=1,zFun,imON,maON,laOff,phys=dom.byId("phys"),imag=dom.byId("imag"),lC,processTimeUpdate,projectTime=[],sLev=8,geoSer,crossTool={},identTool={},meaTool={},
+		legend,fex=dom.byId("fex"),imOn=0,maOn=1,zFun,imON,maON,laOff,phys=dom.byId("phys"),imag=dom.byId("imag"),processTimeUpdate,projectTime=[],sLev=8,geoSer,crossTool={},identTool={},meaTool={},
 		movers=dque(".mov"),tiout,esav,firstHan,rpCon=dom.byId("rpCon"),tiload,outsideTimeBoundary=[],crossOpen=0,crossHandle,runIdent,runMea,lastActive=null,
 		helpBod=dom.byId("helpbod"),helpPane=dom.byId("helppane"),helpHead=dom.byId("helphead"),foot=dom.byId("foot"),currButt,helpClo=dom.byId("helpclo"),
 		cTex="padding:5px 4px 3px 4px;color:#111;box-shadow: inset 0 1px 2px 0 #857ca5;background-image:-webkit-linear-gradient(top,#a0bce5,#f0f5fd);background-image:-moz-linear-gradient(top,#a0bce5,#f0f5fd);",
@@ -130,13 +130,19 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				showPane();
 		}
 		};
+
+
+
+
+		//*****initialize grid and attach all handlers*******\\
+
 		(function(){
-			var fsFeats=fs.features,i=0,j=fsFeats.length,gdata=[],
+			var fsFeats=fs.features,i=0,j=fsFeats.length,gdata=[],imHead,
 				intData,featureAttr,dte,dst,
-				adGr= dec([Grid,Keyb,ColRe]);
-			grid= new adGr({columns:{
-								Project:{label:"Project"},
-								Date:{label:"Date"},
+				adGr=dec([Grid,Keyb,ColRe]),gridHeader,headerNodes,
+				grid= new adGr({columns:{
+								Project:{label:"Project",sortable:false},
+								Date:{label:"Date",sortable:false},
 								OBJECTID:{label:"OBJECTID"},
 								Editor:edi({field: "Image",sortable:false}, "checkbox"),
 								__Date:{label:"_Date"}
@@ -157,11 +163,175 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				intData["OBJECTID"]=featureAttr["OBJECTID"];
 				gdata.push(intData);
 			}
+			gdata.sort(dateSortSeq);
 			gridLoaded=1;
 			grid.renderArray(gdata);
-			gdata=null;
-			lC=copColl(grid);
+
+			gridHeader=dom.byId("ilP-header");
+			headerNodes=gridHeader.childNodes;
+			headerNodes[0].title="Sort by Name"; //maybe pass these into constructor
+			headerNodes[1].title="Sort by Date";           
+			headerNodes[3].title="Turn images on or off";
+			gridCon=dque(".dgrid-content")[0];
+			gridNodes=gridCon.childNodes;
+			dScroll=dque(".dgrid-scroller")[0];
+
+			function dateSortSeq(a,b){
+				return a["__Date"]-b["__Date"]
+			}
+			function dateSortInv(a,b){
+				return b["__Date"]-a["__Date"]
+			}
+			function nameSortSeq(a,b){
+				return a["Project"]>b["Project"]?1:-1;
+			}
+			function nameSortInv(a,b){
+				return a["Project"]>b["Project"]?-1:1;
+			}
+			function renderSort(sorter,gdata,gnodes){
+				var i=0,j=gdata.length,newCon,
+					frag=DOC.createDocumentFragment();
+				gdata.sort(sorter);
+				for(var i=0,j=gdata.length;i<j;i++){
+					frag.appendChild(gnodes[gdata[i]["OBJECTID"]-1].cloneNode(true));
+				}
+				newCon=gridCon.cloneNode(false);
+				console.log(frag.firstChild)
+				newCon.appendChild(frag);
+				gridCon.parentNode.replaceChild(newCon,gridCon);
+				gridCon=newCon;
+			}
+
+			O(spl, "mousedown",function(e){								//expand left pane
+			var expandReady=1,mM,W=WIN;
+			if(!W.requestAnimationFrame)(function(W){var eaf='equestAnimationFrame',raf='r'+eaf,Raf='R'+eaf;W[raf]=W['webkit'+Raf]||W['moz'+Raf]||W[raf]||(function(callback){setTimeout(callback,16)})})(W);
+
+			mM=O(W,"mousemove",triggerExpand);
+
+			on.once(W,"mouseup",function(evt){
+				MAP.resize();
+				mM.remove();
+			});
+			function expand(e){
+				gridCon.style.width=gridHeader.style.width;
+				expandReady=1;
+			}
+			function triggerExpand(e){
+				if(expandReady){
+					W.requestAnimationFrame(function(){expand(e)});
+					expandReady=0;
+				}
+			}
+			});
+
+			O(dque(".dgrid-resize-header-container",gridHeader)[3],"mousedown",function(e){      						//mass image display/clear
+			var inpArr=dque(".dgrid-input",ilP), someChecked=0,dL=dynamicLayer;
+				darr.forEach(inpArr, function(v){
+					if(v.checked){
+						someChecked=1;
+						v.checked=false;
+					}
+				});
+			if(someChecked){
+				checkTrack=[];
+				dL.setVisibleLayers(["-1"]);
+				dL.suspend();
+				legend.hide();
+			}	
+			if(!someChecked){
+				if(dL.suspended)
+					dL.resume();
+				darr.forEach(inpArr,function(v,i){//check them all
+					v.checked=true;
+					checkTrack[i]=true;
+				});
+				dL.setVisibleLayers(["-1",13, 1, 11, 15, 0, 3, 77, 80, 83, 86, 26, 97, 91, 88, 74, 103, 71, 66, 65, 54, 44, 34, 32, 29, 100, 6, 5, 2, 12, 61, 62, 79, 53, 82, 76, 43, 25, 85, 90, 93, 96, 33, 99, 31, 28, 73, 102, 4, 14, 7,17, 55, 45, 46, 37, 56, 18, 78, 75, 95, 98, 92, 87, 70, 72, 67, 94, 69, 47, 57, 19, 81, 84, 89, 101, 35, 36, 30, 27, 8, 106, 20, 58, 38, 48, 10, 9, 16, 21, 59, 49, 39, 104, 40, 22, 50, 60, 63, 23, 51, 41, 52, 24, 42, 64, 68, 107, 105]);
+				if(!MAP.layerIds[2]){
+					MAP.addLayer(dL);
+				}
+
+
+			}
+			});
+
+
+			grid.on(".dgrid-cell:mouseover",function(e){                       //grid mouseover handler
+				var thGr=oidToGraphic(getOBJECTID(e));
+				if(thGr){
+					erow=grid.row(e);
+					if(erow)
+						caCh(thGr,erow.element,"hi");	
+				}
+			});
+
+
+			grid.on(".dgrid-cell:mouseout",function(e){						//grid mouseout handler
+				if(erow){
+				if(rowStore==erow.element){
+					return;
+				}else{
+					var thGr=oidToGraphic(getOBJECTID(e));
+					if(thGr)
+						caCh(thGr,erow.element,"");
+				}
+			}
+			});
+
+
+			grid.on(".dgrid-cell:mousedown",function(e){	//grid click handler
+				var et=e.target;
+				if(!et.firstChild||				
+					domcl.contains(et.firstChild,"dgrid-resize-header-container")||
+					domcl.contains(et,"dgrid-resize-header-container")||
+					domcl.contains(et,"field-Image")||
+					domcl.contains(et,"dgrid-input"))
+						return;
+				if(et!==previousRecentTarget){
+					window.clearTimeout(mouseDownTimeout);
+					previousRecentTarget=et;
+					mouseDownTimeout=WIN.setTimeout(function(){previousRecentTarget=null;},400);
+				var oid=getOBJECTID(e),
+					grPr=oidToGraphic(oid),
+					eg=outlines.graphics[oid-1];
+					erow=grid.row(e);
+				if(grStore){
+					if(grStore===oid){
+						clSh();
+						return;
+					}else{
+						caCh(oidToGraphic(grStore),rowStore,"");
+						infoFunc(eg.attributes);
+					}
+				}else{
+					infoFunc(eg.attributes);
+					caCh(grPr,erow.element,"hi");
+				}
+			 	grStore=oid; 	
+			 	rowStore=erow.element;
+			 	currentOID=oid;
+			 }
+			});
+
+			grid.on(".dgrid-cell:dblclick",function(e){                 //grid dblclick handler
+				var iSt=e.target, inpz,oid=getOBJECTID(e);
+				if(oid){
+					var eg=outlines.graphics[oid-1],
+						gOe=oidToGraphic(oid);
+					grStore=oid;
+					rowStore=erow.element;
+					currentOID=oid;
+					if(iSt.localName!="div"){
+						iSt.localName=="input"?inpz=iSt:inpz=iSt.parentNode.childNodes[3].childNodes[0];
+							MAP.setExtent(gOe._extent.expand(1.3));
+						if(!inpz.checked){
+							inpz.checked=true;
+							O.emit(inpz,"change",{bubbles:true});
+						}
+					}
+				}
+			});
 		})();
+
 		scal= new sB({map:MAP});
 		scaleBarLabels=dque('.esriScalebarLabel');
 		console.log("query completes");
@@ -221,18 +391,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
     	helpPane.style.opacity=0;
 
    		ie9=(DOC.all&&DOC.addEventListener&&!window.atob)?true:false;
-		lph=dom.byId("lP-header");
-		cHead=dom.byId("ilP-header");
-		ghd=dque("th",lph);
-		ghd[0].title="Sort by Name";
-		ghd[1].title="Sort by Date";             //do some style adjustments/variable creation
-		ghd[3].title="Turn images on or off";
-		O.emit(ghd[1],"click",{bubbles:true});
-		O.emit(ghd[1],"click",{bubbles:true});
-		lHead=dque(".dgrid-header")[0];
-		grCon=dque(".dgrid-content")[0];
-		dScroll=dque(".dgrid-scroller")[0];
-		imHead=dque(".dgrid-resize-header-container",lph)[3];
+		
 
 		var tCount, timeSlider, sliderDiv, timeExtent = new E.TimeExtent();
 		timeExtent.startTime = new Date("01/01/2010 UTC");
@@ -273,12 +432,25 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		linArr[linArr.length-1].style.cssText="text-shadow:1px 1px 1px #fff;color:rgb(0,0,0);";
 		phys.style.cssText=cTex;
 
-
 /****************CURRENT WORK******************/
 
 
+	
 
-		processTimeUpdate=function(e){  //grid logic on timechange INEFFICIENT Use hash. Sorting at end is poor
+
+
+
+
+
+		hideRow=function(row){
+
+		}
+
+
+
+
+
+	/*	processTimeUpdate=function(e){  //grid logic on timechange INEFFICIENT Use hash. Sorting at end is poor
 			console.log("processing timeupdate",e);
 			var yoSt,startTime=e.startTime,endTime=e.endTime;//somewhat convoluted due to sorting/highlighting/checkboxes
 			console.log(grid._lastCollection,"starting last collection");
@@ -286,13 +458,22 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			darr.forEach(projectTime,function(v,i){ //every feature, checking against time boundary
 				var currGraphic=oidToGraphic(i+1);
 				if(v<startTime||v>endTime){
+					console.log(v)
 					outsideTimeBoundary[i+1]=true; //if outside boundary, wipe outline and mark as outside
 					currGraphic.setSymbol(blank);
-				}else{								
+
+				//}else{
+
+			//	}
+				
+				}else{		
+				console.log(v);
+
 					outsideTimeBoundary[i+1]=null;
 					caCh(currGraphic,null,"");
-					grid._lastCollection.push(lC[i]);  
-				}                                               					
+					grid._lastCollection.push(gridData[i]);  
+				}
+				                                              					
 			});
 			var aGrid=grid.bodyNode.firstChild.childNodes; //grab the showing grid nodes
 
@@ -323,7 +504,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			});
 			O.emit(ghd[1],"click",{bubbles:true}); //sort.. this sucks. sort by date instead
 			O.emit(ghd[1],"click",{bubbles:true});
-		};
+		};*/
 
 		O(timeDiv, ".dijitRuleLabelH:mouseover",function(e){
 			var ets=e.target.style,col=ets.color;
@@ -1103,79 +1284,51 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		}
 	}();
 
-   		O(helpBod, "mouseover", function(e){
-   			if(e.target.tagName==="B"){
+		function toggleHelpGlow(e){
+			if(e.target.tagName==="B"){
    				var key=e.target.textContent.slice(0,3);
    				switch (key){
 		   			case "Zoo":
-		   				domcl.add(zSlid,"helpglow");
+		   				domcl.toggle(zSlid,"helpglow");
 		   				break;
 		   			case "Glo":
-		   				domcl.add(fex,"helpglow");
+		   				domcl.toggle(fex,"helpglow");
 		   				break;
 		   			case "Bas":
-		   				domcl.add(phys,"helpglow");
-		   				domcl.add(imag,"helpglow");
+		   				domcl.toggle(phys,"helpglow");
+		   				domcl.toggle(imag,"helpglow");
 		   				break;
 		   			case "Sli":
-		   				domcl.add(lP,"helpglow");
-		   				domcl.add(spl,"helpglow");
+		   				domcl.toggle(lP,"helpglow");
+		   				domcl.toggle(spl,"helpglow");
 		   				break;
 		   			case "Ide":
-		   				domcl.add(ident,"helpglow");
+		   				domcl.toggle(ident,"helpglow");
 		   				break;
 		   			case "Pro":
-		   				domcl.add(cros,"helpglow");
+		   				domcl.toggle(cros,"helpglow");
 		   				break;
 		   			case "Mea":
-		   				domcl.add(mea,"helpglow");
+		   				domcl.toggle(mea,"helpglow");
 		   				break;
 		   			case "Arr":
-		   				domcl.add(shoP,"helpglow");
+		   				domcl.toggle(shoP,"helpglow");
 		   				break;
 		   			case "Tim":
-		   				domcl.add(tsNode,"helpglow");
+		   				domcl.toggle(tsNode,"helpglow");
 		   				break;
    				}
    			}
+		}
+
+
+   		O(helpBod, "mouseover", function(e){
+   			toggleHelpGlow(e);
    		});
 
    		O(helpBod, "mouseout", function(e){
-   			if(e.target.tagName==="B"){
-   				var key=e.target.textContent.slice(0,3);
-   				switch (key){
-		   			case "Zoo":
-		   				domcl.remove(zSlid,"helpglow");
-		   				break;
-		   			case "Glo":
-		   				domcl.remove(fex,"helpglow");
-		   				break;
-		   			case "Bas":
-		   				domcl.remove(phys,"helpglow");
-		   				domcl.remove(imag,"helpglow");
-		   				break;
-		   			case "Sli":
-		   				domcl.remove(lP,"helpglow");
-		   				domcl.remove(spl,"helpglow");
-		   				break;
-		   			case "Ide":
-		   				domcl.remove(ident,"helpglow");
-		   				break;
-		   			case "Pro":
-		   				domcl.remove(cros,"helpglow");
-		   				break;
-		   			case "Mea":
-		   				domcl.remove(mea,"helpglow");
-		   				break;
-		   			case "Arr":
-		   				domcl.remove(shoP,"helpglow");
-		   				break;
-		   			case "Tim":
-		   				domcl.remove(tsNode,"helpglow");
-		   				break;
-   				}
-   			}
-   		});//HELP CRUD
+   			toggleHelpGlow(e);
+   		});
 
    		O(dlLink,"mouseover",function(e){  //remove spatial reference info from files
    			var pro=(irP.firstChild.textContent).split(" ").join(""),
@@ -1251,27 +1404,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			}
 		});
 
-		O(spl, "mousedown",function(e){								//expand left pane
-			var expandReady=1,mM,W=WIN;
-			if(!W.requestAnimationFrame)(function(W){var eaf='equestAnimationFrame',raf='r'+eaf,Raf='R'+eaf;W[raf]=W['webkit'+Raf]||W['moz'+Raf]||W[raf]||(function(callback){setTimeout(callback,16)})})(W);
-
-			mM=O(W,"mousemove",triggerExpand);
-
-			on.once(W,"mouseup",function(evt){
-				MAP.resize();
-				mM.remove();
-			});
-			function expand(e){
-				grCon.style.width= lHead.style.width;
-				expandReady=1;
-			}
-			function triggerExpand(e){
-				if(expandReady){
-					W.requestAnimationFrame(function(){expand(e)});
-					expandReady=0;
-				}
-			}
-		});
 
 
 		O(WIN, "resize",function(e){			//resize map on browser resize
@@ -1485,86 +1617,10 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					dScroll.scrollTop=rowStore.offsetTop-155;
 				}
 			}
+			console.log(grid);
 		});
-
-
-		grid.on(".dgrid-cell:mouseover",function(e){                       //grid mouseover handler
-			var thGr=oidToGraphic(getOBJECTID(e));
-			if(thGr){
-				erow=grid.row(e);
-				if(erow)
-					caCh(thGr,erow.element,"hi");	
-			}
-		});
-
-
-		grid.on(".dgrid-cell:mouseout",function(e){						//grid mouseout handler
-			if(erow){
-			if(rowStore==erow.element){
-				return;
-			}else{
-				var thGr=oidToGraphic(getOBJECTID(e));
-				if(thGr)
-					caCh(thGr,erow.element,"");
-			}
-		}
-		});
-
 
 		O(shoP,"mousedown",clSh);//handle close button click
-
-		grid.on(".dgrid-cell:mousedown",function(e){	//grid click handler
-			var et=e.target;
-			if(!et.firstChild||				
-				domcl.contains(et.firstChild,"dgrid-resize-header-container")||
-				domcl.contains(et,"dgrid-resize-header-container")||
-				domcl.contains(et,"field-Image")||
-				domcl.contains(et,"dgrid-input"))
-					return;
-			if(et!==previousRecentTarget){
-				window.clearTimeout(mouseDownTimeout);
-				previousRecentTarget=et;
-				mouseDownTimeout=WIN.setTimeout(function(){previousRecentTarget=null;},400);
-			var oid=getOBJECTID(e),
-				grPr=oidToGraphic(oid),
-				eg=outlines.graphics[oid-1];
-				erow=grid.row(e);
-			if(grStore){
-				if(grStore===oid){
-					clSh();
-					return;
-				}else{
-					caCh(oidToGraphic(grStore),rowStore,"");
-					infoFunc(eg.attributes);
-				}
-			}else{
-				infoFunc(eg.attributes);
-				caCh(grPr,erow.element,"hi");
-			}
-		 	grStore=oid; 	
-		 	rowStore=erow.element;
-		 	currentOID=oid;
-		 }
-		});
-
-		grid.on(".dgrid-cell:dblclick",function(e){                 //grid dblclick handler
-			var iSt=e.target, inpz,oid=getOBJECTID(e);
-			if(oid){
-				var eg=outlines.graphics[oid-1],
-					gOe=oidToGraphic(oid);
-				grStore=oid;
-				rowStore=erow.element;
-				currentOID=oid;
-				if(iSt.localName!="div"){
-					iSt.localName=="input"?inpz=iSt:inpz=iSt.parentNode.childNodes[3].childNodes[0];
-						MAP.setExtent(gOe._extent.expand(1.3));
-					if(!inpz.checked){
-						inpz.checked=true;
-						O.emit(inpz,"change",{bubbles:true});
-					}
-				}
-			}
-		});
 
 
 		DJ.connect(outlines, "onMouseOver", function(e) {//map mouseover handler
@@ -1640,36 +1696,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		}
 		});
 
-		O(imHead,"mousedown",function(e){      						//mass image display/clear
-			var inpArr=dque(".dgrid-input",ilP), someChecked=0,dL=dynamicLayer;
-				darr.forEach(inpArr, function(v){
-					if(v.checked){
-						someChecked=1;
-						v.checked=false;
-					}
-				});
-			if(someChecked){
-				checkTrack=[];
-				dL.setVisibleLayers(["-1"]);
-				dL.suspend();
-				legend.hide();
-			}	
-			if(!someChecked){
-				if(dL.suspended)
-					dL.resume();
-				darr.forEach(inpArr,function(v,i){//check them all
-					v.checked=true;
-					checkTrack[i]=true;
-				});
-				dL.setVisibleLayers(["-1",13, 1, 11, 15, 0, 3, 77, 80, 83, 86, 26, 97, 91, 88, 74, 103, 71, 66, 65, 54, 44, 34, 32, 29, 100, 6, 5, 2, 12, 61, 62, 79, 53, 82, 76, 43, 25, 85, 90, 93, 96, 33, 99, 31, 28, 73, 102, 4, 14, 7,17, 55, 45, 46, 37, 56, 18, 78, 75, 95, 98, 92, 87, 70, 72, 67, 94, 69, 47, 57, 19, 81, 84, 89, 101, 35, 36, 30, 27, 8, 106, 20, 58, 38, 48, 10, 9, 16, 21, 59, 49, 39, 104, 40, 22, 50, 60, 63, 23, 51, 41, 52, 24, 42, 64, 68, 107, 105]);
-				if(!MAP.layerIds[2]){
-					MAP.addLayer(dL);
-				}
-
-
-			}
-		});
-
 		O(grid,".dgrid-input:change",function(e){                             //actual display/clear logic	
 			if(!MAP.layerIds[2]){ //if the raster has not been added, add it.
 				dynamicLayer.setVisibleLayers(["-1"]);
@@ -1720,13 +1746,13 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				onEnd:function(){noClick.style.zIndex="-100"}}).play()},2000);
 		}
 
-		function copColl(g){    							//make a copy of the grid's internal _lastCollection
+	/*	function copyLastCollection(g){    							//make a copy of the grid's internal _lastCollection
 			var lC=g._lastCollection,i=0,j=lC.length,cop=[];
 			for(;i<j;i++){
 				cop[i]=lC[i];
 			}
 			return cop;
-		}
+		}*/
 
 		function creCov(targ,Z){      //apply highlighting logic to an array
 			console.log("Applying highlighting logic with crecov");

@@ -14,13 +14,13 @@
     <!--[if IE]> <style type="text/css"> #heaR,h2,strong{color:#66b5ff;}#heaR{background-color:rgba(222,222,255,0.3);}</style> <![endif]-->
   </head>
   <body class="soria" id="body">
-    <div id="mainWindow" data-dojo-type="dijit.layout.BorderContainer"
+    <div id="mainWindow" class="unselectable" data-dojo-type="dijit.layout.BorderContainer"
           gutters="false" style="width:100%; height:100%;">
       <div data-dojo-type="dijit.layout.ContentPane" id="lP" region="left"splitter="true">
         <strong id="loadingg">Loading</strong>
         <div id='ilP'></div>
       </div>
-      <div id="mapDiv" data-dojo-type="dijit.layout.ContentPane" region="center">
+      <div id="mapDiv" class="unselectable" data-dojo-type="dijit.layout.ContentPane" region="center">
         <a id="heaR"class="atop" href="http://www.cd.water.ca.gov/surface_water/bathymetry.cfm" target="_blank">Delta Bathymetry Catalog</a>
         <div id="fex" class="atop" title="Full Extent"></div>
         <div id="bmaps" class="atop">
@@ -41,13 +41,13 @@
           <a id="mdLink" href="zips/Metadata.zip" target="_self">Metadata</a>
           <a id="dlLink" href="tryagain.zip" target="_self">Download</a>
         </div>
-        <div id="idCon" class="atop">
+        <div id="idCon" class="atop selectable">
           <strong id="idRes"title="NAVD 88 Elevation">Identify Results&#58;</strong></br>
           <div id="resCon"></div>
         </div>
       </div>
        <div id="infopane"></div>
-        <div id="foot">
+        <div id="foot" class="unselectable">
         <div class="footDiv" id="help">Help</div>
         <div class="footDiv" id="tou">Terms of Use</div>
         <div class="footDiv" id="contact">Contact</div>
@@ -55,8 +55,8 @@
     </div>
     <div id="noClick" class="atop">Turn an image on to use this tool.</div>
     <img id="legend" class="legend atop" title="Image Legend (ft)"src=""></img>
-    <div id="measur"class="atop"></div> 
-    <div id="shoP"class="mov atop">
+    <div id="measur"class="atop selectable"></div> 
+    <div id="shoP"class="mov atop unselectable">
       <div id="arro"></div>
     </div>
     <!--[if gt IE 8]><!-->

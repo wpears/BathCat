@@ -35,7 +35,6 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 			map.addLayer(basemapImagery);
 			imageryLayer=map.getLayer("imagery");
 			imageryLayer.hide();
-			console.log("imagery on");
 			imageryOn=true;
 			dojo.disconnect(imageryLoader);
 			imageryLoader=null;
@@ -43,19 +42,18 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 		topoLoader=dojo.connect(basemapTopo,"onLoad",function(){
 			map.addLayer(basemapTopo);
 			topoLayer=map.getLayer("topo");
-			console.log("topo on");
 			topoOn=true;
 			dojo.disconnect(topoLoader);
 			topoLoader=null;
 		});
-		dojo.connect(basemapImagery,"onError",function(e){
+	/*	dojo.connect(basemapImagery,"onError",function(e){
 			console.log("Rerequesting Imagery");
 			basemapTopo = new eL.ArcGISTiledMapServiceLayer("http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer",{id:"imagery"});
 		});
 		dojo.connect(basemapTopo,"onError",function(e){
 			console.log("Rerequesting Map");
 			basemapTopo = new eL.ArcGISTiledMapServiceLayer("http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer",{id:"topo"});
-		});
+		});*/
 		rasterLayer.setVisibleLayers([-1]);
 			
 		(function loadDots(){
@@ -172,7 +170,6 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
      			if(imageryOn||topoOn){
 					MAP.addLayer(tiout);
 					MAP.addLayer(outlines);
-					console.log("ti on");
 					DJ.disconnect(tiload);
 				}else{
 				WIN.setTimeout(addLays,50);
@@ -310,7 +307,6 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 				currTime,currOID,currGraphic,gridData=gdata,currentCount=selectedGraphicsCount,
 				currRow,toBeHidden=timeUpdate.toBeHidden,oidRasterIndex,
 				rastersAsOIDs=timeUpdate.rastersAsOIDs;
-				console.log(currentRasters);
 				for(var i=0,j=gridData.length;i<j;i++){
 					currOID=gridData[i].OBJECTID;
 					currGraphic=oidToGraphic(currOID);
@@ -342,7 +338,6 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 				}
 				if(MAP.layerIds[2]){
 					uncheckImageInputs(toBeHidden);
-					console.log(currentRasters);
 					for(var i=1;i<currentRasters.length;i++){
 						rastersAsOIDs[rastersAsOIDs.length]=currentRasters[i]+1;
 					}
@@ -637,7 +632,6 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 			return arr;
 		}
 		
-		console.log("query completes");
 		var sls=eS.SimpleLineSymbol.STYLE_SOLID,
 			sfs=eS.SimpleFillSymbol.STYLE_SOLID,//define map symbols
 			blank= new eS.SimpleFillSymbol(sfs,new eS.SimpleLineSymbol(sls,new DJ.Color([255,255,255,0.001]),1),new DJ.Color([0,0,0,0.001])),
@@ -741,7 +735,6 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 		};
 
 		adjustOnZoom= function(ext,zF,anc,lev){	//logic on ZoomEnd	
-			console.log(MAP.getScale());
 			if(imageryLayer&&topoLayer){
 				if(lev>=15&&previousLevel<15)
 					enableImagery();
@@ -1015,7 +1008,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 			sR=inMap.spatialReference, graphics=[[]], mapGfx=inMap.graphics,offsetStep=0,
 			gOffset=-1, gfxOffset=4, graphHandlers=[],graphList=[],mouseDownY,mouseDownX,
 			charts=[], charDivs=[],chartId, chartCount=1, crossCount=0,reqQueue=[],freeToReq=1,
-			updateReady=1, tls, tlin, containerNode,layerIdsFound,exportHandlers=[],
+			updateReady=1, tls, tlin, containerNode,layerIdsFound,exportHandlers=[],chartArray=[],
 			lSy=new eS.SimpleLineSymbol(sls,new inD.Color([0,0,0]),2),
 			pSy=new eS.SimpleMarkerSymbol({"size":6,"color":new DJ.Color([0,0,0])}),
 			graylSy=new eS.SimpleLineSymbol(sls,new inD.Color([180,180,180]),2),
@@ -1046,10 +1039,10 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 				moveLine(p1,p2);
 				if(p2.x===p1.x&&p2.y===p1.y)return;
 				addSymbol(p2,pSy,graphics[crCount]);
-				console.log(self.handlers)
 				inD.disconnect(self.handlers[2]);
 				inD.disconnect(self.handlers[3]);
-				console.log("...not disconnected?")
+				self.handlers[2]=null;
+				self.handlers[3]=null;
 				self.handlers[1]=inD.connect(inMap,"onMouseUp",function(e){
 					if(e.pageX<mouseDownX+10&&e.pageX>mouseDownX-10&&e.pageY<mouseDownY+10&&e.pageY>mouseDownY-10)
 						addFirstPoint(e.mapPoint)});
@@ -1059,7 +1052,6 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 			},
 
 			addFirstPoint=function(point){
-				console.log("fired");
 				var chCount=chartCount,crCount=crossCount;
 				chartCount++;
 				crossCount++;
@@ -1069,6 +1061,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 				addSymbol(point,pSy,graphics[crCount]);
 				tls=addSymbol(null,lSy,graphics[crCount]);
 				inD.disconnect(self.handlers[1]);
+				self.handlers[1]=null;
 				self.handlers[2]=inD.connect(inMap,"onMouseMove",function(e){moveLine(point,e.mapPoint)});
 				self.handlers[3]=inD.connect(inMap,"onMouseUp",function(e){
 					if(e.pageX<mouseDownX+10&&e.pageX>mouseDownX-10&&e.pageY<mouseDownY+10&&e.pageY>mouseDownY-10)
@@ -1140,7 +1133,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 					dlFileName=chartId+'_Profile'+chartCount+'_'+'WebMercator.txt',
 					deferredCount=0,
 					resultCount=0,
-					chartArr=[],
+					chartArr=chartArray,
 					ii=0,
 					requestStep=15,
 					curP=new inEG.Point(p1.x,p1.y,sR),
@@ -1148,6 +1141,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 					makeReq;
 				freeToReq=0;
 				addTextSymbol(chartCount,p1,10*M.cos(0.87+ang),10*M.sin(0.87+ang),graphics[crossCount]);
+				chartArr.length=0;
 				if(dx<0){
 					xng=maxPointsCorrection*fromWmm*M.cos(ang);
 					yng=maxPointsCorrection*fromWmm*M.sin(ang);
@@ -1165,6 +1159,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 			    exLink.download=dlFileName;
 			    if(ie9)exLink.style.color="#FF0000";
 			    containerNode.appendChild(exLink);
+
 			    makeReq=function(start,end){
 			    var gfx=graphics[crossCount],sy=pSy;
 				for(;start<end;start++){
@@ -1218,7 +1213,6 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
     						}
     					}
 				    	chart.render();
-				    	console.log(chart);
 				    	addSwellHandlers(graphics[crossCount],gOffset,hovSy);
 				    	chartArr.length=0;
 				    	if(reqQueue.length)
@@ -1277,6 +1271,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 			clearGraphHandlers=function(arr){
 				for(var i=arr.length-1;i>=0;i--){
 					arr[i].remove();
+					arr[i]=null;
 					arr.length=i;
 				}
 			},
@@ -1349,11 +1344,13 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 				graphList.length=0;
 				for(var i=0,j=charts.length;i<j;i++){
 					charts[i].destroy();
+					charts[i]=null;
 					clearNode(charDivs[i])
 				}
 				charts.length=0;
 				charDivs.length=0;
 				reqQueue.length=0;
+				chartArray.length=0;
 				clearNode(containerNode);
 				container.hide();
 				for(var i=0,j=graphics.length;i<j;i++){  
@@ -1485,7 +1482,6 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 					mdLink.style.display="block";
 				};
 		function showPane(){
-			console.log("showPane");
 			var i=0,j=movers.length;
 			paneIsShowing=1;
 			arro.style.backgroundPosition="-32px -16px";

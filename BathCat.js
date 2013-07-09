@@ -1,13 +1,21 @@
-require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
-		"dgrid/Keyboard", "dgrid/editor","dgrid/extensions/ColumnResizer","dojo/_base/declare","dojo/parser","dojo/dom-construct","dojo/dom","dojo/query",
+require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
+		"dgrid/editor","dgrid/extensions/ColumnResizer","dojo/_base/declare","dojo/parser","dojo/dom-construct","dojo/dom","dojo/query",
 		"dojo/dom-class","esri/layers/FeatureLayer","dojo/_base/array","esri/tasks/query","esri/tasks/geometry","dojox/charting/action2d/Magnify",
 		"dojox/charting/Chart","dojox/charting/themes/PurpleRain","dojox/charting/axis2d/Default", "dojox/charting/plot2d/MarkersOnly","dojox/charting/action2d/Tooltip",
 		"dojo/on","esri/dijit/TimeSlider","dojo/ready","esri/dijit/Scalebar","esri/dijit/Measurement","dojo/aspect","require","dojo/NodeList-fx"],
-		function(dijit,BorderContainer,CP,Grid,Keyb,edi,ColRe,dec,parser,dCon,dom,dque,
+		function(BorderContainer,CP,Grid,edi,ColRe,dec,parser,dCon,dom,dque,
 				 domcl,FL,darr,qr,geom,Mag,Chrt,chThem,chAx,chLin,Ttip,O,tts,ready,sB,MT,asp,require){
 	//esri.map,	esri.utils, alt infowin included compact
-
-  var parsedd= parser.parse(); //parse widgets
+  	parser.parse(); //parse widgets
+  	var allowMM=0;  // An absolutely obscene amount of event handlers. And TONS of triggered body/map mm events
+  	(function(){
+		var eael=HTMLElement.prototype.addEventListener;
+		HTMLElement.prototype.addEventListener=function(){
+ 			if(arguments[0]!=="mousemove"||allowMM){
+    			eael.apply(this,arguments);
+      		}
+		}
+	})();
    ready(function(){ //wait for the dom
    	dom.byId("rP").style.height=window.innerHeight-225+"px";
    	document.body.style.visibility="visible"; //show the page on load.. no unstyled content
@@ -49,7 +57,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			basemapTopo = new eL.ArcGISTiledMapServiceLayer("http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer",{id:"topo"});
 		});
 		rasterLayer.setVisibleLayers([-1]);
-
 			
 		(function loadDots(){
 			if(!gridLoaded){
@@ -158,12 +165,10 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
        	 	outFields: ["OBJECTID"],
        	 	maxAllowableOffset:MAP.extent.getWidth()/map.width
   		});
-
   		tiload=DJ.connect(tiout,"onLoad",function(){
      		tiout.setRenderer(new E.renderer.SimpleRenderer(blank));
      		outlines.setRenderer(new E.renderer.SimpleRenderer(blank));
-     		function addLays(){
-     			console.log("order matters. this is wrong.")
+     		function addLays(){ //need a caching map service in first at this API version
      			if(imageryOn||topoOn){
 					MAP.addLayer(tiout);
 					MAP.addLayer(outlines);
@@ -215,15 +220,14 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 
   				}
   			}
-  			console.log(splitGeoArr);
   		})();
-
+	
 		//*****initialize grid and attach all handlers*******\\
 
 		gridObject=(function(){
 			var fsFeats=fs.features,i=0,j=fsFeats.length,gdata=[],gridCon,
 				intData,featureAttr,dte,dst,nameSorted=0,dateSorted=1,lastNodePos=[],
-				adGr=dec([Grid,Keyb,ColRe]),gridHeader,headerNodes;
+				adGr=dec([Grid,ColRe]),gridHeader,headerNodes;
 
 				grid= new adGr({columns:{
 								Project:{label:"Project",sortable:false},
@@ -250,6 +254,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			gridLoaded=1;
 			grid.renderArray(gdata);
 			gridHeader=dom.byId("ilP-header");
+			if(IE)gridHeader=gridHeader.firstChild;
 			headerNodes=gridHeader.childNodes;
 			headerNodes[0].title="Sort by Name"; //maybe pass these into constructor
 			headerNodes[1].title="Sort by Date";         
@@ -449,11 +454,14 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					} 	
 		 		}
 			});
-
-			grid.on(".dgrid-cell:dblclick",function(e){                 //grid dblclick handler
+			
+			function gridDbl(e){
 				var inputBox,oid=getOIDFromGrid(e);
 				if(oid){
 					var graphic=oidToGraphic(oid);
+					if(!graphic){
+						return;
+					}
 					if(e.target.localName!=="div"){
 						clearAndSetOID(oid,graphic.attributes)
 						inputBox=getInputBox(oid);
@@ -466,11 +474,12 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 						}
 					}
 				}
-			});
+			}
+
+			grid.on(".dgrid-cell:dblclick",gridDbl);
 
 			setVisibleRasters.reusableArray=[];
 			function setVisibleRasters(newOIDs,fromCheck){
-				console.log("setting Visible Rasters",newOIDs)
 				if(!MAP.layerIds[2]){ //if the raster has not been added, add it.
 					MAP.addLayer(rasterLayer);
 					legend.node.src="images/leg_img.png";
@@ -482,7 +491,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					j=visibleRasterOIDs.length,
 					splicedIfPresent,
 					rasterIndex;
-					console.log(visibleRasterOIDs)
 				if(newOIDs.length>1){
 					(function(){
 						for(var i=0,j=newOIDs.length;i<j;i++){
@@ -824,7 +832,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				darr.forEach(popupHandlers,function(v){
 					v.remove();
 				});
-				popupHandlers=[];
+				popupHandlers.length=0;
 			},
 
 			freezeSelectable=function(selectable){
@@ -1002,18 +1010,11 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 		};
 
 
-
-
-
-
-
-
-
 		crossTool=function(container){						//cross section function!
 			var self, inMap=MAP, inE=E, inD=dojo, inEG=inE.geometry, W=WIN,
 			sR=inMap.spatialReference, graphics=[[]], mapGfx=inMap.graphics,offsetStep=0,
 			gOffset=-1, gfxOffset=4, graphHandlers=[],graphList=[],mouseDownY,mouseDownX,
-			charts=[], chartId, chartCount=1, crossCount=0,p1, p2,reqQueue=[],freeToReq=1,
+			charts=[], charDivs=[],chartId, chartCount=1, crossCount=0,reqQueue=[],freeToReq=1,
 			updateReady=1, tls, tlin, containerNode,layerIdsFound,exportHandlers=[],
 			lSy=new eS.SimpleLineSymbol(sls,new inD.Color([0,0,0]),2),
 			pSy=new eS.SimpleMarkerSymbol({"size":6,"color":new DJ.Color([0,0,0])}),
@@ -1022,87 +1023,84 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			graySy=new eS.SimpleMarkerSymbol({"size":6,"color":new DJ.Color([140,140,140]),"outline":graylSyOut}),
 			hovSy=new eS.SimpleMarkerSymbol(eS.SimpleMarkerSymbol.STYLE_CIRCLE,15,lSy,new inD.Color('#4879bc')),
 			
-			update= function(point){
-					tlin=new inEG.Polyline(sR)
-					tlin.addPath([p1, point]);
+			update= function(p1,p2){
+					tlin=new inEG.Polyline(sR);
+					tlin.addPath([p1, p2]);
 					tls.setGeometry(tlin);
 					updateReady=1;	
 			},
-			moveLine=function(e){
-				if(updateReady){							
-					W.requestAnimationFrame(function(){update(e.mapPoint)});
+			moveLine=function(p1,p2){
+				if(updateReady){
 					updateReady=0;
+					update(p1,p2)						
 				}
 			},
-			reqWhenAble=function(){
-				if(freeToReq)
-					rendGr(pSy,p1,p2,chartCount,crossCount);
-				else
-					reqQueue.push({p1:p1,p2:p2,chartCount:chartCount,crossCount:crossCount});
-				chartCount++;
-				crossCount++;
+			reqWhenAble=function(p1,p2,chCount,crCount){
+				if(freeToReq){
+					rendGr(pSy,p1,p2,chCount,crCount);
+				}else{
+					reqQueue.push({p1:p1,p2:p2,chCount:chCount,crCount:crCount});
+				}
 			},
-			addSecondPoint=function(point){
-				update(point);
-				p2=point;
+			addSecondPoint=function(p1,p2,chCount,crCount){
+				moveLine(p1,p2);
 				if(p2.x===p1.x&&p2.y===p1.y)return;
-				addSymbol(p2,pSy,graphics[crossCount]);
+				addSymbol(p2,pSy,graphics[crCount]);
+				console.log(self.handlers)
 				inD.disconnect(self.handlers[2]);
 				inD.disconnect(self.handlers[3]);
-				self.handlers[2]=null;
-				self.handlers[3]=null;
+				console.log("...not disconnected?")
 				self.handlers[1]=inD.connect(inMap,"onMouseUp",function(e){
 					if(e.pageX<mouseDownX+10&&e.pageX>mouseDownX-10&&e.pageY<mouseDownY+10&&e.pageY>mouseDownY-10)
 						addFirstPoint(e.mapPoint)});
 				if(!layerIdsFound)
-					findLayerIds(p2,true);
-				else reqWhenAble();
+					findLayerIds(p2,p1,chCount,crCount);
+				else reqWhenAble(p1,p2,chCount,crCount);
 			},
+
 			addFirstPoint=function(point){
 				console.log("fired");
+				var chCount=chartCount,crCount=crossCount;
+				chartCount++;
+				crossCount++;
 				layerIdsFound=0;
-				p1=point;
-				graphics[crossCount]=[];
-				if(freeToReq)
-					findLayerIds(p1);
-				addSymbol(p1,pSy,graphics[crossCount]);
-				tls=addSymbol(null,lSy,graphics[crossCount]);
+				graphics[crCount]=graphics[crCount]===undefined?[]:graphics[crCount];
+				findLayerIds(point,null,chCount,crCount);
+				addSymbol(point,pSy,graphics[crCount]);
+				tls=addSymbol(null,lSy,graphics[crCount]);
 				inD.disconnect(self.handlers[1]);
-				self.handlers[1]=null;
-				self.handlers[2]=inD.connect(inMap,"onMouseMove",moveLine);
+				self.handlers[2]=inD.connect(inMap,"onMouseMove",function(e){moveLine(point,e.mapPoint)});
 				self.handlers[3]=inD.connect(inMap,"onMouseUp",function(e){
 					if(e.pageX<mouseDownX+10&&e.pageX>mouseDownX-10&&e.pageY<mouseDownY+10&&e.pageY>mouseDownY-10)
-						addSecondPoint(e.mapPoint)
+						addSecondPoint(point,e.mapPoint,chCount,crCount);
 				});
 			},
-			findLayerIds=function(mapPoint,point2){
-				var lids=[],
-				lDef=runIT(mapPoint,true).then(function(v){ //v is an array with an layerIds and one of values
+			findLayerIds=function(mapPoint,point1ForReq,chCount,crCount){
+				runIT(mapPoint,true).then(function(v){ //v is an array with an layerIds and one of values
 						if(v[0].length){
 							offsetStep=v[0].length-1;
 							layerIdsFound=1;
 							v[2].layerIds=v[0];
 							chartId=outlines.graphics[v[0][0]].attributes.Project;
-							if(point2) reqWhenAble();
+							if(point1ForReq) reqWhenAble(point1ForReq,mapPoint,chCount,crCount);
 					    }else{
-					    	if(!point2){
-								graphics[crossCount][0].setSymbol(graySy);
-								graphics[crossCount][1].setSymbol(graylSy);
+					    	if(!point1ForReq){
+								graphics[crCount][0].setSymbol(graySy);
+								graphics[crCount][1].setSymbol(graylSy);
 							}else{
-								graphics[crossCount][2].setSymbol(graySy);
-								crossCount++
+								graphics[crCount][2].setSymbol(graySy);
 							}
 						}
 				});					
 			},
 			execNextReq=function(rq){
 					var next=rq.shift();
-					rendGr(pSy,next.p1,next.p2,next.chartCount,crossCount);
+					rendGr(pSy,next.p1,next.p2,next.chCount,next.crCount);
 			},
 			createChart=function(xmax,ymin,chartCount){
 				gOffset+=4; //gOffset gets parent of current graph points, offset to skip axes, labels
-				var charDiv=dCon.create("div", {height:"350px"}, containerNode),
-					chart = new Chrt(charDiv);
+				charDivs[charDivs.length]=dCon.create("div", {height:"350px"}, containerNode);
+				var chart = new Chrt(charDivs[charDivs.length-1]);
 				chart.addPlot("default", {type: chLin});
 				chart.addAxis("x",{min:-1,max:Math.ceil(xmax),title:"(ft)",titleGap:8,titleOrientation:"away"});
 				chart.addAxis("y", {vertical: true,min:ymin,max:5,title:"(ft)",titleGap:8});
@@ -1118,18 +1116,11 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 									TRIANGLE_INVERTED:"m-3,-3 l3,7 3,-7 z"}); 
 			    chart.setTheme(chThem);
 			    chart.render();
-
-			    //exportLink=DOC.getElementsByClassName('exportChart')[0];
-			  //  exportLink.textContent="ALALALALALALALALA";
-			  //if window.navigator.saveAsBlob... (blob,name)
-			  //if ie9 sorry bro
-			  //check if image or xyz
-			  //if so, dom to canvas, by creating a blob with ?svg+xml? type
 			    charts[charts.length]=chart;
 			    containerNode.scrollTop=containerNode.scrollHeight;
 			    return chart;
 			},
-			rendGr=function(sy,p1,p2,chartCount,crossCount){       
+			rendGr=function(sy,p1,p2,chartCount,crossCount){ 
 				var M=Math,
 					p1x=p1.x, //in web mercator meters
 					p1y=p1.y,
@@ -1157,7 +1148,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					makeReq;
 				freeToReq=0;
 				addTextSymbol(chartCount,p1,10*M.cos(0.87+ang),10*M.sin(0.87+ang),graphics[crossCount]);
-
 				if(dx<0){
 					xng=maxPointsCorrection*fromWmm*M.cos(ang);
 					yng=maxPointsCorrection*fromWmm*M.sin(ang);
@@ -1175,7 +1165,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			    exLink.download=dlFileName;
 			    if(ie9)exLink.style.color="#FF0000";
 			    containerNode.appendChild(exLink);
-
 			    makeReq=function(start,end){
 			    var gfx=graphics[crossCount],sy=pSy;
 				for(;start<end;start++){
@@ -1195,7 +1184,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 								chartArr[i].push({x:lengthForChart*maxPointsCorrection, //depth to 
 												  y:M.round(v[i].value*10)/10});       //tenths place
 								if(v[i].value<chartMin)chartMin=(v[i].value-10)>>0; //adjust chart height
-								if(!symCreated)symCreated=addSymb(inPoi,sy,gfx);//add once (for multiple)
+								if(!symCreated)symCreated=!!W.requestAnimationFrame(function(){addSymb(inPoi,sy,gfx)});//add once (for multiple)
 							}										
 						}
 
@@ -1205,7 +1194,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 						    if(resultCount>requestStep){ //add data from chartArr structure to chart
 								for(;i<j;i++)chart.addSeries(i,chartArr[i]);
 		    					chart.addAxis("y", {vertical:true,min:chartMin,max:5,title:"(ft)",titleGap:8});
-						    	chart.render();
+						    	W.requestAnimationFrame(function(){chart.render()});
 						    	requestStep+=15;
 					    	} 
 						}
@@ -1213,8 +1202,8 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					if(deferredCount===resultCount&&chartArr[0].length>0){
 				    	for(;i<j;i++)chart.addSeries(i, chartArr[i]);
 				    	chart.addAxis("y", {vertical:true,min:chartMin,max:5,title:"(ft)",titleGap:8});
-    					var tip = new Ttip(chart, "default"); //edits in the module for positioning/height tooltip.js
-    					var mag = new Mag(chart, "default");
+    					new Ttip(chart, "default"); //edits in the module for positioning/height tooltip.js
+    					new Mag(chart, "default");
     					if(W.Blob){
     						if(W.navigator.msSaveBlob){
     							exLink.onclick=function(){
@@ -1231,6 +1220,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				    	chart.render();
 				    	console.log(chart);
 				    	addSwellHandlers(graphics[crossCount],gOffset,hovSy);
+				    	chartArr.length=0;
 				    	if(reqQueue.length)
 				    		execNextReq(reqQueue);
 				    	else freeToReq=1;
@@ -1301,13 +1291,10 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			},
 			resizeCharts=function(charts,con){
 				clearGraphHandlers(graphHandlers);
-				var conStyle=con.style,charDivs=con.childNodes,
+				var charDivNumb=con.childNodes.length,conStyle=con.style,
 				mup=on(W,"mouseup",function(e){
-					var nextWid=conStyle.width.slice(0,-2)-17+"px";
 					conStyle.visibility="hidden";
-					for(var i=0;i<charDivs.length;i+=2){
-						charDivs[i].style.width=nextWid;
-						charDivs[i].style.height="300px";
+					for(var i=0;i<charDivNumb;i+=2){
 						charts[i/2].resize();
 					}
 					conStyle.visibility="visible";
@@ -1340,16 +1327,15 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				this.revive();
 			},
 			idle:function(){
-				darr.forEach(self.handlers,function(v,i){
-							inD.disconnect(v);
-							self.handlers[i]=null;
-
-					});
+				for(var i=0;i<self.handlers.length;i++){
+					inD.disconnect(self.handlers[i]);
+				}
+				self.handlers.length=0;		
 				outlines.enableMouseEvents();
 			},
 			revive:function(){
 				outlines.disableMouseEvents();
-				self.handlers[0]=inD.connect(inMap, "onMouseDown", function(e){mouseDownX=e.pageX;mouseDownY=e.pageY;});
+				self.handlers[0]=inD.connect(inMap, "onMouseDown", function(e){allowMM=1;mouseDownX=e.pageX;mouseDownY=e.pageY;});
 				self.handlers[1]=inD.connect(inMap,"onMouseUp",function(e){
 				if(e.pageX<mouseDownX+10&&e.pageX>mouseDownX-10&&e.pageY<mouseDownY+10&&e.pageY>mouseDownY-10)
 					addFirstPoint(e.mapPoint)});
@@ -1360,15 +1346,20 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				chartCount=1;
 				crossCount=0;
 				clearGraphHandlers[graphHandlers];
-				graphList=[];
-				darr.forEach(charts,function(v){v.destroy();});
-				charts=[];
+				graphList.length=0;
+				for(var i=0,j=charts.length;i<j;i++){
+					charts[i].destroy();
+					clearNode(charDivs[i])
+				}
+				charts.length=0;
+				charDivs.length=0;
+				reqQueue.length=0;
 				clearNode(containerNode);
 				container.hide();
 				for(var i=0,j=graphics.length;i<j;i++){  
 					for(var ii=0;ii<graphics[i].length;ii++)
 						mapGfx.remove(graphics[i][ii]);
-					graphics[i]=[];
+					graphics[i].length=0;
 				}
 			}
 		};
@@ -1473,6 +1464,8 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 							gridObject.scrollToRow(oid);
 							markedGraphic=null;
 						}else{
+							dlLink.style.display="none";
+							mdLink.style.display="none";
 							irP.style.marginTop=rpCon.clientHeight/2-15+"px";
 							irP.innerHTML="<h2>"+selectedGraphicsCount+" projects selected</h2>"
 						}
@@ -1741,7 +1734,8 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 					measur=dom.byId("measur");
 					domcl.add(measur,"atop selectable");
 					selectableNodes=dque(".selectable");
-					toolToggle(e,meaTool)
+					toolToggle(e,meaTool);
+					allowMM=1;
 					on(mea,"mousedown",function(e){toolToggle(e,meaTool)});
 					asp.after(mmt,"setTool",function(tool,flag){
 											if(flag!==false){
@@ -1885,8 +1879,6 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 			}else
 				whyNoClick();
 		}); 
-
-
 		on(shoP,"mousedown",toggleRightPane);//handle close button click
 
 		DJ.connect(outlines, "onMouseOver", function(e) {//map mouseover handler
@@ -2034,8 +2026,7 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 							caCh(oid,"",1);
 				});
 		}
-
-		function caCh(oid,hi,refresh){ //main highlighting logic, separated by year with different basemap
+		function doHighlight(oid,hi,refresh){
 			var symbo=imageryLayer&&imageryLayer.visible?imSym:symbols,
 			chk=fs.features[oid-1]?fs.features[oid-1].attributes.Date:null,
 			graphic=oidToGraphic(oid),
@@ -2082,7 +2073,10 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				}
 			}
 			}
+		}
 
+		function caCh(oid,hi,refresh){ //main highlighting logic, separated by year with different basemap
+			WIN.requestAnimationFrame(function(){doHighlight(oid,hi,refresh)});
 		}
 
 		function oidToGraphic(oid){
@@ -2097,7 +2091,10 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				return +etP.parentNode.childNodes[2].innerHTML;
 		}
 		function getInputBox(oid){
-			return gridObject.oidToRow(oid).childNodes[0].childNodes[3].childNodes[0];
+			var box;
+			if(IE) box=gridObject.oidToRow(oid).childNodes[0].childNodes[0].childNodes[3].childNodes[0];
+			else box=gridObject.oidToRow(oid).childNodes[0].childNodes[3].childNodes[0];
+			return box;
 		}
 		function isNumber(n) {
   			return !isNaN(parseFloat(n)) && isFinite(n);
@@ -2132,27 +2129,33 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 
 		function processId(tA,pA){
 			var def=tA.execute(pA);
-				return def.then(function(v){
-					var output=[[],[],pA],lids=[],inpArr;
-					if(v.length>0){
-					lids=[],inpArr=dque(".dgrid-input",ilP);
+			return def.then(function(v){
+				var output=processId.output,
+					lids=processId.lids;
+				output[0].length=0;
+				output[1].length=0;
+				output[2]=pA;
+				lids.length=0;
+				if(v.length>0){
 					for (var i=0,j=v.length;i<j;i++){ //logic for multiple layers
-						lids[i]={lI:v[i].layerId,v:v[i]};//array of objects with OBJECTID and it's ident data
+						processId.lids[i]={lI:v[i].layerId,v:v[i]};//array of objects with OBJECTID and it's ident data
 					}
-					darr.forEach(inpArr,function(val){
-						if(val.checked){
+					for(var oi=0,oj=checkTrack.length;oi<oj;oi++){
+						if(checkTrack[oi]){
 							for(var i=0,j=lids.length;i<j;i++){
-								if(+val.parentNode.previousSibling.innerHTML==lids[i].lI+1){
-									output[0].push(lids[i].lI);
-									output[1].push(lids[i].v);
+								if(oi===lids[i].lI){
+									processId.output[0].push(lids[i].lI);
+									processId.output[1].push(lids[i].v);
 								}
 							}			
-						}		
-					});
+						}	
+					}	
 				}
 				return output;
-				});
+			});
 		}
+		processId.output=[[],[],null];
+		processId.lids=[];
 		function initId(e){ //id logic... cross section tool feeds here as well.. this gets set up lazily also
 			require(["esri/tasks/identify"],function(ide){
 				idT= new eT.IdentifyTask("http://mrsbmapp00642/ArcGIS/rest/services/BATH/Web_Rr/MapServer"),
@@ -2164,10 +2167,10 @@ require(["dijit/dijit","dijit/layout/BorderContainer","dijit/layout/ContentPane"
 				idP.mapExtent=MAP.extent;
 				identifyUp=true;
 				runIT=function(geom,query){
-					idP.height = MAP.height;
-					idP.width  = MAP.width;
 					idP.geometry=geom;
 					if(query){
+						idP.height = MAP.height;
+						idP.width  = MAP.width;
 						idP.layerIds=layerArray;
 						return processId(idT,idP,geom);
 					}

@@ -5,6 +5,8 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 		"dojo/on","esri/dijit/TimeSlider","dojo/ready","esri/dijit/Scalebar","esri/dijit/Measurement","dojo/aspect","require","dojo/NodeList-fx"],
 		function(BorderContainer,CP,Grid,edi,ColRe,dec,parser,dCon,dom,dque,
 				 domcl,FL,darr,qr,geom,Mag,Chrt,chThem,chAx,chLin,Ttip,O,tts,ready,sB,MT,asp,require){
+			dijit=null;
+			dojox=null;
 	//esri.map,	esri.utils, alt infowin included compact
   	parser.parse(); //parse widgets
   	var allowMM=0;  // An absolutely obscene amount of event handlers. And TONS of triggered body/map mm events
@@ -111,7 +113,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 
 	dojo.connect(qt,"onComplete",function(fs){ //declare most variables upfront for fewer vars/hoisting trouble
 	var WIN=window, DOC=document, DJ=dojo, MAP=map, fsFeat=fs.features, IE=!!document.all, ie9, fx,
-		outlines, grid, dScroll, eS=E.symbol, outlineMouseMove, outlineTimeout, on=O,
+		outlines, grid, gridObject, dScroll, eS=E.symbol, outlineMouseMove, outlineTimeout, on=O,
 		mouseDownTimeout, previousRecentTarget, justMousedDown=false,
 	 	Popup, identHandle, identifyUp, identOff=1, runIT, crossHandle, mmt, currentMeaTool,
 	 	crossTool, identTool, meaTool, lastActive=null,
@@ -289,6 +291,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 				newCon.appendChild(frag);
 				gCon.parentNode.replaceChild(newCon,gridCon);
 				gridCon=newCon;
+				frag=null;
 			}
 
 			function oidToRow(oid){
@@ -352,6 +355,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 			timeUpdate.toBeHidden=[];
 
 			renderSort(dateSortSeq,gdata,gridCon);
+			domcl.add(headerNodes[1],"sortTarget");
 
 
 
@@ -360,9 +364,11 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 					renderSort(nameSortInv,gdata,gridCon);
 					nameSorted=0;
 				}else{
-					renderSort(nameSortSeq,gdata,gridCon)
+					renderSort(nameSortSeq,gdata,gridCon);
 					nameSorted=1;
 				}
+				domcl.add(headerNodes[0],"sortTarget");
+				domcl.remove(headerNodes[1],"sortTarget");
 				if(selectedGraphicsCount)scrollToRow(selectedGraphics[0])
 			});
 			on(headerNodes[1],"mousedown",function(){
@@ -373,6 +379,8 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 					renderSort(dateSortSeq,gdata,gridCon);
 					dateSorted=1;
 				}
+				domcl.add(headerNodes[1],"sortTarget");
+				domcl.remove(headerNodes[0],"sortTarget");
 				if(selectedGraphicsCount)scrollToRow(selectedGraphics[0])
 			});
 
@@ -1003,7 +1011,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 				getClose:getClose
 			}
 		};
-
+console.log(MAP)
 
 		crossTool=function(container){						//cross section function!
 			var self, inMap=MAP, inE=E, inD=dojo, inEG=inE.geometry, W=WIN,
@@ -1070,7 +1078,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 			},
 			getPointAngle=function(p1,p2){
 				return Math.atan((p1.y-p2.y)/(p1.x-p2.x));
-			}
+			},
 			findLayerIds=function(mapPoint,p1ForReq2,chCount,crCount){
 				if(!p1ForReq2){
 					runIT(mapPoint,true).then(function(v){ //v is an array with an array of layerIds and one of values
@@ -1130,7 +1138,6 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 			    return chart;
 			},
 			rendGr=function(sy,p1,p2,chartCount,crossCount){ 
-				console.log("rendering")
 				var M=Math,
 					p1x=p1.x, //in web mercator meters
 					p1y=p1.y,
@@ -2193,7 +2200,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 		processId.lids=[];
 		function initId(e){ //id logic... cross section tool feeds here as well.. this gets set up lazily also
 			require(["esri/tasks/identify"],function(ide){
-				idT= new eT.IdentifyTask("http://mrsbmapp00642/ArcGIS/rest/services/BATH/Web_Rr/MapServer"),
+				var idT= new eT.IdentifyTask("http://mrsbmapp00642/ArcGIS/rest/services/BATH/Web_Rr/MapServer"),
 				idP= new eT.IdentifyParameters();
 				idP.layerOption=eT.IdentifyParameters.LAYER_OPTION_VISIBLE;
 				idP.layerIds=layerArray;

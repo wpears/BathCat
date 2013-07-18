@@ -30,7 +30,10 @@
 .dijitTooltip iframe{
   display:none;
 }
-
+.sortTarget{
+text-decoration:underline;
+font-size:17px;
+}
 .dijitRuleLabelH{
   padding:0 4px 0 3px;
   cursor:pointer;
@@ -95,7 +98,7 @@ body{
   background: url(images/bg.png);
   overflow:hidden; 
   font-family: 'SSP', sans-serif;
-  color: #555;
+  color: #555566;
   visibility:hidden;
   line-height:1.4em;
   margin:0;

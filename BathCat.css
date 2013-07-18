@@ -173,6 +173,10 @@ body{
 #irP{
   width:85%;
   margin-left:27px;
+  -webkit-transition:opacity 0.25s ease;
+ -moz-transition:    opacity 0.25s ease;
+  transition:        opacity 0.25s ease;
+ -o-transition:      opacity 0.25s ease;
 }
 .spirp{
   display:block;
@@ -183,10 +187,10 @@ body{
   position:relative;
   transform:translate3d(0,0,0);
  -webkit-transform:translate3d(0,0,0);
- -webkit-transition: height 0.2s ease, opacity 0.25s ease;
- -moz-transition:    height 0.2s ease, opacity 0.25s ease;
-  transition:        height 0.2s ease, opacity 0.25s ease;
- -o-transition:      height 0.2s ease, opacity 0.25s ease;
+ -webkit-transition: height 0.2s ease;
+ -moz-transition:    height 0.2s ease;
+  transition:        height 0.2s ease;
+ -o-transition:      height 0.2s ease;
 
 }
 #lP{
@@ -230,6 +234,10 @@ body{
   float:right;
   font-size:0.9em;
   line-height: 1.2em;
+   -webkit-transition:opacity 0.25s ease;
+ -moz-transition:    opacity 0.25s ease;
+  transition:        opacity 0.25s ease;
+ -o-transition:      opacity 0.25s ease;
 }
 #mdLink{
   margin-top:-2px;
@@ -237,6 +245,10 @@ body{
   float:right;
   font-size:0.9em;
   line-height: 1.2em;
+   -webkit-transition:opacity 0.25s ease;
+ -moz-transition:    opacity 0.25s ease;
+  transition:        opacity 0.25s ease;
+ -o-transition:      opacity 0.25s ease;
 }
 #foot{
   margin:0;

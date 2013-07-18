@@ -309,6 +309,8 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 				rastersAsOIDs=timeUpdate.rastersAsOIDs;
 				for(var i=0,j=gridData.length;i<j;i++){
 					currOID=gridData[i].OBJECTID;
+					if(oidStore[currOID])
+						clearStoredOID(currOID,1,1);
 					currGraphic=oidToGraphic(currOID);
 					currRow=oidToRow(currOID);
 					currTime=+gridData[i]["__Date"]
@@ -324,8 +326,6 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 								}
 							}
 						}
-						if(oidStore[currOID])
-							clearStoredOID(currOID,1,1);
 						outsideTimeBoundary[currOID]=1;
 						currGraphic.setSymbol(blank);
 					}else{
@@ -623,6 +623,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 					clearStoredOID(selectedGraphics[i],0,0);
 			selectedGraphics.length=0;
 			geoSearch.prevArr.length=0;
+			markedGraphic=null;
 		}
 
 		function splice(arr,index){
@@ -811,9 +812,6 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 			attachHandlers=function(){
 				if(!popupHandlers[0]){
 					popupHandlers=[
-					on(popClose,"mousedown",function(){
-						toolWipe(crossTool,cros);
-					}),
 					on(popHeader,"mousedown",move),             //e,dim,pageDim,max,otherSplitStyle,edgeTracker,oppositeEdge
 					on(popSplitterV,"mousedown",function(e){self.resize(e,"width","pageX",innerWidth,edges.left,"right")}),
 					on(popSplitterH,"mousedown",function(e){self.resize(e,"height","pageY",innerHeight,edges.top,"bottom")})
@@ -991,6 +989,9 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 			},
 			getContainer=function(){
 				return popContainer;
+			},
+			getClose=function(){
+				return popClose;
 			};
 
 			return{
@@ -998,7 +999,8 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 				hide:hide,
 				move:move,
 				resize:resize,
-				getContainer:getContainer
+				getContainer:getContainer,
+				getClose:getClose
 			}
 		};
 
@@ -1008,7 +1010,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 			sR=inMap.spatialReference, graphics=[[]], mapGfx=inMap.graphics,offsetStep=0,
 			gOffset=-1, gfxOffset=4, graphHandlers=[],graphList=[],mouseDownY,mouseDownX,
 			charts=[], charDivs=[],chartId, chartCount=1, crossCount=0,reqQueue=[],freeToReq=1,
-			updateReady=1, tls, tlin, containerNode,layerIdsFound,exportHandlers=[],chartArray=[],
+			updateReady=1, tls, tlin, containerNode,point1Found=0,chartArray=[],
 			lSy=new eS.SimpleLineSymbol(sls,new inD.Color([0,0,0]),2),
 			pSy=new eS.SimpleMarkerSymbol({"size":6,"color":new DJ.Color([0,0,0])}),
 			graylSy=new eS.SimpleLineSymbol(sls,new inD.Color([180,180,180]),2),
@@ -1046,16 +1048,14 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 				self.handlers[1]=inD.connect(inMap,"onMouseUp",function(e){
 					if(e.pageX<mouseDownX+10&&e.pageX>mouseDownX-10&&e.pageY<mouseDownY+10&&e.pageY>mouseDownY-10)
 						addFirstPoint(e.mapPoint)});
-				if(!layerIdsFound)
-					findLayerIds(p2,p1,chCount,crCount);
-				else reqWhenAble(p1,p2,chCount,crCount);
+				findLayerIds(p2,p1,chCount,crCount);
 			},
 
 			addFirstPoint=function(point){
 				var chCount=chartCount,crCount=crossCount;
 				chartCount++;
 				crossCount++;
-				layerIdsFound=0;
+				point1Found=0;
 				graphics[crCount]=graphics[crCount]===undefined?[]:graphics[crCount];
 				findLayerIds(point,null,chCount,crCount);
 				addSymbol(point,pSy,graphics[crCount]);
@@ -1068,23 +1068,39 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 						addSecondPoint(point,e.mapPoint,chCount,crCount);
 				});
 			},
-			findLayerIds=function(mapPoint,point1ForReq,chCount,crCount){
-				runIT(mapPoint,true).then(function(v){ //v is an array with an layerIds and one of values
-						if(v[0].length){
+			getPointAngle=function(p1,p2){
+				return Math.atan((p1.y-p2.y)/(p1.x-p2.x));
+			}
+			findLayerIds=function(mapPoint,p1ForReq2,chCount,crCount){
+				if(!p1ForReq2){
+					runIT(mapPoint,true).then(function(v){ //v is an array with an array of layerIds and one of values
+						if(v[0].length>1||v[1][0].value!=="NoData"){
 							offsetStep=v[0].length-1;
-							layerIdsFound=1;
+							point1Found=1;
 							v[2].layerIds=v[0];
 							chartId=outlines.graphics[v[0][0]].attributes.Project;
-							if(point1ForReq) reqWhenAble(point1ForReq,mapPoint,chCount,crCount);
 					    }else{
-					    	if(!point1ForReq){
 								graphics[crCount][0].setSymbol(graySy);
 								graphics[crCount][1].setSymbol(graylSy);
-							}else{
+						}
+					});
+				}else{
+					if(point1Found){
+						reqWhenAble(p1ForReq2,mapPoint,chCount,crCount);
+					}else{
+						runIT(mapPoint,true).then(function(v){
+							if(v[0].length>1||v[1][0].value!=="NoData"){
+								offsetStep=v[0].length-1;
+								point1Found=1;
+								v[2].layerIds=v[0];
+								chartId=outlines.graphics[v[0][0]].attributes.Project;
+								reqWhenAble(p1ForReq2,mapPoint,chCount,crCount);
+						    }else{
 								graphics[crCount][2].setSymbol(graySy);
 							}
-						}
-				});					
+						});
+					}
+				}					
 			},
 			execNextReq=function(rq){
 					var next=rq.shift();
@@ -1114,6 +1130,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 			    return chart;
 			},
 			rendGr=function(sy,p1,p2,chartCount,crossCount){ 
+				console.log("rendering")
 				var M=Math,
 					p1x=p1.x, //in web mercator meters
 					p1y=p1.y,
@@ -1163,9 +1180,8 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 			    makeReq=function(start,end){
 			    var gfx=graphics[crossCount],sy=pSy;
 				for(;start<end;start++){
-					var def=runIT(curP);
 					deferredCount++;
-					def.then(function(v){ //returning geometry to put in proper order on the graph
+					runIT(curP).then(function(v){ //returning geometry to put in proper order on the graph
 						if(v[0]){
 						var i=0,j=v.length,symCreated,
 							inPoi=v[0].feature.geometry,
@@ -1241,33 +1257,6 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 				//lin.href="data:application/octet-stream;base64," + btoa(serialized)
 				//
 			},
-			addSwellHandlers=function(gfxArr,gOff,hovSy){
-				var currNum,gTags=DOC.getElementsByTagName("g"),
-				graphh=gTags[gOff],pathss,pathObj={};
-				if(graphh){
-					pathss=graphh.firstChild.childNodes;
-					for(var i=1;i<pathss.length;i+=2){ //below is distance from left edge
-						pathObj[pathss[i].getAttribute("path").slice(1,6)]=(i/2>>0)+gfxOffset;
-					}
-					graphHandlers.push(on(graphh,"mouseover",function(e){
-			    		var et=e.target.getAttribute("path").slice(1,6);
-			    		if(pathObj[et]!==undefined){
-			    				currNum=pathObj[et];
-			    		}
-			    		if(currNum!==undefined) //used to be setSymbol ->hovSy ->pSy
-			    			addSymbol(gfxArr[currNum].geometry,hovSy,gfxArr);
-			    	}));
-			    	graphHandlers.push(on(graphh,"mouseout",function(e){
-			    		if(currNum!==undefined){ //there may be brittleness here. ie no hovered
-			    			mapGfx.remove(gfxArr[gfxArr.length-1]);
-			    			gfxArr.length=gfxArr.length-1;
-			    		}
-			    	}));
-			    	graphList.unshift(arguments);
-			    	gOffset+=offsetStep; //accomodate overlapping rasters
-			    	offsetStep=0;
-		    	}
-		    },
 			clearGraphHandlers=function(arr){
 				for(var i=arr.length-1;i>=0;i--){
 					arr[i].remove();
@@ -1295,8 +1284,36 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 					conStyle.visibility="visible";
 					reattachGraph(graphList);
 					mup.remove();
+					mup=null;
 				});
-			};
+			},
+			addSwellHandlers=function(gfxArr,gOff,hovSy){
+				var currNum,pathss,pathObj={},
+				graphh=DOC.getElementsByTagName("g")[gOff];
+				if(graphh){
+					pathss=graphh.firstChild.childNodes;
+					for(var i=1;i<pathss.length;i+=2){ //below is distance from left edge
+						pathObj[pathss[i].getAttribute("path").slice(1,6)]=(i/2>>0)+gfxOffset;
+					}
+					graphHandlers.push(on(graphh,"mouseover",function(e){
+			    		var et=e.target.getAttribute("path").slice(1,6);
+			    		if(pathObj[et]!==undefined){
+			    				currNum=pathObj[et];
+			    		}
+			    		if(currNum!==undefined) //used to be setSymbol ->hovSy ->pSy
+			    			addSymbol(gfxArr[currNum].geometry,hovSy,gfxArr);
+			    	}));
+			    	graphHandlers.push(on(graphh,"mouseout",function(e){
+			    		if(currNum!==undefined){ //there may be brittleness here. ie no hovered
+			    			mapGfx.remove(gfxArr[gfxArr.length-1]);
+			    			gfxArr.length=gfxArr.length-1;
+			    		}
+			    	}));
+			    	graphList.unshift(arguments);
+			    	gOffset+=offsetStep; //accomodate overlapping rasters
+			    	offsetStep=0;
+		    	}
+		    };
 		
 		return{
 			handlers:[],
@@ -1310,10 +1327,15 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 						resizeCharts(charts,containerNode);
 					},true);
 				on(cros,"mousedown",function(e){
-						if(domcl.contains(cros,"clickable"))
-							return toolToggle(e,self);
-						else whyNoClick();
-				});		
+						if(domcl.contains(cros,"clickable")){
+							if(freeToReq)
+								toolToggle(e,self);
+						}else whyNoClick();
+				});
+				on(container.getClose(),"mousedown",function(){
+					if(freeToReq)
+						toolWipe(crossTool,cros);
+				});	
 
 			},
 			start:function(){
@@ -1324,6 +1346,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 			idle:function(){
 				for(var i=0;i<self.handlers.length;i++){
 					inD.disconnect(self.handlers[i]);
+					self.handlers[i]=null;
 				}
 				self.handlers.length=0;		
 				outlines.enableMouseEvents();
@@ -1340,7 +1363,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 				gOffset=-1;
 				chartCount=1;
 				crossCount=0;
-				clearGraphHandlers[graphHandlers];
+				clearGraphHandlers(graphHandlers);
 				graphList.length=0;
 				for(var i=0,j=charts.length;i<j;i++){
 					charts[i].destroy();
@@ -1378,7 +1401,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 				if(typeof identTool==='object'&&identTool.isShowing())
 					toolWipe(identTool,ident);
 				clearAllStoredOIDs();
-				geoSearch.prevArr.length=[];
+				geoSearch.prevArr.length=0;
 			}else{
 				irP.style.marginTop=0;
 				clearNode(irP);
@@ -1411,10 +1434,14 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 				}
 				}else{
 					if(paneIsShowing){
-						rpCon.style.opacity=0;
+						irP.style.opacity=0;
+						mdLink.style.opacity=0;
+						dlLink.style.opacity=0;
 						WIN.setTimeout(function(){
 							infoFunc.setHTML(attributes);
-							rpCon.style.opacity=1;
+							irP.style.opacity=1;
+							mdLink.style.opacity=1;
+							dlLink.style.opacity=1;
 							infoFunc.positionIdentPane();
 						},225);
 					}else{
@@ -1811,6 +1838,11 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 					renderIdent(idArr,identCount);
 				});
 			}
+			function clearIntro(){
+				clearNode(irP);
+				idCon.style.display="block";
+				infoFunc.positionIdentPane();
+			}
 
 			return {
 				handlers:[],
@@ -1829,18 +1861,25 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 				},							
 				start:function(){
 					this.revive();
-					if(!paneIsShowing){
-						clearNode(irP);
-						showPane();
+					if(irP.innerHTML.slice(0,5)==="<p>Th"){
+						irP.style.opacity=0;
+						WIN.setTimeout(clearIntro,100);	
+					}else{
+						if(!paneIsShowing){
+							clearNode(irP);
+							showPane();
+						}
+						idCon.style.display="block";
+						infoFunc.positionIdentPane();
 					}
-					idCon.style.display="block";
-					infoFunc.positionIdentPane();
 				},
 				idle:function(){
 					outlines.enableMouseEvents();
 					MAP.setMapCursor("default");
 					DJ.disconnect(this.handlers[0]);
 					DJ.disconnect(this.handlers[1]);
+					this.handlers[0]=null;
+					this.handlers[1]=null;
 					identOff=1;
 				},
 				revive:function(){
@@ -1858,9 +1897,12 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 					clearNode(resCon);
 					clearGraphics(this.graphics);
 					clearGraphics(this.labels);
-					this.graphics=[];
-					this.labels=[];
+					this.graphics.length=0;
+					this.labels.length=0;
 					idCount=0;
+					if(irP.innerHTML==="")
+						irP.innerHTML=toggleRightPane.introText;
+					irP.style.opacity=1;
 				},
 				isShowing:function(){return dque(".activeTool")[0]===ident||dque(".idle")[0]===ident}
 			};	
@@ -2022,7 +2064,8 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 							caCh(oid,"",1);
 				});
 		}
-		function doHighlight(oid,hi,refresh){
+
+		function caCh(oid,hi,refresh){ //main highlighting logic, separated by year with different basemap
 			var symbo=imageryLayer&&imageryLayer.visible?imSym:symbols,
 			chk=fs.features[oid-1]?fs.features[oid-1].attributes.Date:null,
 			graphic=oidToGraphic(oid),
@@ -2069,10 +2112,6 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 				}
 			}
 			}
-		}
-
-		function caCh(oid,hi,refresh){ //main highlighting logic, separated by year with different basemap
-			WIN.requestAnimationFrame(function(){doHighlight(oid,hi,refresh)});
 		}
 
 		function oidToGraphic(oid){

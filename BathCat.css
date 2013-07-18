@@ -285,13 +285,13 @@ background-image:-webkit-linear-gradient(top, #e1ebfb, #b4cdf5);
   background-image:-moz-linear-gradient(top,#a0bce5,#f0f5fd);
   padding-top:4px;
 }
-.helpglow{
-  box-shadow:0 0 16px 6px #5ADE6B !important;
-  background-color:#5ADE6B;             
-}
 .activeTool{
   box-shadow:0 0 16px 6px #99ceff !important;
    			 background-color:#99ceff;
+}
+.helpglow{
+  box-shadow:0 0 16px 6px #5ADE6B !important;
+  background-color:#5ADE6B;             
 }
 #infopane{
   overflow-y:scroll;

@@ -1011,7 +1011,6 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 				getClose:getClose
 			}
 		};
-console.log(MAP)
 
 		crossTool=function(container){						//cross section function!
 			var self, inMap=MAP, inE=E, inD=dojo, inEG=inE.geometry, W=WIN,
@@ -1959,7 +1958,6 @@ console.log(MAP)
 		});
 
 		DJ.connect(outlines, "onDblClick", function(e){						//map dblclick handler
-			console.log("dbl")
 			var selected,
 			oid=e.graphic.attributes.OBJECTID,
 			reSearch=selectedGraphics.indexOf(oid)===-1; //might need to copy, not assign
@@ -1980,7 +1978,6 @@ console.log(MAP)
 		geoSearch.currArr=[];
 		geoSearch.binLength=geoBins.length;
 		function geoSearch(e,mouseDown){//think about using two sorted arrays, one mins one maxs
-			var st=performance.now();
 			var i=0,j=geoSearch.binLength-1,curr,oid,temp,prevArr=geoSearch.prevArr,currArr=geoSearch.currArr,
 			mapX=e.mapPoint.x,mapY=e.mapPoint.y,breakMax=mapX+1000,binArr,someTargeted=0;
 			if(!mouseDown&&mapX!==0){
@@ -2039,7 +2036,6 @@ console.log(MAP)
 						storeOID(prevArr[i]);
 				}
 			}
-			console.log(performance.now()-st)
 		}
 
 		function whyNoClick(){

@@ -28,7 +28,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 		eT=E.tasks,qt=new eT.QueryTask(url),qry= new eT.Query(),loadIt=dom.byId("loadingg"),dots=".",gridLoaded,
    		sr= new E.SpatialReference({wkid:102100}),timeDiv=dom.byId('timeDiv'),timeSlider,
 		inExt = new E.geometry.Extent(-13612000,4519000,-13405000,4662600,sr),
-        map = new E.Map("mapDiv", {extent:inExt}),
+        map = new E.Map("mapDiv", {extent:inExt,fadeOnZoom:false}),
         rasterLayer = new eL.ArcGISDynamicMapServiceLayer("http://mrsbmapp00642/ArcGIS/rest/services/BATH/Web_Rr/MapServer",{id:"raster"}),
         basemapImagery =new eL.ArcGISTiledMapServiceLayer("http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer",{id:"imagery"}),
      	basemapTopo = new eL.ArcGISTiledMapServiceLayer("http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer",{id:"topo"}),
@@ -114,7 +114,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 	dojo.connect(qt,"onComplete",function(fs){ //declare most variables upfront for fewer vars/hoisting trouble
 	var WIN=window, DOC=document, DJ=dojo, MAP=map, fsFeat=fs.features, IE=!!document.all, ie9, fx,
 		outlines, grid, gridObject, dScroll, eS=E.symbol, outlineMouseMove, outlineTimeout, on=O,
-		mouseDownTimeout, previousRecentTarget, justMousedDown=false,
+		mouseDownTimeout, previousRecentTarget, justMousedDown=false,  outMoveTime=0,
 	 	Popup, identHandle, identifyUp, identOff=1, runIT, crossHandle, mmt, currentMeaTool,
 	 	crossTool, identTool, meaTool, lastActive=null,
 		geoArr, splitGeoArr, geoBins, selectedGraphics=[], selectedGraphicsCount=0, markedGraphic,
@@ -1924,23 +1924,24 @@ console.log(MAP)
 			}else
 				whyNoClick();
 		}); 
+
 		on(shoP,"mousedown",toggleRightPane);//handle close button click
 
+
 		DJ.connect(outlines, "onMouseOver", function(e) {//map mouseover handler
-			function mmManager(e){
-				DJ.disconnect(outlineMouseMove);
-				if(justMousedDown)justMousedDown=false; //mousemove triggered by click
-				else geoSearch(e,0);
-				outlineTimeout=WIN.setTimeout(function(){
-					outlineMouseMove=DJ.connect(outlines, "onMouseMove",mmManager);
-				},100)
-			}
 			outlineMouseMove=DJ.connect(outlines, "onMouseMove",mmManager);    	
 		});
 
+		function mmManager(e){
+			if(Date.now()<outMoveTime+100)
+				return;
+			geoSearch(e,0);
+			outMoveTime=Date.now();
+		}
+
+
 		DJ.connect(outlines,"onMouseOut", function(e){		//map mouseout handler
 				if(identOff)MAP.setMapCursor("default");
-				WIN.clearTimeout(outlineTimeout);
 				DJ.disconnect(outlineMouseMove);
 				geoSearch({mapPoint:{x:0,y:0}},0);
 		});
@@ -1958,6 +1959,7 @@ console.log(MAP)
 		});
 
 		DJ.connect(outlines, "onDblClick", function(e){						//map dblclick handler
+			console.log("dbl")
 			var selected,
 			oid=e.graphic.attributes.OBJECTID,
 			reSearch=selectedGraphics.indexOf(oid)===-1; //might need to copy, not assign
@@ -1978,6 +1980,7 @@ console.log(MAP)
 		geoSearch.currArr=[];
 		geoSearch.binLength=geoBins.length;
 		function geoSearch(e,mouseDown){//think about using two sorted arrays, one mins one maxs
+			var st=performance.now();
 			var i=0,j=geoSearch.binLength-1,curr,oid,temp,prevArr=geoSearch.prevArr,currArr=geoSearch.currArr,
 			mapX=e.mapPoint.x,mapY=e.mapPoint.y,breakMax=mapX+1000,binArr,someTargeted=0;
 			if(!mouseDown&&mapX!==0){
@@ -2036,6 +2039,7 @@ console.log(MAP)
 						storeOID(prevArr[i]);
 				}
 			}
+			console.log(performance.now()-st)
 		}
 
 		function whyNoClick(){

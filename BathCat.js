@@ -1928,12 +1928,17 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 
 
 		DJ.connect(outlines, "onMouseOver", function(e) {//map mouseover handler
+			DJ.disconnect(outlineMouseMove);
 			outlineMouseMove=DJ.connect(outlines, "onMouseMove",mmManager);    	
 		});
 
 		function mmManager(e){
 			if(Date.now()<outMoveTime+100)
 				return;
+			if(justMousedDown){
+				justMousedDown=false;
+				return;
+			}
 			geoSearch(e,0);
 			outMoveTime=Date.now();
 		}
@@ -1943,6 +1948,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 				if(identOff)MAP.setMapCursor("default");
 				DJ.disconnect(outlineMouseMove);
 				geoSearch({mapPoint:{x:0,y:0}},0);
+
 		});
 
 		DJ.connect(outlines, "onMouseDown", function(e){            //map click handler
@@ -1977,19 +1983,29 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 		geoSearch.prevArr=[];
 		geoSearch.currArr=[];
 		geoSearch.binLength=geoBins.length;
+		geoSearch.lastMouseBin;
+		geoSearch.lastClickBin=[];
 		function geoSearch(e,mouseDown){//think about using two sorted arrays, one mins one maxs
-			var i=0,j=geoSearch.binLength-1,curr,oid,temp,prevArr=geoSearch.prevArr,currArr=geoSearch.currArr,
+			var i=0,j=geoSearch.binLength-1,curr,oid,temp,binTemp,prevArr=geoSearch.prevArr,currArr=geoSearch.currArr,
 			mapX=e.mapPoint.x,mapY=e.mapPoint.y,breakMax=mapX+1000,binArr,someTargeted=0;
-			if(!mouseDown&&mapX!==0){
-				for(;i<j;i++){
-					if(mapX<geoBins[i+1])
-						break;
+				if(mapX!==0){
+					for(;i<j;i++){
+						if(mapX<geoBins[i+1])
+							break;
+					}
+					binArr=splitGeoArr[i]||splitGeoArr[i-1];
+					geoSearch.lastMouseBin=binArr;
+					i=0;
+				}else{
+					binArr=geoSearch.lastMouseBin;
 				}
-				binArr=splitGeoArr[i]||splitGeoArr[i-1];
-				i=0;
-			}else{
-				binArr=geoArr;
-			}
+				if(mouseDown&&binArr!==geoSearch.lastClickBin){
+					binTemp=binArr;
+					binArr=binArr.concat(geoSearch.lastClickBin);
+					geoSearch.lastClickBin=binTemp;
+					binTemp=null;
+				}
+
 			j=binArr.length;
 			for(;i<j;i++){
 				curr=binArr[i];
@@ -1997,14 +2013,16 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 				if(curr.xmin>breakMax&&!mouseDown)
 					break;
 				if(!outsideTimeBoundary[oid]){
-					if(curr.xmin<=mapX&&curr.xmax>=mapX&&curr.ymin<=mapY&&curr.ymax>=mapY){
+					if(curr.xmax>=mapX&&curr.xmin<=mapX&&curr.ymin<=mapY&&curr.ymax>=mapY){
 						someTargeted=1;
 						caCh(oid,"hi",0);
 						if(identOff)MAP.setMapCursor("pointer");
 						if(mouseDown){
-							currArr.push(oid);
-							if(!oidStore[oid])
-								storeOID(oid);
+							if(currArr.indexOf(oid)==-1){
+								currArr.push(oid);
+								if(!oidStore[oid])
+									storeOID(oid);
+							}
 						}	    	
 					}else{										
 						if(oidStore[oid]){
@@ -2036,6 +2054,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 						storeOID(prevArr[i]);
 				}
 			}
+			binArr=null;
 		}
 
 		function whyNoClick(){

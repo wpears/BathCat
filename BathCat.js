@@ -16,7 +16,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
  			if(arguments[0]!=="mousemove"||allowMM){
     			eael.apply(this,arguments);
       		}
-		}
+		};
 	})();
    ready(function(){ //wait for the dom
    	dom.byId("rP").style.height=window.innerHeight-225+"px";
@@ -138,6 +138,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 		rP=dom.byId("rP"),
 		idCon=dom.byId("idCon"),
 		irP=dom.byId("irP"),
+		lrP=dom.byId('lrP'),
 		ilP=dom.byId("ilP"),
 		resCon=dom.byId("resCon"),
 		measur=dom.byId("measur"),
@@ -148,7 +149,6 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 		bmaps=dom.byId("bmaps"),
 		shoP=dom.byId("shoP"),
 		spl=dom.byId("lP_splitter"),
-		mdLink=dom.byId("mdLink"),
 		fex=dom.byId("fex"),
 		phys=dom.byId("phys"),
 		imag=dom.byId("imag"),
@@ -241,13 +241,13 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 			for(;i<j;i++){
 				intData={};
 				featureAttr=fsFeats[i].attributes;
-				dte=new Date(featureAttr["Date"]);
+				dte=new Date(featureAttr.Date);
 				dst=dte.toUTCString();
 				dst=dst.charAt(6)===" "?dst.substring(0,5)+"0"+dst.substring(5):dst; //ieFix
-				intData["__Date"]=featureAttr["Date"];
-				intData["Date"]=dst.slice(12,16)+"-"+((1+dte.getUTCMonth())<10?"0"+(1+dte.getUTCMonth()):(1+dte.getUTCMonth()))+"-"+dst.slice(5,7);
-				intData["Project"]=(featureAttr["Project"].length<6?"Soil Sed. "+featureAttr.Project:featureAttr.Project);
-				intData["OBJECTID"]=featureAttr["OBJECTID"];
+				intData.__Date=featureAttr.Date;
+				intData.Date=dst.slice(12,16)+"-"+((1+dte.getUTCMonth())<10?"0"+(1+dte.getUTCMonth()):(1+dte.getUTCMonth()))+"-"+dst.slice(5,7);
+				intData.Project=(featureAttr.Project.length<6?"Soil Sed. "+featureAttr.Project:featureAttr.Project);
+				intData.OBJECTID=featureAttr.OBJECTID;
 				gdata.push(intData);
 			}
 			gridLoaded=1;
@@ -267,23 +267,23 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 
 
 			function dateSortSeq(a,b){
-				return a["__Date"]-b["__Date"]
+				return a.__Date-b.__Date
 			}
 			function dateSortInv(a,b){
-				return b["__Date"]-a["__Date"]
+				return b.__Date-a.__Date
 			}
 			function nameSortSeq(a,b){
-				return a["Project"]>b["Project"]?1:-1;
+				return a.Project>b.Project?1:-1;
 			}
 			function nameSortInv(a,b){
-				return a["Project"]>b["Project"]?-1:1;
+				return a.Project>b.Project?-1:1;
 			}
 			function renderSort(sorter,gdata,gCon){
 				var i=0,j=gdata.length,newCon,currentNodes=gCon.childNodes,
 					nodeIndex,frag=DOC.createDocumentFragment();
 				gdata.sort(sorter);
 				for(var i=0,j=gdata.length;i<j;i++){
-					nodeIndex=gdata[i]["OBJECTID"]-1;
+					nodeIndex=gdata[i].OBJECTID-1;
 					frag.appendChild(currentNodes[lastNodePos[nodeIndex]].cloneNode(true));
 					lastNodePos[nodeIndex]=i;
 				}
@@ -316,7 +316,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 						clearStoredOID(currOID,1,1);
 					currGraphic=oidToGraphic(currOID);
 					currRow=oidToRow(currOID);
-					currTime=+gridData[i]["__Date"]
+					currTime=+gridData[i].__Date
 					if(currTime<startTime||currTime>endTime){
 						domcl.add(currRow,"hiddenRow");
 						if(MAP.layerIds[2]){
@@ -1414,8 +1414,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 				irP.innerHTML=toggleRightPane.introText;
 				showPane();
 			}
-			dlLink.style.display="none";
-			mdLink.style.display="none";
+			lrP.style.display="none";
 		};
 
 		toggleRightPane.introText="<p>The <strong>Delta Bathymetry Catalog</strong> houses the complete set of multibeam bathymetric data collected by the Bathymetry and Technical Support section of the California Department of Water Resources.</p> <p id='beta'><b>Note: </b>The Catalog is still in active development. Please report any bugs or usability issues to <a href='mailto:wyatt.pearsall@water.ca.gov?subject=Bathymetry Catalog Issue'>Wyatt Pearsall</a>.</p><p>Click on a feature in the map or table to bring up its <strong>description</strong>. Double-click to view the <strong>raster image</strong>.</p> <p><strong>Download</strong> data as text files from the descrption pane.</p> <p><strong>Measure</strong> distances, <strong>identify</strong> raster elevations, and draw <strong>profile graphs</strong> with the tools at the top-right.</p> <p>Change what displays by <strong>collection date</strong> with the slider at bottom-right. <strong>Sort</strong> by date and name with the table's column headers.</p> <p>See the <strong>help</strong> below for further information.</p>";
@@ -1441,13 +1440,11 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 				}else{
 					if(paneIsShowing){
 						irP.style.opacity=0;
-						mdLink.style.opacity=0;
-						dlLink.style.opacity=0;
+						lrP.style.opacity=0;
 						WIN.setTimeout(function(){
 							infoFunc.setHTML(attributes);
 							irP.style.opacity=1;
-							mdLink.style.opacity=1;
-							dlLink.style.opacity=1;
+							lrP.style.opacity=1;
 							infoFunc.positionIdentPane();
 						},225);
 					}else{
@@ -1456,7 +1453,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 					}
 				}
 			}
-		};
+		}
 		infoFunc.positionIdentPane=function(){
 			if (typeof identTool==='object'&&identTool.isShowing()){
 				rpCon.scrollTop=0;
@@ -1494,8 +1491,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 							gridObject.scrollToRow(oid);
 							markedGraphic=null;
 						}else{
-							dlLink.style.display="none";
-							mdLink.style.display="none";
+							lrP.style.display="none";
 							irP.style.marginTop=rpCon.clientHeight/2-15+"px";
 							irP.innerHTML="<h2>"+selectedGraphicsCount+" projects selected</h2>"
 						}
@@ -1511,8 +1507,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 					"<span class='spirp'><strong>Client: </strong>"+(attr.Client||"Groundwater Supply Assessment Section, DWR")+"</span>"+
 					"<span class='spirp'><strong>Waterways Covered: </strong>"+(attr.Waterways||this.WWays(attr))+"</span>"+
 					"<span class='spirp'><strong>Purpose: </strong>"+(attr.Purpose||"Data was collected to determine the sediment impacts of the agricultural barriers at Middle River, Grant Line Canal, and Old River near the Delta Mendota Canal. Measurements have been made since 1998 at nineteen stations. Multibeam/RTK bathymetry has been gathered since 2011. Four stations have monthly data, the rest are visited in the Fall and Spring.")+"</span>";
-					dlLink.style.display="block";
-					mdLink.style.display="block";
+					lrP.style.display="block";
 				};
 		function showPane(){
 			var i=0,j=movers.length;

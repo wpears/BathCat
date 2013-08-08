@@ -229,30 +229,29 @@ body{
   margin-left:1px;
   margin-right:-4px;
 }
+
 #lrP{
   padding:0 23px 5px 0;
+ -webkit-transition: opacity 0.25s ease;
+ -moz-transition:    opacity 0.25s ease;
+  transition:        opacity 0.25s ease;
+ -o-transition:      opacity 0.25s ease;
 }
+
+.lrp{
+  margin-top:4px;
+  float:right;
+  font-size:0.9em;
+  line-height: 1.2em;
+}
+
 #dlLink{
-  margin-top:-2px;
-  float:right;
-  font-size:0.9em;
-  line-height: 1.2em;
-   -webkit-transition:opacity 0.25s ease;
- -moz-transition:    opacity 0.25s ease;
-  transition:        opacity 0.25s ease;
- -o-transition:      opacity 0.25s ease;
+  margin-right:10px;
 }
-#mdLink{
-  margin-top:-2px;
-  margin-left:5px;
-  float:right;
-  font-size:0.9em;
-  line-height: 1.2em;
-   -webkit-transition:opacity 0.25s ease;
- -moz-transition:    opacity 0.25s ease;
-  transition:        opacity 0.25s ease;
- -o-transition:      opacity 0.25s ease;
+#dlTitle{
+  margin-left:27px;
 }
+
 #foot{
   margin:0;
   position:absolute;

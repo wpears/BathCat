@@ -439,7 +439,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 				if(et!==previousRecentTarget){ //prevent click before double click
 					window.clearTimeout(mouseDownTimeout);
 					previousRecentTarget=et;
-					mouseDownTimeout=WIN.setTimeout(function(){previousRecentTarget=null;},400);
+					mouseDownTimeout=WIN.setTimeout(nullPrevious,400);
 					attributes=outlines.graphics[oid-1].attributes;
 					if(oidStore[oid]&&selectedGraphicsCount===1){ //target is sole open
 						clearStoredOID(oid,1,1);
@@ -1044,6 +1044,10 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 					reqQueue.push({p1:p1,p2:p2,chCount:chCount,crCount:crCount});
 				}
 			},
+			secondMouseUp=function(e){
+					if(e.pageX<mouseDownX+10&&e.pageX>mouseDownX-10&&e.pageY<mouseDownY+10&&e.pageY>mouseDownY-10)
+						addFirstPoint(e.mapPoint)
+			},
 			addSecondPoint=function(p1,p2,chCount,crCount){
 				moveLine(p1,p2);
 				if(p2.x===p1.x&&p2.y===p1.y)return;
@@ -1052,12 +1056,9 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 				inD.disconnect(self.handlers[3]);
 				self.handlers[2]=null;
 				self.handlers[3]=null;
-				self.handlers[1]=inD.connect(inMap,"onMouseUp",function(e){
-					if(e.pageX<mouseDownX+10&&e.pageX>mouseDownX-10&&e.pageY<mouseDownY+10&&e.pageY>mouseDownY-10)
-						addFirstPoint(e.mapPoint)});
+				self.handlers[1]=inD.connect(inMap,"onMouseUp",secondMouseUp);
 				findLayerIds(p2,p1,chCount,crCount);
 			},
-
 			addFirstPoint=function(point){
 				var chCount=chartCount,crCount=crossCount;
 				chartCount++;
@@ -1069,7 +1070,9 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 				tls=addSymbol(null,lSy,graphics[crCount]);
 				inD.disconnect(self.handlers[1]);
 				self.handlers[1]=null;
-				self.handlers[2]=inD.connect(inMap,"onMouseMove",function(e){moveLine(point,e.mapPoint)});
+				self.handlers[2]=inD.connect(inMap,"onMouseMove",function(e){
+					moveLine(point,e.mapPoint)
+				});
 				self.handlers[3]=inD.connect(inMap,"onMouseUp",function(e){
 					if(e.pageX<mouseDownX+10&&e.pageX>mouseDownX-10&&e.pageY<mouseDownY+10&&e.pageY>mouseDownY-10)
 						addSecondPoint(point,e.mapPoint,chCount,crCount);
@@ -1201,7 +1204,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 								chartArr[i].push({x:lengthForChart*maxPointsCorrection, //depth to 
 												  y:M.round(v[i].value*10)/10});       //tenths place
 								if(v[i].value<chartMin)chartMin=(v[i].value-10)>>0; //adjust chart height
-								if(!symCreated)symCreated=!!W.requestAnimationFrame(function(){addSymb(inPoi,sy,gfx)});//add once (for multiple)
+								if(!symCreated)symCreated=!!addSymb(inPoi,sy,gfx);//add once (for multiple)
 							}										
 						}
 
@@ -1301,6 +1304,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 					for(var i=1;i<pathss.length;i+=2){ //below is distance from left edge
 						pathObj[pathss[i].getAttribute("path").slice(1,6)]=(i/2>>0)+gfxOffset;
 					}
+					pathss=null;
 					graphHandlers.push(on(graphh,"mouseover",function(e){
 			    		var et=e.target.getAttribute("path").slice(1,6);
 			    		if(pathObj[et]!==undefined){
@@ -1404,6 +1408,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 		toggleRightPane=function(e){
 			if(paneIsShowing){//close button logic
 				hidePane();
+				lrP.style.display="none";
 				if(typeof identTool==='object'&&identTool.isShowing())
 					toolWipe(identTool,ident);
 				clearAllStoredOIDs();
@@ -1412,9 +1417,8 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 				irP.style.marginTop=0;
 				clearNode(irP);
 				irP.innerHTML=toggleRightPane.introText;
-				showPane();
+				WIN.setTimeout(showPane,0);
 			}
-			lrP.style.display="none";
 		};
 
 		toggleRightPane.introText="<p>The <strong>Delta Bathymetry Catalog</strong> houses the complete set of multibeam bathymetric data collected by the Bathymetry and Technical Support section of the California Department of Water Resources.</p> <p id='beta'><b>Note: </b>The Catalog is still in active development. Please report any bugs or usability issues to <a href='mailto:wyatt.pearsall@water.ca.gov?subject=Bathymetry Catalog Issue'>Wyatt Pearsall</a>.</p><p>Click on a feature in the map or table to bring up its <strong>description</strong>. Double-click to view the <strong>raster image</strong>.</p> <p><strong>Download</strong> data as text files from the descrption pane.</p> <p><strong>Measure</strong> distances, <strong>identify</strong> raster elevations, and draw <strong>profile graphs</strong> with the tools at the top-right.</p> <p>Change what displays by <strong>collection date</strong> with the slider at bottom-right. <strong>Sort</strong> by date and name with the table's column headers.</p> <p>See the <strong>help</strong> below for further information.</p>";
@@ -1453,25 +1457,18 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 					}
 				}
 			}
-		}
+		};
 		infoFunc.positionIdentPane=function(){
 			if (typeof identTool==='object'&&identTool.isShowing()){
 				rpCon.scrollTop=0;
-				var oHeightAndMarginTop=+irP.style.marginTop.slice(0,-2)+irP.offsetHeight;
+				var oHeightAndMarginTop=+irP.style.marginTop.slice(0,-2)+irP.offsetHeight+15;
 				if(ie9){
-					idCon.style.top=oHeightAndMarginTop+60+"px";
+					idCon.style.top=oHeightAndMarginTop+75+"px";
 				}else{
 					idCon.style["transform"]="translate3d(0px,"+oHeightAndMarginTop+"px,0)";
 					idCon.style["-webkit-transform"]="translate3d(0px,"+oHeightAndMarginTop+"px,0)";
 				}
-		/*		if(rpCon.clientHeight>irP.offsetHeight){
-					console.log("flashing")
-					WIN.setTimeout(function(){
-						idCon.style.display="none";
-						idCon.style.display="block"},215);
-				}*/
-
-			};
+			}
 		};
 		infoFunc.WWays=function(attr){
 						switch(attr.Project.slice(0,2)){
@@ -1546,6 +1543,11 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 		termText="<strong id='infoPaneTitle'>Terms of Use</strong><p>The data displayed in this application is for qualitative purposes only. Do not use the data as displayed in rigorous analyses. If downloading the data, familiarize yourself with the metadata before use. Not for use as a navigation aid. The data reflects measurements taken at specific time periods and the Department of Water Resources makes no claim as to the current state of these channels, nor to the accuracy of the data as displayed. Do not share or publish this data without including proper attribution.</p>",
 		conText="<strong id='infoPaneTitle'>Contact</strong><p>For information on scheduling new bathymetric surveys, contact  <a href='mailto:shawn.mayr@water.ca.gov?subject=Bathymetric Survey'>Shawn Mayr</a>, (916) 376-9664.</p><p>For information on this application or the data contained herein, contact  <a href='mailto:wyatt.pearsall@water.ca.gov?subject=Bathymetry Catalog'>Wyatt Pearsall</a>, (916) 376-9643.</p>",
 		infoPane=dom.byId("infopane"),foot=dom.byId("foot"),lastButt;
+		function clearHelp(){
+   					clearNode(infoPane);
+   					infoPaneOpen=0;
+   					rpCon.style.borderBottom="none";
+   	};
 
 		function toggleHelpGlow(e){
 			if(e.target.tagName==="B"){
@@ -1624,11 +1626,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
    			}
 
    			if(lastButt===e.target){
-   				WIN.setTimeout(function(){
-   					clearNode(infoPane);
-   					infoPaneOpen=0;
-   					rpCon.style.borderBottom="none";
-   				},205);
+   				WIN.setTimeout(clearHelp,205);
    				if(ie9){
    					fx.animateProperty({node:infoPane,duration:200,properties:{height:0}}).play();
    					fx.animateProperty({node:rpCon,duration:200,properties:{height:rpCon.clientHeight+250}}).play();
@@ -1699,10 +1697,10 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 			grid.resize();
 			if(+irP.style.marginTop.slice(0,1)) irP.style.marginTop=(winHeight-257)/2-15+"px";
 			on.emit(dque(".dgrid-resize-handle")[0],'click',{bubbles:true});
-			oHeightAndMarginTop=+irP.style.marginTop.slice(0,-2)+irP.offsetHeight;
+			oHeightAndMarginTop=+irP.style.marginTop.slice(0,-2)+irP.offsetHeight+15;
 			if(ie9){
 				fx.animateProperty({node:rP,duration:300,properties:{height:winHeight-225}}).play();
-				fx.animateProperty({node:idCon,duration:150,properties:{top:oHeightAndMarginTop+60}}).play();
+				fx.animateProperty({node:idCon,duration:150,properties:{top:oHeightAndMarginTop+70}}).play();
 				if(infoPaneOpen)
 					fx.animateProperty({node:rpCon,duration:300,properties:{height:winHeight-506}}).play();
 				else fx.animateProperty({node:rpCon,duration:300,properties:{height:winHeight-257}}).play();
@@ -1952,7 +1950,7 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 			if(oid!==previousRecentTarget){//prevent click before double click
 				WIN.clearTimeout(mouseDownTimeout);
 				previousRecentTarget=oid;
-				mouseDownTimeout=WIN.setTimeout(function(){previousRecentTarget=null;},400);
+				mouseDownTimeout=WIN.setTimeout(nullPrevious,400);
 				geoSearch(e,1);
 				gridObject.scrollToRow(oid);
 			}
@@ -2030,6 +2028,9 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 				}
 			}
 			if(mouseDown&&someTargeted){
+				if(selectedGraphicsCount>currArr.length){ //clear a previous click in grid
+					clearStoredOID(selectedGraphics[0],1,0);
+				}
 				if(WIN.JSON.stringify(prevArr)===WIN.JSON.stringify(currArr)){
 					clearAllStoredOIDs();
 					geoSearch.prevArr.length=0;
@@ -2154,6 +2155,9 @@ require(["dijit/layout/BorderContainer","dijit/layout/ContentPane","dgrid/Grid",
 		}
 		function isNumber(n) {
   			return !isNaN(parseFloat(n)) && isFinite(n);
+		}
+		function nullPrevious(){
+			previousRecentTarget=null;
 		}
 
 		function clearNode(node){

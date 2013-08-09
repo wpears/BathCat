@@ -149,7 +149,7 @@ body{
 .mov{
   transform:translate3d(0,0,0);
  -webkit-transform:translate3d(0,0,0);
- -webkit-transition: -webkit-transform 0.3s ease, height 0.2s ease;
+ -webkit-transition: -webkit-transform 0.2s ease, height 0.2s ease;
  -moz-transition:    transform 0.3s ease, height 0.2s ease;
   transition:        transform 0.3s ease, height 0.2s ease;
  -o-transition:      transform 0.3s ease, height 0.2s ease;

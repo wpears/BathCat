@@ -79,11 +79,11 @@ font-size:17px;
 
 @font-face{
   font-family: Harabara;
-  src: url("Harabara.ttf");
+  src: url("fonts/Harabara.ttf");
 }
 @font-face{
   font-family:SSP;
-  src: url("SourceSansPro-Regular.ttf");
+  src: url("fonts/SourceSansPro-Regular.ttf");
 }
 h4{
 color:green:
@@ -570,7 +570,7 @@ margin-left:2px;
 }
 #legend{
   background-image:url(images/bg.png);
-  width:240px;
+  width:250px;
   height:55px;
   bottom:70px;
   right:-255px;

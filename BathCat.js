@@ -19,12 +19,14 @@ require(["dijit/layout/BorderContainer"
 				,"esri/dijit/Scalebar"
 				,"dojo/aspect"
 				,"require"
+				,'modules/tools.js'
 				,"modules/popup.js"
 				,"modules/crosstool.js"
-			//	,"modules/identtool.js"
+				,"modules/identtool.js"
 				,"modules/measuretool.js"
 				,"modules/addsymbol.js"
-				,"modules/clearnode.js"],
+				,"modules/clearnode.js"
+				,"modules/tooltip.js"],
 function( BorderContainer
 				, ContentPane
 				, Grid
@@ -46,12 +48,14 @@ function( BorderContainer
 				, ScaleBar
 				, aspect
 				, require
+				, tools
 				, Popup
 				, CrossTool
-	//			, IdentTool
+				, IdentTool
 				, MeasureTool
 				, addSymbol
 				, clearNode
+				, Tooltip
 				){
 
 		dijit = null;
@@ -175,10 +179,10 @@ function( BorderContainer
 	var WIN = window, DOC = document, DJ = dojo, MAP = map, fsFeat = fs.features, IE =!!document.all, ie9, fx,
 		outlines, grid, gridObject, dScroll, Symbol = E.symbol, outlineMouseMove, outlineTimeout, on = O,
 		mouseDownTimeout, previousRecentTarget, justMousedDown = false,  outMoveTime = 0,
-	 	identifyUp, identOff = 1, measure, 
+	 	identifyUp, identOff = 1, measure, tooltip,
 	 	crossTool, identTool, meaTool, 
 		geoArr, splitGeoArr, geoBins, selectedGraphics =[], selectedGraphicsCount = 0, markedGraphic,
-		infoPaneOpen = 0, legend, paneIsShowing = 0, toggleRightPane, eventFeatures= [],
+		infoPaneOpen = 0, legend, toggleRightPane, eventFeatures= [],
 		zoomEnd, adjustOnZoom, enableImagery, enableMap, imageIsOn = 0, mapIsOn = 1, laOff, previousLevel = 8,
 		processTimeUpdate,
 		tiout, tiload,
@@ -195,13 +199,11 @@ function( BorderContainer
 		noClick = dom.byId("noClick"),
 		dlLink = dom.byId("dlLink"),
 		rP = dom.byId("rP"),
-		idCon = dom.byId("idCon"),
-		irP = dom.byId("irP"),
-		lrP = dom.byId('lrP'),
+		dataNode = dom.byId("dataNode"),
+		downloadNode = dom.byId('downloadNode'),
 		ilP = dom.byId("ilP"),
-		resCon = dom.byId("resCon"),
 		measureAnchor = dom.byId("mea"),
-		ident = dom.byId("ident"),
+		identAnchor = dom.byId("ident"),
 		tsNode = dom.byId("timeSlider"),
 		linArr = dquery(".dijitRuleLabelH", tsNode),
 		bmaps = dom.byId("bmaps"),
@@ -297,7 +299,7 @@ function( BorderContainer
 								},
 							cellNavigation:0
 							},
-							"ilP");
+							ilP);
 			for(;i<j;i++){
 				intData ={};
 				featureAttr = fsFeats[i].attributes;
@@ -594,14 +596,14 @@ function( BorderContainer
 
 			function setToolVisibility(visibleRasterOIDs){
 				if(visibleRasterOIDs.length>1){//working identify logic below
-					domClass.replace(ident,"clickable","unclick");
+					domClass.replace(identAnchor,"clickable","unclick");
 					domClass.replace(crossAnchor,"clickable","unclick");
-				}else if(visibleRasterOIDs.length == 1&&idCon.style.display == "block"){
-					on.emit(ident,"mousedown",{bubbles:true});
-					domClass.replace(ident,"unclick","clickable");
+				}else if(visibleRasterOIDs.length == 1&&identTool&&identTool.getNode().style.display == "block"){
+					on.emit(identAnchor,"mousedown",{bubbles:true});
+					domClass.replace(identAnchor,"unclick","clickable");
 					domClass.replace(crossAnchor,"unclick","clickable");
 				}else{
-					domClass.replace(ident,"unclick","clickable");
+					domClass.replace(identAnchor,"unclick","clickable");
 					domClass.replace(crossAnchor,"unclick","clickable");
 				}
 			}
@@ -825,34 +827,23 @@ function( BorderContainer
 			tiout.refresh();
 		}; 
    		zoomEnd = DJ.connect(MAP,"onZoomEnd", adjustOnZoom);
-	/*	DJ.connect(MAP,"onMouseDragEnd", function(e){
-			var currImg = dquery("#mapDiv_basemapImagery img")[0];
-			console.log(e, currImg);
-			if(currImg){
-				on(currImg,"click", function(e){console.log(e,"currImg")});
-			}
-	Looks like I'd need to ax click blockers..?
-	})*/
-
 
 	toggleRightPane = function(e){
-		if(paneIsShowing){//close button logic
-			hidePane();
-			lrP.style.display = "none";
+		if(rP.isShowing()){//close button logic
+			rP.hidePane();
 			if(typeof identTool === 'object'&&identTool.isShowing())
-				toolWipe(identTool, ident); //FIXME
+				tools.wipe(identTool, identAnchor);
 			clearAllStoredOIDs();
 			geoSearch.prevArr.length = 0;
 		}else{
-			irP.style.marginTop = 0;
-			clearNode(irP);
-			irP.innerHTML = toggleRightPane.introText;
-			WIN.setTimeout(showPane, 0);
+			dataNode.style.marginTop = 0;
+			clearNode(dataNode);
+			dataNode.innerHTML = toggleRightPane.introText;
+			WIN.setTimeout(rP.showPane, 0);
 		}
 	};
 
 		toggleRightPane.introText = "<p>The <strong>Delta Bathymetry Catalog</strong> houses the complete set of multibeam bathymetric data collected by the Bathymetry and Technical Support section of the California Department of Water Resources.</p> <p id = 'beta'><b>Note: </b>The Catalog is still in active development. Please report any bugs or usability issues to <a href = 'mailto:wyatt.pearsall@water.ca.gov?subject = Bathymetry Catalog Issue'>Wyatt Pearsall</a>.</p><p>Click on a feature in the map or table to bring up its <strong>description</strong>. Double-click to view the <strong>raster image</strong>.</p> <p><strong>Download</strong> data as text files from the descrption pane.</p> <p><strong>Measure</strong> distances, <strong>identify</strong> raster elevations, and draw <strong>profile graphs</strong> with the tools at the top-right.</p> <p>Change what displays by <strong>collection date</strong> with the slider at bottom-right. <strong>Sort</strong> by date and name with the table's column headers.</p> <p>See the <strong>help</strong> below for further information.</p>";
-
 
 		function infoFunc(attributes){
 			if(!attributes&&selectedGraphicsCount === 0)
@@ -863,110 +854,71 @@ function( BorderContainer
 								onEnd:function(){
 									infoFunc.setHTML(attributes);
 									fx.fadeIn({node:rpCon}).play();
-									infoFunc.positionIdentPane();	
+									if(rpCon.positionIdentPane)rpCon.positionIdentPane();
 								}};
-					if(paneIsShowing){
+					if(rP.isShowing()){
 						fx.animateProperty(fxArgs).play();
 					}else{
 					infoFunc.setHTML(attributes);
-					showPane();
+					rP.showPane();
 				}
 				}else{
-					if(paneIsShowing){
-						irP.style.opacity = 0;
-						lrP.style.opacity = 0;
+					if(rP.isShowing()){
+						dataNode.style.opacity = 0;
+						downloadNode.style.opacity = 0;
 						WIN.setTimeout(function(){
 							infoFunc.setHTML(attributes);
-							irP.style.opacity = 1;
-							lrP.style.opacity = 1;
-							infoFunc.positionIdentPane();
+							dataNode.style.opacity = 1;
+							downloadNode.style.opacity = 1;
+							if(rpCon.positionIdentPane)rpCon.positionIdentPane();
 						}, 225);
 					}else{
 						infoFunc.setHTML(attributes);
-						showPane();
+						rP.showPane();
 					}
 				}
-			}
-		};
-		infoFunc.positionIdentPane = function(){
-			if (typeof identTool === 'object'&&identTool.isShowing()){
-				rpCon.scrollTop = 0;
-				var oHeightAndMarginTop =+irP.style.marginTop.slice(0,-2)+irP.offsetHeight+15;
-				if(ie9){
-					idCon.style.top = oHeightAndMarginTop+75+"px";
-				}else{
-					idCon.style["transform"] = "translate3d(0px,"+oHeightAndMarginTop+"px, 0)";
-					idCon.style["-webkit-transform"] = "translate3d(0px,"+oHeightAndMarginTop+"px, 0)";
-				}
-			}
-		};
-		infoFunc.WWays = function(attr){
-						switch(attr.Project.slice(0, 2)){
-						   case "GL":
-								return "Grant Line Canal";
-							case "OR":
-								return "Old River";
-							case "DC":
-								return "Doughty Cut";
-						}
-				};	
-		infoFunc.setHTML = function(attr){
-					if(!attr){
-						if(selectedGraphicsCount === 1){
-							var oid = selectedGraphics[0];
-							infoFunc.parseAttributes(outlines.graphics[oid-1].attributes);
-							gridObject.scrollToRow(oid);
-							markedGraphic = null;
-						}else{
-							lrP.style.display = "none";
-							irP.style.marginTop = rpCon.clientHeight/2-15+"px";
-							irP.innerHTML = "<h2>"+selectedGraphicsCount+" projects selected</h2>"
-						}
-					}else{
-						if(attr&&attr.Project)
-							infoFunc.parseAttributes(attr);	
-					}
-				};
-				infoFunc.parseAttributes = function(attr){
-					irP.style.marginTop = "0";	
-					irP.innerHTML = "<h2>"+(attr.Project.length<6?"Soil Sed. "+attr.Project:attr.Project)+"</h2>"+
-					"<span class = 'spirp'><strong>Collection Date: </strong>"+(new Date(attr.Date)).toUTCString().slice(4, 16)+"</span>"+
-					"<span class = 'spirp'><strong>Client: </strong>"+(attr.Client||"Groundwater Supply Assessment Section, DWR")+"</span>"+
-					"<span class = 'spirp'><strong>Waterways Covered: </strong>"+(attr.Waterways||this.WWays(attr))+"</span>"+
-					"<span class = 'spirp'><strong>Purpose: </strong>"+(attr.Purpose||"Data was collected to determine the sediment impacts of the agricultural barriers at Middle River, Grant Line Canal, and Old River near the Delta Mendota Canal. Measurements have been made since 1998 at nineteen stations. Multibeam/RTK bathymetry has been gathered since 2011. Four stations have monthly data, the rest are visited in the Fall and Spring.")+"</span>";
-					lrP.style.display = "block";
-				};
-		function showPane(){
-			var i = 0, j = movers.length;
-			paneIsShowing = 1;
-			arro.style.backgroundPosition = "-32px -16px";
-			if(ie9){
-				for(;i<j;i++){
-				if(movers[i] === rP)
-					fx.animateProperty({node:movers[i], duration:300, properties:{marginRight:0}}).play();
-				else fx.animateProperty({node:movers[i], duration:300, properties:{marginRight:285}}).play();
-				}
-			}else{
-				for(;i<j;i++)
-					domClass.add(movers[i],"movd");
 			}
 		}
 
-		function hidePane(){
-			var i = 0, j = movers.length;
-			paneIsShowing = 0;
-			arro.style.backgroundPosition = "-96px -16px";
-			if(ie9){
-				for(;i<j;i++){
-				if(movers[i] === rP)
-					fx.animateProperty({node:movers[i], duration:250, properties:{marginRight:-285}}).play();
-				else fx.animateProperty({node:movers[i], duration:250, properties:{marginRight:0}}).play();
+		infoFunc.WWays = function(attr){
+			switch(attr.Project.slice(0, 2)){
+			   case "GL":
+					return "Grant Line Canal";
+				case "OR":
+					return "Old River";
+				case "DC":
+					return "Doughty Cut";
+			}
+		};	
+
+		infoFunc.setHTML = function(attr){
+			if(!attr){
+				if(selectedGraphicsCount === 1){
+					var oid = selectedGraphics[0];
+					infoFunc.parseAttributes(outlines.graphics[oid-1].attributes);
+					gridObject.scrollToRow(oid);
+					markedGraphic = null;
+				}else{
+					downloadNode.style.display = "none";
+					dataNode.style.marginTop = rpCon.clientHeight/2-15+"px";
+					dataNode.innerHTML = "<h2>"+selectedGraphicsCount+" projects selected</h2>"
 				}
 			}else{
-				for(;i<j;i++)
-					domClass.remove(movers[i],"movd");
+				if(attr&&attr.Project)
+					infoFunc.parseAttributes(attr);	
 			}
-		}
+		};
+
+		infoFunc.parseAttributes = function(attr){
+			dataNode.style.marginTop = "0";	
+			dataNode.innerHTML = "<h2>"+(attr.Project.length<6?"Soil Sed. "+attr.Project:attr.Project)+"</h2>"+
+			"<span class = 'spirp'><strong>Collection Date: </strong>"+(new Date(attr.Date)).toUTCString().slice(4, 16)+"</span>"+
+			"<span class = 'spirp'><strong>Client: </strong>"+(attr.Client||"Groundwater Supply Assessment Section, DWR")+"</span>"+
+			"<span class = 'spirp'><strong>Waterways Covered: </strong>"+(attr.Waterways||this.WWays(attr))+"</span>"+
+			"<span class = 'spirp'><strong>Purpose: </strong>"+(attr.Purpose||"Data was collected to determine the sediment impacts of the agricultural barriers at Middle River, Grant Line Canal, and Old River near the Delta Mendota Canal. Measurements have been made since 1998 at nineteen stations. Multibeam/RTK bathymetry has been gathered since 2011. Four stations have monthly data, the rest are visited in the Fall and Spring.")+"</span>";
+			downloadNode.style.display = "block";
+		};
+
 
 (function(){
 	var helpText = "<strong id = 'infoPaneTitle'>Help</strong><p>Zoom in and out with the <b>Zoom buttons</b> or the mousewheel. Shift and drag on the map to zoom to a selected area.</p><p>Go to the full extent of the data with the <b>Globe</b>.</p><p>Select map or satellite view with the <b>Basemap buttons</b>.</p><p>Browse through projects in the table. Sort the table with the column headers and collapse it with the <b>Slider</b>.</p><p>Turn on a raster by double-clicking it in the table or map, or checking its checkbox in the table.</p><ul>When a raster is displayed:<br/><li>With the <b>Identify</b> tool, click to display NAVD88 elevation at any point.</li><li>Draw a cross-section graph with the <b>Profile tool</b>. Click the start and end points of the line to generate a graph in a draggable window. Hover over points to display elevation.</li></ul><p>Use the <b>Measure tool</b> to calculate distance, area, or geographic location.</p><p>Project information and Identify results are displayed in the right pane. Toggle this pane with the <b>Arrow button</b>.</p><p>Use the <b>Time slider</b> to filter the display of features by date. Drag the start and end thumbs or click a year to only display data from that year.</p>",
@@ -977,7 +929,7 @@ function( BorderContainer
    					clearNode(infoPane);
    					infoPaneOpen = 0;
    					rpCon.style.borderBottom = "none";
-   	};
+   	}
 
 		function toggleHelpGlow(e){
 			if(e.target.tagName === "B"){
@@ -998,7 +950,7 @@ function( BorderContainer
 		   				domClass.toggle(spl,"helpglow");
 		   				break;
 		   			case "Ide":
-		   				domClass.toggle(ident,"helpglow");
+		   				domClass.toggle(identAnchor,"helpglow");
 		   				break;
 		   			case "Pro":
 		   				domClass.toggle(crossAnchor,"helpglow");
@@ -1025,8 +977,8 @@ function( BorderContainer
    		});
 
    		on(dlLink,"mouseover", function(e){  //remove spatial reference info from files
-   			var pro =(irP.firstChild.textContent).split(" ").join(""),
-   				dat = new Date(irP.firstChild.nextElementSibling.textContent.slice(-11)),
+   			var pro =(dataNode.firstChild.textContent).split(" ").join(""),
+   				dat = new Date(dataNode.firstChild.nextElementSibling.textContent.slice(-11)),
    				yea = dat.getFullYear(),
    				mo = dat.getMonth()+1,
    				dayy = dat.getDate();
@@ -1121,14 +1073,17 @@ function( BorderContainer
 
 
 		on(WIN, "resize", function(e){			//resize map on browser resize
-			var winHeight = WIN.innerHeight, oHeightAndMarginTop;
+			var winHeight = WIN.innerHeight
+				, oHeightAndMarginTop
+				, idCon=identTool?identTool.getNode():null;
 			MAP.resize();
 			grid.resize();
-			if(+irP.style.marginTop.slice(0, 1)) irP.style.marginTop =(winHeight-257)/2-15+"px";
+			if(+dataNode.style.marginTop.slice(0, 1)) dataNode.style.marginTop =(winHeight-257)/2-15+"px";
 			on.emit(dquery(".dgrid-resize-handle")[0],'click',{bubbles:true});
-			oHeightAndMarginTop =+irP.style.marginTop.slice(0,-2)+irP.offsetHeight+15;
+			oHeightAndMarginTop =+dataNode.style.marginTop.slice(0,-2)+dataNode.offsetHeight+15;
 			if(ie9){
 				fx.animateProperty({node:rP, duration:300, properties:{height:winHeight-225}}).play();
+				if(idCon)
 				fx.animateProperty({node:idCon, duration:150, properties:{top:oHeightAndMarginTop+70}}).play();
 				if(infoPaneOpen)
 					fx.animateProperty({node:rpCon, duration:300, properties:{height:winHeight-506}}).play();
@@ -1138,32 +1093,133 @@ function( BorderContainer
 				if(infoPaneOpen)
 					rpCon.style.height = winHeight-507+"px";
 				else rpCon.style.height = winHeight-257+"px";
-				idCon.style["transform"] = "translate3d(0px,"+oHeightAndMarginTop+"px, 0)";
-				idCon.style["-webkit-transform"] = "translate3d(0px,"+oHeightAndMarginTop+"px, 0)";
+				if(idCon){
+					idCon.style["transform"] = "translate3d(0px,"+oHeightAndMarginTop+"px, 0)";
+					idCon.style["-webkit-transform"] = "translate3d(0px,"+oHeightAndMarginTop+"px, 0)";
+				}
 			}
-
 		});
 
 
-/************TOOLS***************/
+  	rP.isShowing = function(){
+    	return rP.showing;
+    }
 
+    rP.showPane = function(){
+			var i = 0, j = movers.length;
+			rP.showing = 1;
+			arro.style.backgroundPosition = "-32px -16px";
+			if(ie9){
+				for(;i<j;i++){
+				if(movers[i] === rP)
+					fx.animateProperty({node:movers[i], duration:300, properties:{marginRight:0}}).play();
+				else fx.animateProperty({node:movers[i], duration:300, properties:{marginRight:285}}).play();
+				}
+			}else{
+				for(;i<j;i++)
+					domClass.add(movers[i],"movd");
+			}
+		}
+
+    rP.hidePane = function(){
+			var i = 0, j = movers.length;
+			rP.showing = 0;
+			downloadNode.style.display="none";
+			arro.style.backgroundPosition = "-96px -16px";
+			if(ie9){
+				for(;i<j;i++){
+				if(movers[i] === rP)
+					fx.animateProperty({node:movers[i], duration:250, properties:{marginRight:-285}}).play();
+				else fx.animateProperty({node:movers[i], duration:250, properties:{marginRight:0}}).play();
+				}
+			}else{
+				for(;i<j;i++)
+					domClass.remove(movers[i],"movd");
+			}
+		}
+
+    function makeIdentContainer(node,previous){
+   		node.show = function(){
+   			if(!rP.isShowing()){
+   				clearNode(previous);
+   				rP.showPane();
+   			}
+   			identTool.getNode().style.display="block";
+   			node.positionIdentPane();
+   		};
+   		node.isDefault = function(){
+   			if(previous.innerHTML.slice(0, 5)=== "<p>Th")
+   				return true;
+   			return false;
+   		};
+   		node.isClear = function(){
+   			if(previous.innerHTML.slice(0, 5)=== "")
+   				return true;
+   			return false;
+   		};
+   		node.setDefault = function(){
+   			previous.innerHTML = toggleRightPane.introText;
+        previous.style.opacity = 1;
+   		};
+   		node.replaceDefault=function(){
+   			if(rP.isShowing()){
+   				previous.style.opacity=0;
+   				WIN.setTimeout(node.performReplace, 100);
+   			}else{
+   				node.performReplace();
+   				rP.showPane();
+   			}
+   		};
+   		node.performReplace=function(){
+   			clearNode(previous);
+   			identTool.getNode().style.display="block";
+   			node.positionIdentPane();
+   		};
+   		node.positionIdentPane = function(){
+				if (typeof identTool === 'object'&&identTool.isShowing()){
+					rpCon.scrollTop = 0;
+					var oHeightAndMarginTop =+dataNode.style.marginTop.slice(0,-2)+dataNode.offsetHeight+15
+						, idCon=identTool.getNode()
+						;
+					if(ie9){
+						idCon.style.top = oHeightAndMarginTop+75+"px";
+					}else{
+						idCon.style["transform"] = "translate3d(0px,"+oHeightAndMarginTop+"px, 0)";
+						idCon.style["-webkit-transform"] = "translate3d(0px,"+oHeightAndMarginTop+"px, 0)";
+					}
+				}
+			};
+   	return node;
+   }       
+/************TOOLS***************/
+		tooltip = Tooltip(noClick);
 
 		on.once(crossAnchor,"mousedown", function(e){
-			if (domClass.contains(crossAnchor,"clickable")){
 				var options = { map:MAP
 											, dojo:DJ
 											, esri:E
 											, rastersShowing:rastersShowing
 											, eventFeatures:eventFeatures
 											, chartNames:outlines
+											, tooltip:tooltip
 										  };
 				allowMM = 1;						  
 				crossTool = CrossTool(Popup(), crossAnchor, rasterUrl, layerArray, options);
-				crossTool.init(e);
-			}else
-				whyNoClick();					
+				crossTool.init(e);				
 		});
 
+		on.once (identAnchor,"mousedown", function(e){
+				var options= { map: MAP
+										 , dojo: DJ
+										 , esri: E
+										 , rastersShowing: rastersShowing
+										 , eventFeatures:eventFeatures
+										 , names:outlines
+										 , tooltip:tooltip
+									   };
+				identTool = IdentTool(makeIdentContainer(rpCon,dataNode), identAnchor, rasterUrl, layerArray, options); 
+				identTool.init(e);
+		}); 
 
 		meaTool = MeasureTool( measureAnchor
 			                   , new simpleLine(solidLine, new DJColor([0, 0, 0]), 2)
@@ -1175,23 +1231,6 @@ function( BorderContainer
 
 		on.once(measureAnchor,"mousedown", function(e){allowMM=1;meaTool.init(e)});
 
-/*
-		on.once (ident,"mousedown", function(e){
-			if(domClass.contains(ident,"clickable")){
-				identTool = IdentTool(fill in); //FIXME
-				identTool.init(e);
-			}else
-				whyNoClick();
-		}); 
-
-
-*/
-
-		function clearGraphics(arr){
-			var mg = MAP.graphics;
-			for(var i = 0, j = arr.length;i<j;i++)
-						mg.remove(arr[i]);
-		}
 
 		on(shoP,"mousedown", toggleRightPane);//handle close button click
 
@@ -1328,31 +1367,10 @@ function( BorderContainer
 			}
 			binArr = null;
 		}
+DJ.connect(MAP,"onClick",function(e){console.log(e.offsetX,e.offsetY,e.mapPoint)});
 
-		function whyNoClick(){
-			if(!whyNoClick.timeout){
-				whyNoClick.zTimeout = function(){noClick.style.zIndex = "-100"};
-				whyNoClick.timeout = function(){
-					noClick.style.opacity = 0;
-					whyNoClick.currTimeouts[1] = WIN.setTimeout(whyNoClick.zTimeout, 105);
-				};
-				whyNoClick.ieTimeout = function(){fx.animateProperty({node:noClick, duration:150, properties:{opacity:0},
-					onEnd:whyNoClick.zTimeout}).play()};
-				whyNoClick.currTimeouts =[];
-			}
-			noClick.style.zIndex = "400";
-			WIN.clearTimeout(whyNoClick.currTimeouts[0]);
-			if(ie9){
-				fx.animateProperty({node:noClick, duration:75, properties:{opacity:1}}).play();
-				whyNoClick.currTimeouts[0] = WIN.setTimeout(whyNoClick.ieTimeOut, 2000);
-			}else{
-				WIN.clearTimeout(whyNoClick.currTimeouts[1]);
-				noClick.style.opacity = 1;
-				whyNoClick.currTimeouts[0] = WIN.setTimeout(whyNoClick.timeout, 2000);
-			}
-		}
-
-		function redrawAllGraphics(graphics){      //apply highlighting logic to an array
+																					//apply highlighting logic to an array
+		function redrawAllGraphics(graphics){    
 				darr.forEach(graphics, function(v){
 					var oid = v.attributes.OBJECTID;
 					if(oidStore[oid])
@@ -1362,56 +1380,34 @@ function( BorderContainer
 							caCh(oid,"", 1);
 				});
 		}
+																//main highlighting logic, separated by year with different basemap
+		function caCh(oid, hi, refresh){
+			var symbo = basemapImagery&&basemapImagery.visible?imSym:symbols
+				, date
+			  , graphic
+				,	row
+				;
+			if(fs.features[oid-1]){
+				date = fs.features[oid-1].attributes.Date;
+				color = getColor(date);
+				graphic = oidToGraphic(oid);
+				if(!graphic) return;
+				row = gridObject.oidToRow(oid);
+				graphic.setSymbol(symbo[color+hi]);
+				if(!refresh){
+					if (hi!== "")
+						domClass.add(row,"highl"+color);
+					else
+						domClass.remove(row,"highl"+color);
+				}
+			}
+		}
 
-		function caCh(oid, hi, refresh){ //main highlighting logic, separated by year with different basemap
-			console.log("LOOK AT CACH MEMORY USAGE")
-			//throw new Error();
-			var symbo = basemapImagery&&basemapImagery.visible?imSym:symbols,
-			chk = fs.features[oid-1]?fs.features[oid-1].attributes.Date:null,
-			graphic = oidToGraphic(oid),
-			row = gridObject.oidToRow(oid);
-					//2012:1325404800000 2011:1293868800000 2009:1230796800000
-					// 2013: 1357027200000 2010:1262332800000
-			if(graphic){
-			if(chk>= 1262304000000&&chk<1293840000000){
-				graphic.setSymbol(symbo["gre"+hi]);
-				if(!refresh){
-					if (hi!== "")
-						domClass.add(row,"highlgre");
-					else
-						domClass.remove(row,"highlgre");
-				}
-			
-			}
-			else if(chk>= 1293840000000&&chk<1325376000000){
-				graphic.setSymbol(symbo["mag"+hi]);
-				if(!refresh){
-					if (hi!== "")
-						domClass.add(row,"highlmag");
-					else
-						domClass.remove(row,"highlmag");
-				}
-			
-			}
-			else if(chk>= 1325376000000&&chk<1357027200000){
-				graphic.setSymbol(symbo["blu"+hi]);
-				if(!refresh){
-					if (hi!== "")
-						domClass.add(row,"highlblu");
-					else						
-						domClass.remove(row,"highlblu");
-				}
-			}
-			else if(chk>= 1357027200000&&chk<1388563200000){            
-				graphic.setSymbol(symbo["red"+hi]);
-				if(!refresh){
-					if (hi!== "")
-						domClass.add(row,"highlred");
-					else
-						domClass.remove(row,"highlred");
-				}
-			}
-			}
+		function getColor(date){
+			if (date < 1293840000000) return "gre";
+			if (date < 1325376000000) return "mag";
+			if (date < 1357027200000) return "blu";
+			if (date < 1388563200000) return "red";
 		}
 
 		function oidToGraphic(oid){

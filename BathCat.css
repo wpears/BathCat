@@ -173,7 +173,7 @@ body{
               -1px 1px 2px 0px #a5b6e0;        
 }
 
-#irP{
+#dataNode{
   width:85%;
   margin-left:27px;
   -webkit-transition:opacity 0.25s ease;
@@ -230,7 +230,8 @@ body{
   margin-right:-4px;
 }
 
-#lrP{
+#downloadNode{
+  display: none;
   padding:0 23px 5px 0;
  -webkit-transition: opacity 0.25s ease;
  -moz-transition:    opacity 0.25s ease;
@@ -335,9 +336,6 @@ li{
 }
 #mapDiv {
   margin-bottom:1px;
-  box-shadow: 0px 2px 2px -1px #7f97d3,   
-              1px 0px 3px 0 #a5b6e0,
-             -1px 0px 3px 0 #a5b6e0;
 }
 #ident{
   font-family:'Palatino Linotype', serif;
@@ -358,7 +356,6 @@ li{
   right:75px;
   border-radius:2px;
   background:rgba(235,235,235,0.9) center url(images/grap.png) no-repeat;
-  background-size:"20px 20px";
 }
 .lab{
   width:28px;
@@ -367,12 +364,11 @@ li{
 #noClick{
   padding:3px 7px 7px 7px;
   font-size: 0.875em;
-  z-index:-100;
+  z-index:400;
+  display:none;
   opacity:0;
   height:40px;
   width:120px;
-  top:75px;
-  right:55px;
   background-image:url(images/bg.png);
   border-radius: 6px;
   box-shadow: 1px 1px 1px 0 #b2b2b2,

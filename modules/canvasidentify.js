@@ -27,8 +27,8 @@ define(["modules/colorrampobject.js"],function(ramp){
       getImage.apply(this,args);
     };
 
-  return function getElevation(point){
-   var data = ctx.getImageData(point.x, point.y, 1, 1).data
+  return function getElevation(x,y){
+   var data = ctx.getImageData(x, y, 1, 1).data
     , key = data[0]*65536+data[1]*256+data[2]
     ;
     return ramp[key];

@@ -57,7 +57,6 @@ function( BorderContainer
 				, addSymbol
 				, clearNode
 				, Tooltip
-				, CanvasId
 				){
 
 		dijit = null;
@@ -1370,8 +1369,8 @@ function( BorderContainer
 			binArr = null;
 		}
 
-var canid = CanvasId(rasterLayer,"canvasworkaround.html");		
-DJ.connect(MAP,"onClick",function(e){console.log(canid(e.offsetX,e.offsetY))});
+//var canid = CanvasId(rasterLayer,"canvasworkaround.html");		
+//DJ.connect(MAP,"onClick",function(e){console.log(canid(e.offsetX,e.offsetY))});
 
 																					//apply highlighting logic to an array
 		function redrawAllGraphics(graphics){    

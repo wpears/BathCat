@@ -76,13 +76,6 @@ function( rampObject
         , containerNode
         , point1Found = 0
         , ie9 = (DOC.all&&DOC.addEventListener&&!window.atob)?true:false
-        , ifr = document.createElement('iframe')
-        , frameWindow
-        , canvas
-        , context
-          //patching in ramp support
-          //create onload...
-          //then on line, 
 
         , simpleLine = Symbol.SimpleLineSymbol
         , simpleMarker = Symbol.SimpleMarkerSymbol
@@ -433,11 +426,6 @@ function( rampObject
           }
         };
 
-    ifr.onload=function(){
-      frameWindow = ifr.contentWindow
-      canvas = frameWindow.can
-      context = frameWindow.ctx
-    };
 
     crossTool={
       handlers:[],
@@ -450,10 +438,8 @@ function( rampObject
           }
         }
         self = this;
-
-        handleClick(e);
-
         container.init();
+        handleClick(e);
 
         aspect.after(container,"resize", function(e, dim){
           if(dim === "width"&&charts.length)

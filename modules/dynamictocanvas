@@ -1,0 +1,13 @@
+var ifr = document.createElement('iframe')
+  , getImage=rasterLayer.getImageUrl;
+  
+    rasterLayer.getImageUrl = function(){
+      var args = Array.prototype.slice.call(arguments,0,arguments.length-1),
+      cb=arguments[3],
+      fn = function(){
+        ifr.contentWindow.postMessage(arguments[0]);
+        cb.apply(this,arguments);
+      };
+      args.push(fn)
+      getImage.apply(this,args);
+    };

@@ -26,7 +26,8 @@ require(["dijit/layout/BorderContainer"
 				,"modules/measuretool.js"
 				,"modules/addsymbol.js"
 				,"modules/clearnode.js"
-				,"modules/tooltip.js"],
+				,"modules/tooltip.js"
+				],
 function( BorderContainer
 				, ContentPane
 				, Grid
@@ -56,6 +57,7 @@ function( BorderContainer
 				, addSymbol
 				, clearNode
 				, Tooltip
+				, CanvasId
 				){
 
 		dijit = null;
@@ -119,7 +121,6 @@ function( BorderContainer
 					topoLoader = null;
 				});
 		rasterLayer.setVisibleLayers([-1]);
-		
 		E.map = map;
 
 		(function loadDots(){
@@ -227,6 +228,7 @@ function( BorderContainer
        	 	outFields: ["OBJECTID"],
        	 	maxAllowableOffset:MAP.extent.getWidth()/MAP.width
   		});
+		window.tiout = tiout
   		tiload = DJ.connect(tiout, "onLoad", function(){
      		tiout.setRenderer(new E.renderer.SimpleRenderer(blank));
      		outlines.setRenderer(new E.renderer.SimpleRenderer(blank));
@@ -1367,7 +1369,9 @@ function( BorderContainer
 			}
 			binArr = null;
 		}
-DJ.connect(MAP,"onClick",function(e){console.log(e.offsetX,e.offsetY,e.mapPoint)});
+
+var canid = CanvasId(rasterLayer,"canvasworkaround.html");		
+DJ.connect(MAP,"onClick",function(e){console.log(canid(e.offsetX,e.offsetY))});
 
 																					//apply highlighting logic to an array
 		function redrawAllGraphics(graphics){    
@@ -1388,10 +1392,11 @@ DJ.connect(MAP,"onClick",function(e){console.log(e.offsetX,e.offsetY,e.mapPoint)
 				,	row
 				;
 			if(fs.features[oid-1]){
-				date = fs.features[oid-1].attributes.Date;
-				color = getColor(date);
 				graphic = oidToGraphic(oid);
 				if(!graphic) return;
+				
+				date = fs.features[oid-1].attributes.Date;
+				color = getColor(date);
 				row = gridObject.oidToRow(oid);
 				graphic.setSymbol(symbo[color+hi]);
 				if(!refresh){

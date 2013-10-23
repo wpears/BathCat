@@ -11,6 +11,11 @@
 .dijitButtonText{text-align:center;padding:0 .3em}.dijitButtonContents{display:block;height:32px;width:16px;padding:0 8px;outline:0}.dijitStretch{white-space:nowrap;background-repeat:repeat-x}.dijitDisplayNone{display:none!important}.dijitPopup{position:absolute;background-color:transparent;margin:0;border:0;padding:0}.dj_ie9 .dijitMenuItemLabel{position:static}.dj_ie9 .dijitPopup .dijitMenuTable{overflow:visible!important}.dijitMenuItemHover,.dijitMenuItemSelected{background-color:#d9e6f9;color:#243c5f}.dijitMenuTable{border-collapse:collapse;border-width:0;background-color:white}.dj_webkit .dijitMenuTable td[colspan="2"]{border-right:hidden}.dijitMenuItem{text-align:left;white-space:nowrap;padding:.1em .2em;cursor:pointer}.dijitMenuItemIcon{background-repeat:no-repeat;width:15px;height:15px}.dijitArrowButtonChar{cursor:pointer;display:none}.dijitDownArrowButton{cursor:pointer;outline:0}.dijitMenuItemLabel{position:relative;vertical-align:middle}.unitDropDown{outline:0}.esriToggleButton{margin-left:-6px}.dijitContentPane.result{font-weight:600;font-size:18px}
 /*columnresizer,removed css plugin from the js file*/
 .dgrid-column-resizer {position: absolute; height: 100%; width: 2px; background-color: #666; z-index: 1000; top: 0;}.dgrid-resize-handle {height: 100px; width: 0; position: absolute; right: -1px; top:-4px; cursor: e-resize; z-index: 999; border-left: 5px solid transparent; outline: none;}.dgrid-resize-header-container {height:100%;}html.has-touch .dgrid-resize-handle {border-left: 20px solid transparent;}html.has-touch .dgrid-column-resizer {width: 2px;}html.has-no-quirks .dgrid-resize-header-container {position: relative;}html.has-ie-6 .dgrid-resize-header-container {position: static;} .dgrid-header .dgrid-cell-padding {overflow: hidden; padding-right:0px;}html.has-ie-6 .dgrid-header .dgrid-cell-padding {margin-right: 4px;}html.has-ie-6 .dgrid-header .dgrid-sort-arrow {margin-right: 0;}html.has-quirks .dgrid-header .dgrid-cell-padding, html.has-ie-6 .dgrid-header .dgrid-cell {position:relative;}#dgrid-css-extensions-ColumnResizer-loaded {display: none;}
+/*Mea tool*/
+.dijitInline.dijitReset.dijitButtonText:after{
+ content:"  \25BC";
+ color:#555a6e;
+}
 
 .dijitTooltip {
    position: absolute;
@@ -469,7 +474,6 @@ li{
 }
 #mea:active{
   background-position:1px 3px;
-
 }
 
 #measur{

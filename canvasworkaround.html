@@ -1,0 +1,24 @@
+<html>
+<head>
+</head>
+<body>
+<img id="im"></img>
+<canvas id="can"></canvas>
+<script>
+var im=document.getElementById("im")
+  , can=document.getElementById("can")
+  , ctx=can.getContext('2d')
+  ;
+
+im.onload=function(){
+  can.width=im.width;
+  can.height=im.height;
+  ctx.drawImage(im,0,0);
+}  
+window.addEventListener("message",function(mess){
+  if(mess.data[0]!=='{')
+  im.src=mess.data;
+});
+</script>
+</body>
+</html>

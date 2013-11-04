@@ -27,6 +27,7 @@ require(["dijit/layout/BorderContainer"
 				,"modules/addsymbol.js"
 				,"modules/clearnode.js"
 				,"modules/tooltip.js"
+				,"modules/canvasidentify.js"
 				],
 function( BorderContainer
 				, ContentPane
@@ -57,6 +58,7 @@ function( BorderContainer
 				, addSymbol
 				, clearNode
 				, Tooltip
+				, CanvasId
 				){
 
 		dijit = null;
@@ -1369,8 +1371,8 @@ function( BorderContainer
 			binArr = null;
 		}
 
-//var canid = CanvasId(rasterLayer,"canvasworkaround.html");		
-//DJ.connect(MAP,"onClick",function(e){console.log(canid(e.offsetX,e.offsetY))});
+var canid = CanvasId(rasterLayer,"http://mrsbmapp00642/bcstage/canvasworkaround.html");		
+DJ.connect(MAP,"onClick",function(e){console.log(canid(e.offsetX,e.offsetY))});
 
 																					//apply highlighting logic to an array
 		function redrawAllGraphics(graphics){    

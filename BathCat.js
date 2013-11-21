@@ -27,6 +27,7 @@ require(["dijit/layout/BorderContainer"
 				,"modules/addsymbol.js"
 				,"modules/clearnode.js"
 				,"modules/tooltip.js"
+//				,"modules/canvasidentify.js"
 				],
 function( BorderContainer
 				, ContentPane
@@ -57,12 +58,12 @@ function( BorderContainer
 				, addSymbol
 				, clearNode
 				, Tooltip
+//				, CanvasId
 				){
 
 		dijit = null;
 		dojox = null; //clear references
 	//esri.map,	esri.utils, alternate infowindow included compact build.. check AMD FIXME
-
   	parser.parse(); //parse widgets
 
   	var allowMM = 0;  // An absolutely obscene amount of event handlers. And TONS of triggered body/map mm events
@@ -100,7 +101,7 @@ function( BorderContainer
    		, timeDiv = dom.byId('timeDiv')
    		, timeSlider
    		, inExt = new E.geometry.Extent(-13612000, 4519000,-13405000, 4662600, sr)
-      , map = new E.Map("mapDiv", {extent:inExt, fadeOnZoom:false})
+      , map = new E.Map("mapDiv", {extent:inExt,fadeOnZoom:false}) //to allow for maxOffset updates
       , rasterLayer = new eL.ArcGISDynamicMapServiceLayer(rasterUrl, {id:"raster"})
       , basemapImagery = new eL.ArcGISTiledMapServiceLayer(imageryUrl, {id:"imagery"})
      	, basemapTopo = new eL.ArcGISTiledMapServiceLayer(topoUrl, {id:"topo"})
@@ -178,7 +179,7 @@ function( BorderContainer
 	dojo.connect(qt, "onComplete", function(fs){ //declare most variables upfront for fewer vars/hoisting trouble
 	var WIN = window, DOC = document, DJ = dojo, MAP = map, fsFeat = fs.features, IE =!!document.all, ie9, fx,
 		outlines, grid, gridObject, dScroll, Symbol = E.symbol, outlineMouseMove, outlineTimeout, on = O,
-		mouseDownTimeout, previousRecentTarget, justMousedDown = false,  outMoveTime = 0,
+		mouseDownTimeout, previousRecentTarget, justMousedUp = false,  outMoveTime = 0,
 	 	identifyUp, identOff = 1, measure, tooltip,
 	 	crossTool, identTool, meaTool, 
 		geoArr, splitGeoArr, geoBins, selectedGraphics =[], selectedGraphicsCount = 0, markedGraphic,
@@ -186,6 +187,7 @@ function( BorderContainer
 		zoomEnd, adjustOnZoom, enableImagery, enableMap, imageIsOn = 0, mapIsOn = 1, laOff, previousLevel = 8,
 		processTimeUpdate,
 		tiout, tiload,
+		mouseDownX = 0, mouseDownY = 0,
 		layerArray = new Array(fsFeat.length),
 		oidArray = new Array(fsFeat.length),
 		oidStore = new Array(fsFeat.length),
@@ -327,7 +329,6 @@ function( BorderContainer
 			for(var i = 0, j = gdata.length;i<j;i++){
 				lastNodePos[i] = i;
 			}
-
 
 			function dateSortSeq(a, b){
 				return a.__Date-b.__Date
@@ -1244,8 +1245,8 @@ function( BorderContainer
 		function mmManager(e){
 			if(Date.now()<outMoveTime+100)
 				return;
-			if(justMousedDown){
-				justMousedDown = false;
+			if(justMousedUp){
+				justMousedUp = false;
 				return;
 			}
 			geoSearch(e, 0);
@@ -1260,15 +1261,19 @@ function( BorderContainer
 
 		});
 
-		DJ.connect(outlines, "onMouseDown", function(e){            //map click handler
-			justMousedDown = true;
-			var attributes = e.graphic.attributes, oid = attributes.OBJECTID;
-			if(oid!== previousRecentTarget){//prevent click before double click
-				WIN.clearTimeout(mouseDownTimeout);
-				previousRecentTarget = oid;
-				mouseDownTimeout = WIN.setTimeout(nullPrevious, 400);
-				geoSearch(e, 1);
-				gridObject.scrollToRow(oid);
+		DJ.connect(outlines, "onMouseDown", function(e){mouseDownX = e.pageX;mouseDownY = e.pageY;});
+
+		DJ.connect(outlines, "onMouseUp", function(e){            //map click handler
+			if(e.pageX < mouseDownX+10&&e.pageX > mouseDownX-10&&e.pageY < mouseDownY+10&&e.pageY > mouseDownY-10){
+				justMousedUp = true;
+				var attributes = e.graphic.attributes, oid = attributes.OBJECTID;
+				if(oid!== previousRecentTarget){//prevent click before double click
+					WIN.clearTimeout(mouseDownTimeout);
+					previousRecentTarget = oid;
+					mouseDownTimeout = WIN.setTimeout(nullPrevious, 400);
+					geoSearch(e, 1);
+					gridObject.scrollToRow(oid);
+				}
 			}
 		});
 
@@ -1292,7 +1297,6 @@ function( BorderContainer
 		geoSearch.prevArr =[];
 		geoSearch.currArr =[];
 		geoSearch.binLength = geoBins.length;
-		geoSearch.lastMouseBin;
 		geoSearch.lastClickBin =[];
 		function geoSearch(e, mouseDown){//think about using two sorted arrays, one mins one maxs
 			var i = 0, j = geoSearch.binLength-1, curr, oid, temp, binTemp, prevArr = geoSearch.prevArr, currArr = geoSearch.currArr,
@@ -1368,7 +1372,8 @@ function( BorderContainer
 			}
 			binArr = null;
 		}
-
+		//var canid = CanvasId(rasterLayer, MAP)
+//DJ.connect(MAP,"onClick",function(e){canid.identify(e.screenPoint)})
 //var canid = CanvasId(rasterLayer,"canvasworkaround.html");		
 //DJ.connect(MAP,"onClick",function(e){console.log(canid(e.offsetX,e.offsetY))});
 

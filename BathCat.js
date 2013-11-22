@@ -337,10 +337,12 @@ function( BorderContainer
 				return b.__Date-a.__Date
 			}
 			function nameSortSeq(a, b){
-				return a.Project>b.Project?1:-1;
+				if(a.Project===b.Project)return dateSortSeq(a,b);
+				return a.Project>b.Project?1:-1
 			}
 			function nameSortInv(a, b){
-				return a.Project>b.Project?-1:1;
+				if(a.Project===b.Project)return dateSortSeq(a,b);
+				return a.Project>b.Project?-1:1
 			}
 			function renderSort(sorter, gdata, gCon){
 				var i = 0, j = gdata.length, newCon, currentNodes = gCon.childNodes,

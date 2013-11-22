@@ -101,7 +101,7 @@ function( BorderContainer
    		, timeDiv = dom.byId('timeDiv')
    		, timeSlider
    		, inExt = new E.geometry.Extent(-13612000, 4519000,-13405000, 4662600, sr)
-      , map = new E.Map("mapDiv", {extent:inExt,fadeOnZoom:false}) //to allow for maxOffset updates
+      , map = new E.Map("mapDiv", {extent:inExt})
       , rasterLayer = new eL.ArcGISDynamicMapServiceLayer(rasterUrl, {id:"raster"})
       , basemapImagery = new eL.ArcGISTiledMapServiceLayer(imageryUrl, {id:"imagery"})
      	, basemapTopo = new eL.ArcGISTiledMapServiceLayer(topoUrl, {id:"topo"})
@@ -290,7 +290,7 @@ function( BorderContainer
 
 		gridObject =(function(){
 			var fsFeats = fs.features, i = 0, j = fsFeats.length, gdata =[], gridCon,
-				intData, featureAttr, dte, dst, nameSorted = 0, dateSorted = 1, lastNodePos =[],
+				intData, featureAttr, dte, dst, lastNodePos =[],nameSorted = 0, dateSorted = 1,
 				adGr = declare([Grid, ColumnResizer]), gridHeader, headerNodes;
 
 				grid = new adGr({columns:{
@@ -423,31 +423,48 @@ function( BorderContainer
 			renderSort(dateSortSeq, gdata, gridCon);
 			domClass.add(headerNodes[1], "sortTarget");
 
+			function nameSortEffects(){
+			  dateSorted = 0;
+			  domClass.add(headerNodes[0], "sortTarget");
+			  domClass.remove(headerNodes[1], "sortTarget");
+			  if(selectedGraphicsCount)scrollToRow(selectedGraphics[0])
+			}
 
+			function dateSortEffects(){
+				nameSorted = 0;
+				domClass.add(headerNodes[1], "sortTarget");
+				domClass.remove(headerNodes[0], "sortTarget");
+				if(selectedGraphicsCount)scrollToRow(selectedGraphics[0])
+			}
+		  function clickSort(){
+		    if(nameSorted === 0&&selectedGraphicsCount>1){
+				  renderSort(nameSortSeq, gdata, gridCon);
+					nameSorted = 1;
+					nameSortEffects();
+					return true;
+				}
+        return false;
+      }
 
 			on(headerNodes[0], "mousedown", function(){
-				if(nameSorted){
+				if(nameSorted>0){
 					renderSort(nameSortInv, gdata, gridCon);
-					nameSorted = 0;
+					nameSorted = -1;
 				}else{
 					renderSort(nameSortSeq, gdata, gridCon);
 					nameSorted = 1;
 				}
-				domClass.add(headerNodes[0], "sortTarget");
-				domClass.remove(headerNodes[1], "sortTarget");
-				if(selectedGraphicsCount)scrollToRow(selectedGraphics[0])
+				nameSortEffects();
 			});
 			on(headerNodes[1], "mousedown", function(){
-				if(dateSorted){
+				if(dateSorted>0){
 					renderSort(dateSortInv, gdata, gridCon);
-					dateSorted = 0;
+					dateSorted = -1;
 				}else{
 					renderSort(dateSortSeq, gdata, gridCon);
 					dateSorted = 1;
 				}
-				domClass.add(headerNodes[1], "sortTarget");
-				domClass.remove(headerNodes[0], "sortTarget");
-				if(selectedGraphicsCount)scrollToRow(selectedGraphics[0])
+				dateSortEffects();
 			});
 
 			on(spl, "mousedown", function(e){								//expand left pane
@@ -667,7 +684,7 @@ function( BorderContainer
 			});
 
 			return {timeUpdate:timeUpdate, oidToRow:oidToRow, scrollToRow:scrollToRow, setVisibleRasters:
-					setVisibleRasters, checkImageInputs:checkImageInputs};
+					setVisibleRasters, checkImageInputs:checkImageInputs,clickSort:clickSort};
 
 		})();
 
@@ -900,7 +917,6 @@ function( BorderContainer
 				if(selectedGraphicsCount === 1){
 					var oid = selectedGraphics[0];
 					infoFunc.parseAttributes(outlines.graphics[oid-1].attributes);
-					gridObject.scrollToRow(oid);
 					markedGraphic = null;
 				}else{
 					downloadNode.style.display = "none";
@@ -1273,8 +1289,8 @@ function( BorderContainer
 					WIN.clearTimeout(mouseDownTimeout);
 					previousRecentTarget = oid;
 					mouseDownTimeout = WIN.setTimeout(nullPrevious, 400);
-					geoSearch(e, 1);
-					gridObject.scrollToRow(oid);
+					geoSearch(e, 1);				
+					if(!gridObject.clickSort()) gridObject.scrollToRow(oid);
 				}
 			}
 		});

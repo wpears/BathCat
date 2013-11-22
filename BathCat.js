@@ -182,7 +182,7 @@ function( BorderContainer
 		mouseDownTimeout, previousRecentTarget, justMousedUp = false,  outMoveTime = 0,
 	 	identifyUp, identOff = 1, measure, tooltip,
 	 	crossTool, identTool, meaTool, 
-		geoArr, splitGeoArr, geoBins, selectedGraphics =[], selectedGraphicsCount = 0, markedGraphic,
+		geoArr, splitGeoArr, geoBins, selectedGraphics =[], selectedGraphicsCount = 0,
 		infoPaneOpen = 0, legend, toggleRightPane, eventFeatures= [],
 		zoomEnd, adjustOnZoom, enableImagery, enableMap, imageIsOn = 0, mapIsOn = 1, laOff, previousLevel = 8,
 		processTimeUpdate,
@@ -526,14 +526,6 @@ function( BorderContainer
 					if(oidStore[oid]&&selectedGraphicsCount === 1){ //target is sole open
 						clearStoredOID(oid, 1, 1);
 						toggleRightPane();
-					}else if(oidStore[oid]&&selectedGraphicsCount>1){ //target is one of several selected
-						if(markedGraphic === oid){
-							clearStoredOID(oid, 1, 1);
-							infoFunc(null);
-						}else{
-							markedGraphic = oid;
-							infoFunc(attributes);
-						}
 					}else{
 						clearAndSetOID(oid, attributes);
 					} 	
@@ -713,7 +705,6 @@ function( BorderContainer
 					clearStoredOID(selectedGraphics[i], 0, 0);
 			selectedGraphics.length = 0;
 			geoSearch.prevArr.length = 0;
-			markedGraphic = null;
 		}
 
 		function splice(arr, index){
@@ -917,7 +908,6 @@ function( BorderContainer
 				if(selectedGraphicsCount === 1){
 					var oid = selectedGraphics[0];
 					infoFunc.parseAttributes(outlines.graphics[oid-1].attributes);
-					markedGraphic = null;
 				}else{
 					downloadNode.style.display = "none";
 					dataNode.style.marginTop = rpCon.clientHeight/2-15+"px";

@@ -295,7 +295,7 @@ function( rampObject
                   if(resultCount > requestStep){ //add data from chartArr structure to chart
                   for(;i < j;i++)chart.addSeries(i, chartArr[i]);
                     chart.addAxis("y", {vertical:true, min:chartMin, max:5, title:"(ft)", titleGap:8});
-            //        W.requestAnimationFrame(function(){chart.render()});
+                    W.requestAnimationFrame(function(){chart.render()});
                     requestStep+= 15;
                   } 
               }
@@ -426,7 +426,7 @@ function( rampObject
               }
             }));
             graphList.unshift(arguments);
-          //  gOffset+= offsetStep; //accomodate overlapping rasters
+            gOffset+= offsetStep; //accomodate overlapping rasters
             offsetStep = 0;
           }
         };

@@ -819,21 +819,31 @@ function( BorderContainer
 			domClass.remove(phys,"currentbmap");
 		};
 
+		on(bmaps,"mousedown", function(e){                            //basemap handling
+			var et = e.target, typ = et.innerHTML;
+			if(typ == "Satellite"&&!imageIsOn){
+				enableImagery();
+				if(!zoomEnd)
+				zoomEnd = DJ.connect(MAP,"onZoomEnd", adjustOnZoom);
+			}else if(typ == "Map"&&!mapIsOn){
+				enableMap();
+				if(!zoomEnd)
+				zoomEnd = DJ.connect(MAP,"onZoomEnd", adjustOnZoom);
+			}
+			else {
+				laOff();
+			}
+		});
+
 		adjustOnZoom = function(ext, zF, anc, lev){	//logic on ZoomEnd	
 			if(basemapImagery&&basemapTopo){
-				if(lev>= 15&&previousLevel<15)
+				if(lev>= 15&&previousLevel<15&&mapIsOn)
 					enableImagery();
-				else if(lev<15&&previousLevel>= 15)
+				else if(lev<15&&previousLevel>= 15&&imageIsOn)
 					enableMap();
-				else if(!basemapTopo.visible&&!basemapImagery.visible){
-					if(lev>= 15)
-						enableImagery();
-					else
-						enableMap();
-				}
 			}
 			previousLevel = lev;
-			var offs = MAP.extent.getWidth()/MAP.width;
+			var offs = ext.getWidth()/MAP.width;
 			offs = offs>10?offs:10;
 			tiout.setMaxAllowableOffset(offs);
 			tiout.refresh();
@@ -1060,24 +1070,6 @@ function( BorderContainer
 
 		on(fex,"mousedown", function(e){                  //go to initial extent
 			MAP.setExtent(inExt);
-		});
-
-		on(bmaps,"mousedown", function(e){                            //basemap handling
-			var et = e.target, typ = et.innerHTML;
-			if(typ == "Satellite"&&!imageIsOn){
-				enableImagery();
-				if(!zoomEnd)
-				zoomEnd = DJ.connect(MAP,"onZoomEnd", adjustOnZoom);
-			}else if(typ == "Map"&&!mapIsOn){
-				enableMap();
-				if(!zoomEnd)
-				zoomEnd = DJ.connect(MAP,"onZoomEnd", adjustOnZoom);
-			}
-			else {
-				DJ.disconnect(zoomEnd);
-				zoomEnd = null;
-				laOff();
-			}
 		});
 
 

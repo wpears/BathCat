@@ -289,7 +289,7 @@ function( BorderContainer
 		//*****initialize grid and attach all handlers*******\\
 
 		gridObject =(function(){
-			var fsFeats = fs.features, i = 0, j = fsFeats.length, gdata =[], gridCon,
+			var fsFeats = fs.features, i = 0, j = fsFeats.length, gdata =[], gridCon, expandReady=1,
 				intData, featureAttr, dte, dst, lastNodePos =[],nameSorted = 0, dateSorted = 1,
 				adGr = declare([Grid, ColumnResizer]), gridHeader, headerNodes;
 
@@ -417,8 +417,10 @@ function( BorderContainer
 				rastersAsOIDs.length = 0;
 				toBeHidden.length = 0;
 			}
+
 			timeUpdate.rastersAsOIDs =[];
 			timeUpdate.toBeHidden =[];
+
 
 			renderSort(dateSortSeq, gdata, gridCon);
 			domClass.add(headerNodes[1], "sortTarget");
@@ -466,25 +468,27 @@ function( BorderContainer
 				}
 				dateSortEffects();
 			});
+      
+			function triggerExpand(e){
+				if(expandReady){
+					WIN.requestAnimationFrame(function(){expand(e)});
+					expandReady = 0;
+				}
+			}
 
-			on(spl, "mousedown", function(e){								//expand left pane
-			var expandReady = 1, mM, W = WIN;
-			mM = on(W, "mousemove", triggerExpand);
-
-			on.once(W,"mouseup", function(evt){
-				MAP.resize();
-				mM.remove();
-			});
 			function expand(e){
 				gridCon.style.width = gridHeader.style.width;
 				expandReady = 1;
 			}
-			function triggerExpand(e){
-				if(expandReady){
-					W.requestAnimationFrame(function(){expand(e)});
-					expandReady = 0;
-				}
-			}
+
+			on(spl, "mousedown", function(e){								//expand left pane
+
+			  var mM = on(WIN, "mousemove", triggerExpand);
+
+			  on.once(WIN,"mouseup", function(evt){
+				  MAP.resize();
+				  mM.remove();
+			  });
 			});
 
 
@@ -676,7 +680,7 @@ function( BorderContainer
 			});
 
 			return {timeUpdate:timeUpdate, oidToRow:oidToRow, scrollToRow:scrollToRow, setVisibleRasters:
-					setVisibleRasters, checkImageInputs:checkImageInputs,clickSort:clickSort};
+					setVisibleRasters, checkImageInputs:checkImageInputs,clickSort:clickSort,expand:triggerExpand};
 
 		})();
 
@@ -1079,9 +1083,8 @@ function( BorderContainer
 				, oHeightAndMarginTop
 				, idCon=identTool?identTool.getNode():null;
 			MAP.resize();
-			grid.resize();
+			gridObject.expand();
 			if(+dataNode.style.marginTop.slice(0, 1)) dataNode.style.marginTop =(winHeight-257)/2-15+"px";
-			on.emit(dquery(".dgrid-resize-handle")[0],'click',{bubbles:true});
 			oHeightAndMarginTop =+dataNode.style.marginTop.slice(0,-2)+dataNode.offsetHeight+15;
 			if(ie9){
 				fx.animateProperty({node:rP, duration:300, properties:{height:winHeight-225}}).play();

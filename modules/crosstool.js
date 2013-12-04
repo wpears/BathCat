@@ -6,7 +6,7 @@ define( ['modules/colorrampobject.js'
         ,'modules/clearnode.js'
         ,'modules/cleargraphics.js'
         ,'modules/featureevents.js'
-  //    ,'modules/canvasidentify.js'
+        ,'modules/canvasidentify.js'
         ,'dojo/aspect'
         ,'dojo/on'
         ,'dojo/dom-class'
@@ -27,7 +27,7 @@ function( rampObject
         , clearNode
         , clearGraphics
         , featureEvents
-    //    , CanvasId
+        , CanvasId
         , aspect
         , on
         , domClass
@@ -136,9 +136,12 @@ function( rampObject
           crossCount++;
           point1Found = 0;
           graphics[crCount] = graphics[crCount] === undefined?[]:graphics[crCount];
+
           findLayerIds(point, null, chCount, crCount);
+
           addSymbol(map, esri, point, dataPointSymbol, graphics[crCount]);
           mouseLine = addSymbol(map, esri, null, lineSymbol, graphics[crCount]);
+
           dojo.disconnect(self.handlers[1]);
           self.handlers[1] = null;
           self.handlers[2] = dojo.connect(map, "onMouseMove", function(e){

@@ -27,7 +27,6 @@ require(["dijit/layout/BorderContainer"
 				,"modules/addsymbol.js"
 				,"modules/clearnode.js"
 				,"modules/tooltip.js"
-//				,"modules/canvasidentify.js"
 				],
 function( BorderContainer
 				, ContentPane
@@ -58,7 +57,6 @@ function( BorderContainer
 				, addSymbol
 				, clearNode
 				, Tooltip
-//				, CanvasId
 				){
 
 		dijit = null;
@@ -1021,7 +1019,8 @@ function( BorderContainer
    					domClass.remove(lastButt,"activeFoot");
    			else{
    				infoPaneOpen = 1;
-   				rpCon.style.borderBottom = "3px dotted #99ceff";
+   				rpCon.style.borderBottom = "2px solid #99ceff";
+   				rpCon.style.boxShadow="0 2px 3px -2px #bbf0ff";
    				if(ie9){
    					fx.animateProperty({node:infoPane, duration:200, properties:{height:242}}).play();
    					fx.animateProperty({node:rpCon, duration:200, properties:{height:rpCon.clientHeight-250}}).play();
@@ -1375,10 +1374,8 @@ function( BorderContainer
 			}
 			binArr = null;
 		}
-		//var canid = CanvasId(rasterLayer, MAP)
-//DJ.connect(MAP,"onClick",function(e){canid.identify(e.screenPoint)})
-//var canid = CanvasId(rasterLayer,"canvasworkaround.html");		
-//DJ.connect(MAP,"onClick",function(e){console.log(canid(e.offsetX,e.offsetY))});
+		
+
 
 																					//apply highlighting logic to an array
 		function redrawAllGraphics(graphics){    

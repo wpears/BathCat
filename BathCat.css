@@ -608,9 +608,10 @@ user-select: none;
   outline:none;
 }
 
-.dgrid-content{
+.dgrid-content,.dgrid-input{
   cursor:pointer;
 }
+
 
 .dgrid-cell{
   line-height:1.5em;

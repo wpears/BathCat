@@ -64,7 +64,6 @@ function( BorderContainer
 		dijit = null;
 		dojox = null; //clear references
 	//esri.map,	esri.utils, alternate infowindow included compact build.. check AMD FIXME
-
   	parser.parse(); //parse widgets
 
   	var allowMM = 0;  // An absolutely obscene amount of event handlers. And TONS of triggered body/map mm events
@@ -102,7 +101,7 @@ function( BorderContainer
    		, timeDiv = dom.byId('timeDiv')
    		, timeSlider
    		, inExt = new E.geometry.Extent(-13612000, 4519000,-13405000, 4662600, sr)
-      , map = new E.Map("mapDiv", {extent:inExt, fadeOnZoom:false})
+      , map = new E.Map("mapDiv", {extent:inExt})
       , rasterLayer = new eL.ArcGISDynamicMapServiceLayer(rasterUrl, {id:"raster"})
       , basemapImagery = new eL.ArcGISTiledMapServiceLayer(imageryUrl, {id:"imagery"})
      	, basemapTopo = new eL.ArcGISTiledMapServiceLayer(topoUrl, {id:"topo"})
@@ -180,14 +179,15 @@ function( BorderContainer
 	dojo.connect(qt, "onComplete", function(fs){ //declare most variables upfront for fewer vars/hoisting trouble
 	var WIN = window, DOC = document, DJ = dojo, MAP = map, fsFeat = fs.features, IE =!!document.all, ie9, fx,
 		outlines, grid, gridObject, dScroll, Symbol = E.symbol, outlineMouseMove, outlineTimeout, on = O,
-		mouseDownTimeout, previousRecentTarget, justMousedDown = false,  outMoveTime = 0,
+		mouseDownTimeout, previousRecentTarget, justMousedUp = false,  outMoveTime = 0,
 	 	identifyUp, identOff = 1, measure, tooltip,
 	 	crossTool, identTool, meaTool, 
-		geoArr, splitGeoArr, geoBins, selectedGraphics =[], selectedGraphicsCount = 0, markedGraphic,
+		geoArr, splitGeoArr, geoBins, selectedGraphics =[], selectedGraphicsCount = 0,
 		infoPaneOpen = 0, legend, toggleRightPane, eventFeatures= [],
 		zoomEnd, adjustOnZoom, enableImagery, enableMap, imageIsOn = 0, mapIsOn = 1, laOff, previousLevel = 8,
 		processTimeUpdate,
 		tiout, tiload,
+		mouseDownX = 0, mouseDownY = 0,
 		layerArray = new Array(fsFeat.length),
 		oidArray = new Array(fsFeat.length),
 		oidStore = new Array(fsFeat.length),
@@ -289,8 +289,8 @@ function( BorderContainer
 		//*****initialize grid and attach all handlers*******\\
 
 		gridObject =(function(){
-			var fsFeats = fs.features, i = 0, j = fsFeats.length, gdata =[], gridCon,
-				intData, featureAttr, dte, dst, nameSorted = 0, dateSorted = 1, lastNodePos =[],
+			var fsFeats = fs.features, i = 0, j = fsFeats.length, gdata =[], gridCon, expandReady=1,
+				intData, featureAttr, dte, dst, lastNodePos =[],nameSorted = 0, dateSorted = 1,
 				adGr = declare([Grid, ColumnResizer]), gridHeader, headerNodes;
 
 				grid = new adGr({columns:{
@@ -330,7 +330,6 @@ function( BorderContainer
 				lastNodePos[i] = i;
 			}
 
-
 			function dateSortSeq(a, b){
 				return a.__Date-b.__Date
 			}
@@ -338,10 +337,12 @@ function( BorderContainer
 				return b.__Date-a.__Date
 			}
 			function nameSortSeq(a, b){
-				return a.Project>b.Project?1:-1;
+				if(a.Project===b.Project)return dateSortSeq(a,b);
+				return a.Project>b.Project?1:-1
 			}
 			function nameSortInv(a, b){
-				return a.Project>b.Project?-1:1;
+				if(a.Project===b.Project)return dateSortSeq(a,b);
+				return a.Project>b.Project?-1:1
 			}
 			function renderSort(sorter, gdata, gCon){
 				var i = 0, j = gdata.length, newCon, currentNodes = gCon.childNodes,
@@ -416,57 +417,78 @@ function( BorderContainer
 				rastersAsOIDs.length = 0;
 				toBeHidden.length = 0;
 			}
+
 			timeUpdate.rastersAsOIDs =[];
 			timeUpdate.toBeHidden =[];
+
 
 			renderSort(dateSortSeq, gdata, gridCon);
 			domClass.add(headerNodes[1], "sortTarget");
 
+			function nameSortEffects(){
+			  dateSorted = 0;
+			  domClass.add(headerNodes[0], "sortTarget");
+			  domClass.remove(headerNodes[1], "sortTarget");
+			  if(selectedGraphicsCount)scrollToRow(selectedGraphics[0])
+			}
 
+			function dateSortEffects(){
+				nameSorted = 0;
+				domClass.add(headerNodes[1], "sortTarget");
+				domClass.remove(headerNodes[0], "sortTarget");
+				if(selectedGraphicsCount)scrollToRow(selectedGraphics[0])
+			}
+		  function clickSort(){
+		    if(nameSorted === 0&&selectedGraphicsCount>1){
+				  renderSort(nameSortSeq, gdata, gridCon);
+					nameSorted = 1;
+					nameSortEffects();
+					return true;
+				}
+        return false;
+      }
 
 			on(headerNodes[0], "mousedown", function(){
-				if(nameSorted){
+				if(nameSorted>0){
 					renderSort(nameSortInv, gdata, gridCon);
-					nameSorted = 0;
+					nameSorted = -1;
 				}else{
 					renderSort(nameSortSeq, gdata, gridCon);
 					nameSorted = 1;
 				}
-				domClass.add(headerNodes[0], "sortTarget");
-				domClass.remove(headerNodes[1], "sortTarget");
-				if(selectedGraphicsCount)scrollToRow(selectedGraphics[0])
+				nameSortEffects();
 			});
 			on(headerNodes[1], "mousedown", function(){
-				if(dateSorted){
+				if(dateSorted>0){
 					renderSort(dateSortInv, gdata, gridCon);
-					dateSorted = 0;
+					dateSorted = -1;
 				}else{
 					renderSort(dateSortSeq, gdata, gridCon);
 					dateSorted = 1;
 				}
-				domClass.add(headerNodes[1], "sortTarget");
-				domClass.remove(headerNodes[0], "sortTarget");
-				if(selectedGraphicsCount)scrollToRow(selectedGraphics[0])
+				dateSortEffects();
 			});
+      
+			function triggerExpand(e){
+				if(expandReady){
+					WIN.requestAnimationFrame(function(){expand(e)});
+					expandReady = 0;
+				}
+			}
 
-			on(spl, "mousedown", function(e){								//expand left pane
-			var expandReady = 1, mM, W = WIN;
-			mM = on(W, "mousemove", triggerExpand);
-
-			on.once(W,"mouseup", function(evt){
-				MAP.resize();
-				mM.remove();
-			});
 			function expand(e){
 				gridCon.style.width = gridHeader.style.width;
 				expandReady = 1;
 			}
-			function triggerExpand(e){
-				if(expandReady){
-					W.requestAnimationFrame(function(){expand(e)});
-					expandReady = 0;
-				}
-			}
+
+			on(spl, "mousedown", function(e){								//expand left pane
+
+			  var mM = on(WIN, "mousemove", triggerExpand);
+
+			  on.once(WIN,"mouseup", function(evt){
+				  MAP.resize();
+				  mM.remove();
+			  });
 			});
 
 
@@ -508,14 +530,6 @@ function( BorderContainer
 					if(oidStore[oid]&&selectedGraphicsCount === 1){ //target is sole open
 						clearStoredOID(oid, 1, 1);
 						toggleRightPane();
-					}else if(oidStore[oid]&&selectedGraphicsCount>1){ //target is one of several selected
-						if(markedGraphic === oid){
-							clearStoredOID(oid, 1, 1);
-							infoFunc(null);
-						}else{
-							markedGraphic = oid;
-							infoFunc(attributes);
-						}
 					}else{
 						clearAndSetOID(oid, attributes);
 					} 	
@@ -666,7 +680,7 @@ function( BorderContainer
 			});
 
 			return {timeUpdate:timeUpdate, oidToRow:oidToRow, scrollToRow:scrollToRow, setVisibleRasters:
-					setVisibleRasters, checkImageInputs:checkImageInputs};
+					setVisibleRasters, checkImageInputs:checkImageInputs,clickSort:clickSort,expand:triggerExpand};
 
 		})();
 
@@ -695,7 +709,6 @@ function( BorderContainer
 					clearStoredOID(selectedGraphics[i], 0, 0);
 			selectedGraphics.length = 0;
 			geoSearch.prevArr.length = 0;
-			markedGraphic = null;
 		}
 
 		function splice(arr, index){
@@ -810,21 +823,31 @@ function( BorderContainer
 			domClass.remove(phys,"currentbmap");
 		};
 
+		on(bmaps,"mousedown", function(e){                            //basemap handling
+			var et = e.target, typ = et.innerHTML;
+			if(typ == "Satellite"&&!imageIsOn){
+				enableImagery();
+				if(!zoomEnd)
+				zoomEnd = DJ.connect(MAP,"onZoomEnd", adjustOnZoom);
+			}else if(typ == "Map"&&!mapIsOn){
+				enableMap();
+				if(!zoomEnd)
+				zoomEnd = DJ.connect(MAP,"onZoomEnd", adjustOnZoom);
+			}
+			else {
+				laOff();
+			}
+		});
+
 		adjustOnZoom = function(ext, zF, anc, lev){	//logic on ZoomEnd	
 			if(basemapImagery&&basemapTopo){
-				if(lev>= 15&&previousLevel<15)
+				if(lev>= 15&&previousLevel<15&&mapIsOn)
 					enableImagery();
-				else if(lev<15&&previousLevel>= 15)
+				else if(lev<15&&previousLevel>= 15&&imageIsOn)
 					enableMap();
-				else if(!basemapTopo.visible&&!basemapImagery.visible){
-					if(lev>= 15)
-						enableImagery();
-					else
-						enableMap();
-				}
 			}
 			previousLevel = lev;
-			var offs = MAP.extent.getWidth()/MAP.width;
+			var offs = ext.getWidth()/MAP.width;
 			offs = offs>10?offs:10;
 			tiout.setMaxAllowableOffset(offs);
 			tiout.refresh();
@@ -899,8 +922,6 @@ function( BorderContainer
 				if(selectedGraphicsCount === 1){
 					var oid = selectedGraphics[0];
 					infoFunc.parseAttributes(outlines.graphics[oid-1].attributes);
-					gridObject.scrollToRow(oid);
-					markedGraphic = null;
 				}else{
 					downloadNode.style.display = "none";
 					dataNode.style.marginTop = rpCon.clientHeight/2-15+"px";
@@ -1000,7 +1021,8 @@ function( BorderContainer
    					domClass.remove(lastButt,"activeFoot");
    			else{
    				infoPaneOpen = 1;
-   				rpCon.style.borderBottom = "3px dotted #99ceff";
+   				rpCon.style.borderBottom = "2px solid #99ceff";
+   				rpCon.style.boxShadow="0 2px 3px -2px #bbf0ff";
    				if(ie9){
    					fx.animateProperty({node:infoPane, duration:200, properties:{height:242}}).play();
    					fx.animateProperty({node:rpCon, duration:200, properties:{height:rpCon.clientHeight-250}}).play();
@@ -1055,24 +1077,6 @@ function( BorderContainer
 			MAP.setExtent(inExt);
 		});
 
-		on(bmaps,"mousedown", function(e){                            //basemap handling
-			var et = e.target, typ = et.innerHTML;
-			if(typ == "Satellite"&&!imageIsOn){
-				enableImagery();
-				if(!zoomEnd)
-				zoomEnd = DJ.connect(MAP,"onZoomEnd", adjustOnZoom);
-			}else if(typ == "Map"&&!mapIsOn){
-				enableMap();
-				if(!zoomEnd)
-				zoomEnd = DJ.connect(MAP,"onZoomEnd", adjustOnZoom);
-			}
-			else {
-				DJ.disconnect(zoomEnd);
-				zoomEnd = null;
-				laOff();
-			}
-		});
-
 
 
 		on(WIN, "resize", function(e){			//resize map on browser resize
@@ -1080,9 +1084,8 @@ function( BorderContainer
 				, oHeightAndMarginTop
 				, idCon=identTool?identTool.getNode():null;
 			MAP.resize();
-			grid.resize();
+			gridObject.expand();
 			if(+dataNode.style.marginTop.slice(0, 1)) dataNode.style.marginTop =(winHeight-257)/2-15+"px";
-			on.emit(dquery(".dgrid-resize-handle")[0],'click',{bubbles:true});
 			oHeightAndMarginTop =+dataNode.style.marginTop.slice(0,-2)+dataNode.offsetHeight+15;
 			if(ie9){
 				fx.animateProperty({node:rP, duration:300, properties:{height:winHeight-225}}).play();
@@ -1246,8 +1249,8 @@ function( BorderContainer
 		function mmManager(e){
 			if(Date.now()<outMoveTime+100)
 				return;
-			if(justMousedDown){
-				justMousedDown = false;
+			if(justMousedUp){
+				justMousedUp = false;
 				return;
 			}
 			geoSearch(e, 0);
@@ -1262,15 +1265,19 @@ function( BorderContainer
 
 		});
 
-		DJ.connect(outlines, "onMouseDown", function(e){            //map click handler
-			justMousedDown = true;
-			var attributes = e.graphic.attributes, oid = attributes.OBJECTID;
-			if(oid!== previousRecentTarget){//prevent click before double click
-				WIN.clearTimeout(mouseDownTimeout);
-				previousRecentTarget = oid;
-				mouseDownTimeout = WIN.setTimeout(nullPrevious, 400);
-				geoSearch(e, 1);
-				gridObject.scrollToRow(oid);
+		DJ.connect(outlines, "onMouseDown", function(e){mouseDownX = e.pageX;mouseDownY = e.pageY;});
+
+		DJ.connect(outlines, "onMouseUp", function(e){            //map click handler
+			if(e.pageX < mouseDownX+10&&e.pageX > mouseDownX-10&&e.pageY < mouseDownY+10&&e.pageY > mouseDownY-10){
+				justMousedUp = true;
+				var attributes = e.graphic.attributes, oid = attributes.OBJECTID;
+				if(oid!== previousRecentTarget){//prevent click before double click
+					WIN.clearTimeout(mouseDownTimeout);
+					previousRecentTarget = oid;
+					mouseDownTimeout = WIN.setTimeout(nullPrevious, 400);
+					geoSearch(e, 1);				
+					if(!gridObject.clickSort()) gridObject.scrollToRow(oid);
+				}
 			}
 		});
 
@@ -1294,7 +1301,6 @@ function( BorderContainer
 		geoSearch.prevArr =[];
 		geoSearch.currArr =[];
 		geoSearch.binLength = geoBins.length;
-		geoSearch.lastMouseBin;
 		geoSearch.lastClickBin =[];
 		function geoSearch(e, mouseDown){//think about using two sorted arrays, one mins one maxs
 			var i = 0, j = geoSearch.binLength-1, curr, oid, temp, binTemp, prevArr = geoSearch.prevArr, currArr = geoSearch.currArr,
@@ -1370,9 +1376,13 @@ function( BorderContainer
 			}
 			binArr = null;
 		}
+		
 
+<<<<<<< HEAD
 var canid = CanvasId(rasterLayer,"http://mrsbmapp00642/bcstage/canvasworkaround.html");		
 DJ.connect(MAP,"onClick",function(e){console.log(canid(e.offsetX,e.offsetY))});
+=======
+>>>>>>> a6e119521824cb206af5aad01e2c71c183f639d7
 
 																					//apply highlighting logic to an array
 		function redrawAllGraphics(graphics){    

@@ -1,22 +1,24 @@
-define(['modules/colorrampobject.js'
-       ,'modules/addsymbol.js'
-       ,'modules/addtextsymbol.js'
-       ,'modules/identify.js'
-       ,'modules/tools.js'
-       ,'modules/clearnode.js'
-       ,'modules/cleargraphics.js'
-       ,'modules/featureevents.js'
-       ,'dojo/aspect'
-       ,'dojo/on'
-       ,'dojo/dom-class'
-       ,'dojo/dom-construct'
-       ,'esri/tasks/geometry'
-       ,'dojox/charting/Chart'
-       ,'dojox/charting/themes/PurpleRain'
-       ,'dojox/charting/axis2d/Default'
-       ,'dojox/charting/plot2d/MarkersOnly'
-       ,'dojox/charting/action2d/Tooltip'
-       ,'dojox/charting/action2d/Magnify'],
+define( ['modules/colorrampobject.js'
+        ,'modules/addsymbol.js'
+        ,'modules/addtextsymbol.js'
+        ,'modules/identify.js'
+        ,'modules/tools.js'
+        ,'modules/clearnode.js'
+        ,'modules/cleargraphics.js'
+        ,'modules/featureevents.js'
+        ,'modules/canvasidentify.js'
+        ,'dojo/aspect'
+        ,'dojo/on'
+        ,'dojo/dom-class'
+        ,'dojo/dom-construct'
+        ,'esri/tasks/geometry'
+        ,'dojox/charting/Chart'
+        ,'dojox/charting/themes/PurpleRain'
+        ,'dojox/charting/axis2d/Default'
+        ,'dojox/charting/plot2d/MarkersOnly'
+        ,'dojox/charting/action2d/Tooltip'
+        ,'dojox/charting/action2d/Magnify'
+        ],
 function( rampObject
         , addSymbol
         , addTextSymbol
@@ -25,6 +27,7 @@ function( rampObject
         , clearNode
         , clearGraphics
         , featureEvents
+        , CanvasId
         , aspect
         , on
         , domClass
@@ -37,7 +40,7 @@ function( rampObject
         , Tooltip
         , Magnify
         ){  
-    return function ( container, anchor, url, layerArray, options) {
+  return function ( container, anchor, url, layerArray, options) {
 
       options=options?options:{};
       var crossTool
@@ -133,9 +136,12 @@ function( rampObject
           crossCount++;
           point1Found = 0;
           graphics[crCount] = graphics[crCount] === undefined?[]:graphics[crCount];
+
           findLayerIds(point, null, chCount, crCount);
+
           addSymbol(map, esri, point, dataPointSymbol, graphics[crCount]);
           mouseLine = addSymbol(map, esri, null, lineSymbol, graphics[crCount]);
+
           dojo.disconnect(self.handlers[1]);
           self.handlers[1] = null;
           self.handlers[2] = dojo.connect(map, "onMouseMove", function(e){
@@ -152,8 +158,10 @@ function( rampObject
         }
 
       , findLayerIds = function(mapPoint, p1ForReq2, chCount, crCount){
+        console.log(arguments);
           if(!p1ForReq2){
             identify(mapPoint, true, layerArray, rastersShowing, map).then(function(v){ //v is an array with an array of layerIds and one of values
+              console.log(v);
               if(v[0].length > 1||v[1][0].value!== "NoData"){
                 offsetStep = v[0].length-1;
                 point1Found = 1;
@@ -290,7 +298,7 @@ function( rampObject
                   if(resultCount > requestStep){ //add data from chartArr structure to chart
                   for(;i < j;i++)chart.addSeries(i, chartArr[i]);
                     chart.addAxis("y", {vertical:true, min:chartMin, max:5, title:"(ft)", titleGap:8});
-            //        W.requestAnimationFrame(function(){chart.render()});
+                    W.requestAnimationFrame(function(){chart.render()});
                     requestStep+= 15;
                   } 
               }
@@ -421,7 +429,7 @@ function( rampObject
               }
             }));
             graphList.unshift(arguments);
-          //  gOffset+= offsetStep; //accomodate overlapping rasters
+            gOffset+= offsetStep; //accomodate overlapping rasters
             offsetStep = 0;
           }
         };

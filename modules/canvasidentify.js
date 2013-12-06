@@ -63,10 +63,9 @@ function getElevation(x,y,ctx){
 
 
 function getElevations(arr,ctx){
-  var elevs = new Array(arr.length);
-  for(var i = 0, j = arr.length; i<j; i++){
-    var pnt = arr[i];
-    elevs[i] = getElevation(pnt.x,pnt.y,ctx);
+  var elevs = new Array(arr.length/2);
+  for(var i = 0, j = arr.length; i<j; i+=2){
+    elevs[i/2]=getElevation(arr[i],arr[i+1],ctx);
   }
   return elevs;
 }
@@ -101,7 +100,7 @@ function prepare(layers){
 }
 
 
-function execute(layers,points,cb){
+function execute(layers,points,cb){ //points is a flattened array [x0,y0,x1,y1,x2,y2,...]
   this.points = points;
   this.cb = cb;
   this.executing = 1;
@@ -221,7 +220,7 @@ function release(){
   images.length = 0;
 }
 
-function identifyTask(){
+function task(){
   this.points=null;
   this.executing = 0;
   this.prepared = {};
@@ -246,7 +245,7 @@ function identify(layers, pnt){
 }
 
   return {
-    identifyTask:identifyTask
+    task:task
   }
 }
 });

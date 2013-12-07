@@ -1,6 +1,6 @@
-define([],function(){
-  function addTextSymbol(map, esri, text, geom, x, y, trackingArr){
-    var txtsym=new esri.symbol.TextSymbol(text), gra;
+define(["esri/symbols/TextSymbol","esri/symbols/Font"],function(TextSymbol,Font){
+  function addTextSymbol(map, text, geom, x, y, trackingArr){
+    var txtsym=new TextSymbol(text), gra;
     txtsym.setOffset(x, y);
     txtsym.setFont=addTextSymbol.font;
     gra=new esri.Graphic(geom, txtsym);
@@ -8,6 +8,6 @@ define([],function(){
     trackingArr.push(gra);
     return txtsym;
   }
-  addTextSymbol.font=new esri.symbol.Font("14px","STYLE_NORMAL","VARIANT_NORMAL","WEIGHT_BOLDER");
+  addTextSymbol.font=new Font("14px","STYLE_NORMAL","VARIANT_NORMAL","WEIGHT_BOLDER");
   return addTextSymbol;
 });

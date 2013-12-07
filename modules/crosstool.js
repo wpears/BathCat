@@ -49,8 +49,6 @@ function( rampObject
         , DOC = document
         , identify = Identify(url)
         , map = options.map||W.esri.map
-        , esri = options.esri||W.esri
-        , dojo = options.dojo||W.dojo
         , rastersShowing = options.rastersShowing||layerArray //Use rastersShowing if you turn off rasters
         , eventFeatures = options.eventFeatures||[]
         , chartNames = options.chartNames||null
@@ -121,7 +119,7 @@ function( rampObject
       , addSecondPoint = function(p1, p2, chCount, crCount){
           moveLine(p1, p2);
           if(p2.x === p1.x&&p2.y === p1.y)return;
-          addSymbol(map, esri, p2, dataPointSymbol, graphics[crCount]);
+          addSymbol(map, p2, dataPointSymbol, graphics[crCount]);
           dojo.disconnect(self.handlers[2]);
           dojo.disconnect(self.handlers[3]);
           self.handlers[2] = null;
@@ -139,8 +137,8 @@ function( rampObject
 
           findLayerIds(point, null, chCount, crCount);
 
-          addSymbol(map, esri, point, dataPointSymbol, graphics[crCount]);
-          mouseLine = addSymbol(map, esri, null, lineSymbol, graphics[crCount]);
+          addSymbol(map, point, dataPointSymbol, graphics[crCount]);
+          mouseLine = addSymbol(map, null, lineSymbol, graphics[crCount]);
 
           dojo.disconnect(self.handlers[1]);
           self.handlers[1] = null;
@@ -252,7 +250,7 @@ function( rampObject
             addSymb = addSymbol,
             makeReq;
           freeToReq = 0;
-          addTextSymbol(map, esri, chartCount, p1, 10*M.cos(0.87+ang), 10*M.sin(0.87+ang), graphics[crossCount]);
+          addTextSymbol(map, chartCount, p1, 10*M.cos(0.87+ang), 10*M.sin(0.87+ang), graphics[crossCount]);
           chartArr.length = 0;
           if(dx < 0){
             xng = maxPointsCorrection*fromWmm*M.cos(ang);
@@ -288,7 +286,7 @@ function( rampObject
                   chartArr[i].push({x:lengthForChart*maxPointsCorrection, //depth to 
                             y:M.round(v[i].value*10)/10});       //tenths place
                   if(v[i].value < chartMin)chartMin =(v[i].value-10)>>0; //adjust chart height
-                  if(!symCreated)symCreated =!!addSymb(map, esri, inPoi, sy, gfx);//add once (for multiple)
+                  if(!symCreated)symCreated =!!addSymb(map, inPoi, sy, gfx);//add once (for multiple)
                 }                   
               }
 
@@ -420,7 +418,7 @@ function( rampObject
                     currNum = pathObj[et];
                 }
                 if(currNum!== undefined) //used to be setSymbol ->hoverPointSymbol ->dataPointSymbol
-                  addSymbol(map, esri, gfxArr[currNum].geometry, hoverPointSymbol, gfxArr);
+                  addSymbol(map, gfxArr[currNum].geometry, hoverPointSymbol, gfxArr);
             }));
             graphHandlers.push(on(graphh,"mouseout", function(){
               if(currNum!== undefined){ //there may be brittleness here. ie no hovered
@@ -499,7 +497,7 @@ function( rampObject
         clearNode(containerNode);
         container.hide();
         for(var i = 0, j = graphics.length;i < j;i++){  
-          clearGraphics(graphics[i]);
+          clearGraphics(map,graphics[i]);
           graphics[i].length = 0;
         }
       }

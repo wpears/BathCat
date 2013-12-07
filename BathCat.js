@@ -1,32 +1,49 @@
 require(["dijit/layout/BorderContainer"
-				,"dijit/layout/ContentPane" 
+				,"dijit/layout/ContentPane"
+
 				,"dgrid/Grid"
 				,"dgrid/editor"
 				,"dgrid/extensions/ColumnResizer"
+
 				,"dojo/_base/declare"
 				,"dojo/parser"
 				,"dojo/dom-construct"
 				,"dojo/dom"
 				,"dojo/query"
 				,"dojo/dom-class"
-				,"esri/layers/FeatureLayer"
 				,"dojo/_base/array"
-				,"esri/tasks/query"
-				,"esri/tasks/geometry"
 				,"dojo/on"
-				,"esri/dijit/TimeSlider"
 				,"dojo/ready"
-				,"esri/dijit/Scalebar"
 				,"dojo/aspect"
-				,"require"
+				,"dojo/_base/Color"
+
+				,"esri/map"
+				,"esri/SpatialReference"
+				,"esri/geometry/Extent"
+				,"esri/layers/FeatureLayer"
+				,"esri/layers/ArcGISDynamicMapServiceLayer"
+				,"esri/layers/ArcGISTiledMapServiceLayer"
+				,"esri/tasks/geometry"
+				,"esri/dijit/TimeSlider"
+				,"esri/TimeExtent"
+				,"esri/dijit/Scalebar"
+				,"esri/tasks/query"
+				,"esri/tasks/QueryTask"
+				,"esri/renderers/SimpleRenderer"
+				,"esri/symbols/SimpleLineSymbol"
+				,"esri/symbols/SimpleFillSymbol"
+  			,"esri/symbols/SimpleMarkerSymbol"
+
+
 				,'modules/tools.js'
 				,"modules/popup.js"
 				,"modules/crosstool.js"
 				,"modules/identtool.js"
 				,"modules/measuretool.js"
-				,"modules/addsymbol.js"
 				,"modules/clearnode.js"
 				,"modules/tooltip.js"
+
+				,"require"
 				],
 function( BorderContainer
 				, ContentPane
@@ -39,24 +56,39 @@ function( BorderContainer
 				, dom
 				, dquery
 				, domClass
-				, FeatureLayer
 				, darr
-				, esriQuery
-				, esriGeom
-				, O
-			  , TimeSlider
+				, on
 				, ready
-				, ScaleBar
 				, aspect
-				, require
+				, Color
+
+				, Map
+				, SpatialReference
+				, Extent
+				, FeatureLayer
+				, DynamicLayer
+				, TiledLayer
+				, esriGeom
+			  , TimeSlider
+			  , TimeExtent
+			  , ScaleBar
+			  , Query
+			  , QueryTask
+			  , SimpleRenderer
+			  , SimpleLine
+				, SimpleFill
+				, SimpleMarker
+
+
 				, tools
 				, Popup
 				, CrossTool
 				, IdentTool
 				, MeasureTool
-				, addSymbol
 				, clearNode
 				, Tooltip
+
+				, require
 				){
 
 		dijit = null;
@@ -81,45 +113,40 @@ function( BorderContainer
 
    	esri.config.defaults.io.corsDetection = false;
    	esri.config.defaults.io.corsEnabledServers.push("mrsbmapp00642");//enable cors for quicker queries
-   	esri.config.defaults.geometryService = new esri.tasks.GeometryService("http://sampleserver3.arcgisonline.com/arcgis/rest/services/Geometry/GeometryServer");
-   	
-   	var E = esri
-   		, eL = E.layers
-   		, rasterUrl = "http://mrsbmapp00642/ArcGIS/rest/services/BATH/Web_Rr/MapServer" 
-   		, dataUrl = "http://mrsbmapp00642/ArcGIS/rest/services/BATH/data_out/MapServer/0?f=json"
-   		, imageryUrl = "http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer"
-   		, topoUrl = "http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer"
-   		, eT = E.tasks
-   		, qt = new eT.QueryTask(dataUrl)
-   		, qry = new eT.Query()
-   		, loadIt = dom.byId("loadingg")
-   		, dots = "."
-   		, gridLoaded
-   		, sr = new E.SpatialReference({wkid:102100})
-   		, timeDiv = dom.byId('timeDiv')
-   		, timeSlider
-   		, inExt = new E.geometry.Extent(-13612000, 4519000,-13405000, 4662600, sr)
-      , map = new E.Map("mapDiv", {extent:inExt})
-      , rasterLayer = new eL.ArcGISDynamicMapServiceLayer(rasterUrl, {id:"raster"})
-      , basemapImagery = new eL.ArcGISTiledMapServiceLayer(imageryUrl, {id:"imagery"})
-     	, basemapTopo = new eL.ArcGISTiledMapServiceLayer(topoUrl, {id:"topo"})
-		  , imageryOn
-		  , topoOn
-			, imageryLoader = dojo.connect(basemapImagery, "onLoad", function(){
-					map.addLayer(basemapImagery);
-					basemapImagery.hide();
-					imageryOn = true;
-					dojo.disconnect(imageryLoader);
-					imageryLoader = null;
-				})
-			, topoLoader = dojo.connect(basemapTopo, "onLoad", function(){
-					map.addLayer(basemapTopo);
-					topoOn = true;
-					dojo.disconnect(topoLoader);
-					topoLoader = null;
-				});
+   	esri.config.defaults.geometryService = new esri.tasks.GeometryService("http://sampleserver3.arcgisonline.com/arcgis/rest/services/Geometry/GeometryServer"); 	
+
+   		var rasterUrl = "http://mrsbmapp00642/ArcGIS/rest/services/BATH/Web_Rr/MapServer" 
+   		var dataUrl = "http://mrsbmapp00642/ArcGIS/rest/services/BATH/data_out/MapServer/0?f=json"
+   		var imageryUrl = "http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer"
+   		var topoUrl = "http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer"
+
+   		var qt = new QueryTask(dataUrl)
+   		var qry = new Query()
+   		var loadIt = dom.byId("loadingg")
+   		var dots = "."
+   		var gridLoaded
+   		var timeDiv = dom.byId('timeDiv')
+   		var timeSlider;
+   		var spatialRef = new SpatialReference(102100);
+   		var intExt = new Extent(-13612000, 4519000,-13405000, 4662600,spatialRef)
+      var map = new Map("mapDiv", {extent:intExt})
+
+     var rasterLayer = new DynamicLayer(rasterUrl, {id:"raster"})
+     var basemapImagery = new TiledLayer(imageryUrl, {id:"imagery"})
+     var basemapTopo = new TiledLayer(topoUrl, {id:"topo"})
+		 var imageryOn
+		 var topoOn;
+
+		 on.once(basemapImagery, "load", function(){
+				map.addLayer(basemapImagery);
+				basemapImagery.hide();
+				imageryOn = true;
+			});
+		on.once(basemapTopo, "load", function(){
+			map.addLayer(basemapTopo);
+			topoOn = true;
+		});
 		rasterLayer.setVisibleLayers([-1]);
-		E.map = map;
 
 		(function loadDots(){
 			if(!gridLoaded){
@@ -132,30 +159,33 @@ function( BorderContainer
 
 		qry.returnGeometry = true;
 		qry.outFields =["*"];
-		qry.outSpatialReference = sr;
+		qry.outSpatialReference = spatialRef;
 		qry.where = "1 = 1";
 		qt.execute(qry);
-		var layDef ={"geometryType":"esriGeometryPolygon", "spatialReference":sr, "displayFieldName": "OBJECTID", "fields" : [
-				    {"name" : "OBJECTID", 
-				      "type" : "esriFieldTypeOID"}, 
-				    {"name" : "Project", 
-				      "type" : "esriFieldTypeString"},  
-				    {"name" : "Date", 
-				      "type" : "esriFieldTypeDate"}, 
-				    {"name" : "Waterways", 
+		var layDef ={"geometryType":"esriGeometryPolygon"
+		            ,"spatialReference":spatialRef
+		            ,"displayFieldName": "OBJECTID"
+		            , "fields" : [
+				    {"name" : "OBJECTID",
+				      "type" : "esriFieldTypeOID"},
+				    {"name" : "Project",
 				      "type" : "esriFieldTypeString"},
-				    {"name" : "Method", 
+				    {"name" : "Date",
+				      "type" : "esriFieldTypeDate"},
+				    {"name" : "Waterways",
 				      "type" : "esriFieldTypeString"},
-				    {"name" : "Client", 
+				    {"name" : "Method",
 				      "type" : "esriFieldTypeString"},
-				    {"name" : "Purpose", 
+				    {"name" : "Client",
+				      "type" : "esriFieldTypeString"},
+				    {"name" : "Purpose",
 				      "type" : "esriFieldTypeString"}
 				  ]};
 
-	timeSlider =(function(){
+	(function(){
 		new ScaleBar({map:map});
-		var tCount, timeSlider,
-			timeExtent = new E.TimeExtent(new Date("01/01/2010 UTC"), new Date("12/31/2013 UTC"));
+		var tCount
+			, timeExtent = new TimeExtent(new Date("01/01/2010 UTC"), new Date("12/31/2013 UTC"));
 		map.setTimeExtent(timeExtent);
 		timeSlider = new TimeSlider({                                            //create TimeSlider
 			style:"width:300px;",
@@ -170,27 +200,29 @@ function( BorderContainer
 		timeSlider.setThumbIndexes([0, tCount]);
 		timeSlider.setTickCount(Math.ceil(tCount/2));
 		timeSlider.startup();
-		map.setTimeSlider(timeSlider);
-		return timeSlider;	  
+		map.setTimeSlider(timeSlider);	  
 	})();
 
-	dojo.connect(qt, "onComplete", function(fs){ //declare most variables upfront for fewer vars/hoisting trouble
-	var WIN = window, DOC = document, DJ = dojo, MAP = map, fsFeat = fs.features, IE =!!document.all, ie9, fx,
-		outlines, grid, gridObject, dScroll, Symbol = E.symbol, outlineMouseMove, outlineTimeout, on = O,
+	on.once(qt, "complete", function(fs){ //declare most variables upfront for fewer vars/hoisting trouble
+	var W = window, DOC = document, DJ = dojo, featureSet = fs.featureSet,
+	  features = featureSet.features, featureCount=features.length, IE =!!document.all, ie9, fx,
+		outlines, grid, gridObject, dScroll, outlineMouseMove, outlineTimeout,
 		mouseDownTimeout, previousRecentTarget, justMousedUp = false,  outMoveTime = 0,
 	 	identifyUp, identOff = 1, measure, tooltip,
-	 	crossTool, identTool, meaTool, 
-		geoArr, splitGeoArr, geoBins, selectedGraphics =[], selectedGraphicsCount = 0,
+	 	crossTool, identTool, meaTool;
+		var geoArr, splitGeoArr, geoBins, selectedGraphics =[], selectedGraphicsCount = 0,
 		infoPaneOpen = 0, legend, toggleRightPane, eventFeatures= [],
 		zoomEnd, adjustOnZoom, enableImagery, enableMap, imageIsOn = 0, mapIsOn = 1, laOff, previousLevel = 8,
 		processTimeUpdate,
-		tiout, tiload,
-		mouseDownX = 0, mouseDownY = 0,
-		layerArray = new Array(fsFeat.length),
-		oidArray = new Array(fsFeat.length),
-		oidStore = new Array(fsFeat.length),
-		outsideTimeBoundary = new Array(fsFeat.length),
-		rastersShowing = new Array(fsFeat.length),
+		tiout,
+		mouseDownX = 0, mouseDownY = 0;
+
+	var	layerArray = new Array(featureCount);
+
+		var oidArray = new Array(featureCount),
+		oidStore = new Array(featureCount),
+		outsideTimeBoundary = new Array(featureCount),
+		rastersShowing = new Array(featureCount),
 		crossAnchor = dom.byId("cros"),
 		arro = dom.byId("arro"),
 		zSlid = dom.byId("mapDiv_zoom_slider"),
@@ -215,29 +247,34 @@ function( BorderContainer
 		movers = dquery(".mov"),
 		rpCon = dom.byId("rpCon");
 
-		outlines = new FeatureLayer({layerDefinition:layDef, featureSet:fs}, {
+		outlines = new FeatureLayer({layerDefinition:layDef, featureSet:featureSet}, {
 		  	id:"out",
        	 	mode: 0,
        	 	outFields: ["*"]
   		});
+
 		eventFeatures[eventFeatures.length]=outlines;
-		tiout = new FeatureLayer("http://mrsbmapp00642/ArcGIS/rest/services/BATH/s_ti/MapServer/0",{
+
+		tiout = new FeatureLayer("http://mrsbmapp00642/ArcGIS/rest/services/BATH/s_ti/MapServer/0",
+			{
 		  	id:"tiout",
-       	 	mode: 0,
-       	 	outFields: ["OBJECTID"],
-       	 	maxAllowableOffset:MAP.extent.getWidth()/MAP.width
+       	mode: 0,
+       	outFields: ["OBJECTID"],
+       	maxAllowableOffset:map.extent.getWidth()/map.width
   		});
-		window.tiout = tiout
-  		tiload = DJ.connect(tiout, "onLoad", function(){
-     		tiout.setRenderer(new E.renderer.SimpleRenderer(blank));
-     		outlines.setRenderer(new E.renderer.SimpleRenderer(blank));
-     		function addLays(){ //need a caching map service in first at this API version
-     			if(imageryOn||topoOn){
-					MAP.addLayer(tiout);
-					MAP.addLayer(outlines);
-					DJ.disconnect(tiload);
+
+
+  	on.once(tiout, "load", function(){
+     	tiout.setRenderer(new SimpleRenderer(blank));
+     	outlines.setRenderer(new SimpleRenderer(blank));
+     	function addLays(){ //need a caching map service in first at this API version
+     		console.log("addlayers")
+     		if(imageryOn||topoOn){
+     			console.log("adding")
+					map.addLayer(tiout);
+					map.addLayer(outlines);
 				}else{
-				WIN.setTimeout(addLays, 50);
+					W.setTimeout(addLays, 50);
 				}
 			}
 			addLays();
@@ -253,7 +290,7 @@ function( BorderContainer
 			}
 		})();
 
-  		(function(){
+  	(function(){
   			var i = 0, outG = outlines.graphics, j = outG.length, curr, k, l, currGeo;
   			geoArr = new Array(j);
   			geoBins = new Array(Math.ceil(j/10));
@@ -282,12 +319,12 @@ function( BorderContainer
 
   				}
   			}
-  		})();
+  	})();
 	
 		//*****initialize grid and attach all handlers*******\\
-
+console.log('grid')
 		gridObject =(function(){
-			var fsFeats = fs.features, i = 0, j = fsFeats.length, gdata =[], gridCon, expandReady=1,
+			var i = 0, j = featureCount, gdata =[], gridCon, expandReady=1,
 				intData, featureAttr, dte, dst, lastNodePos =[],nameSorted = 0, dateSorted = 1,
 				adGr = declare([Grid, ColumnResizer]), gridHeader, headerNodes;
 
@@ -303,7 +340,7 @@ function( BorderContainer
 							ilP);
 			for(;i<j;i++){
 				intData ={};
-				featureAttr = fsFeats[i].attributes;
+				featureAttr = features[i].attributes;
 				dte = new Date(featureAttr.Date);
 				dst = dte.toUTCString();
 				dst = dst.charAt(6)=== " "?dst.substring(0, 5)+"0"+dst.substring(5):dst; //ieFix
@@ -383,7 +420,7 @@ function( BorderContainer
 					currTime =+gridData[i].__Date
 					if(currTime<startTime||currTime>endTime){
 						domClass.add(currRow, "hiddenRow");
-						if(MAP.layerIds[2]){
+						if(map.layerIds[2]){
 							oidRasterIndex = currOID-1;
 							toBeHidden[toBeHidden.length] = currOID;
 							for(var k = 1;k<currentRasters.length;k++){
@@ -403,7 +440,7 @@ function( BorderContainer
 						}
 					}
 				}
-				if(MAP.layerIds[2]){
+				if(map.layerIds[2]){
 					uncheckImageInputs(toBeHidden);
 					for(var i = 1;i<currentRasters.length;i++){
 						rastersAsOIDs[rastersAsOIDs.length] = currentRasters[i]+1;
@@ -469,7 +506,7 @@ function( BorderContainer
       
 			function triggerExpand(e){
 				if(expandReady){
-					WIN.requestAnimationFrame(function(){expand(e)});
+					W.requestAnimationFrame(function(){expand(e)});
 					expandReady = 0;
 				}
 			}
@@ -481,10 +518,10 @@ function( BorderContainer
 
 			on(spl, "mousedown", function(e){								//expand left pane
 
-			  var mM = on(WIN, "mousemove", triggerExpand);
+			  var mM = on(W, "mousemove", triggerExpand);
 
-			  on.once(WIN,"mouseup", function(evt){
-				  MAP.resize();
+			  on.once(W,"mouseup", function(evt){
+				  map.resize();
 				  mM.remove();
 			  });
 			});
@@ -523,7 +560,7 @@ function( BorderContainer
 				if(et!== previousRecentTarget){ //prevent click before double click
 					window.clearTimeout(mouseDownTimeout);
 					previousRecentTarget = et;
-					mouseDownTimeout = WIN.setTimeout(nullPrevious, 400);
+					mouseDownTimeout = W.setTimeout(nullPrevious, 400);
 					attributes = outlines.graphics[oid-1].attributes;
 					if(oidStore[oid]&&selectedGraphicsCount === 1){ //target is sole open
 						clearStoredOID(oid, 1, 1);
@@ -544,7 +581,7 @@ function( BorderContainer
 					if(e.target.localName!== "div"){
 						clearAndSetOID(oid, graphic.attributes)
 						inputBox = getInputBox(oid);
-						MAP.setExtent(graphic._extent.expand(1.3));
+						map.setExtent(graphic._extent.expand(1.3));
 						if(!inputBox.checked){
 							inputBox.checked = true;
 							rastersShowing[oid-1] = 1;
@@ -559,8 +596,8 @@ function( BorderContainer
 
 			setVisibleRasters.reusableArray =[];
 			function setVisibleRasters(newOIDs, fromCheck){
-				if(!MAP.layerIds[2]){ //if the raster has not been added, add it.
-					MAP.addLayer(rasterLayer);
+				if(!map.layerIds[2]){ //if the raster has not been added, add it.
+					map.addLayer(rasterLayer);
 					legend.node.src = "images/leg.png";
 					legend.show();
 				}
@@ -681,6 +718,7 @@ function( BorderContainer
 					setVisibleRasters, checkImageInputs:checkImageInputs,clickSort:clickSort,expand:triggerExpand};
 
 		})();
+console.log('post grid');
 
 		function clearStoredOID(oid, doSplice, fromGrid){
 			var oidIndex = geoSearch.prevArr.indexOf(oid);
@@ -715,34 +753,31 @@ function( BorderContainer
 			arr.length = len;
 			return arr;
 		}
-		
-		var simpleLine = Symbol.SimpleLineSymbol
-			, simpleFill = Symbol.SimpleFillSymbol
-			, solidLine = simpleLine.STYLE_SOLID
-			, solidFill = simpleFill.STYLE_SOLID
-			, DJColor = DJ.Color
-			, blank = new simpleFill(solidFill, new simpleLine(solidLine, new DJColor([255, 255, 255, 0.001]), 1), new DJColor([0, 0, 0, 0.001]))
+
+		var solidLine = SimpleLine.STYLE_SOLID
+			, solidFill = SimpleFill.STYLE_SOLID
+      , DJblack = new Color([0, 0, 0, 0])
+		  , blank = new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([255, 255, 255, 0.001]), 1), new Color([0, 0, 0, 0.001]))
 			, symbols = {
-						gre: new simpleFill(solidFill, new simpleLine(solidLine, new DJColor([18, 160, 0]), 1.5), new DJColor([0, 0, 0, 0])),
-						mag: new simpleFill(solidFill, new simpleLine(solidLine, new DJColor([221, 4, 178]), 1.5), new DJColor([0, 0, 0, 0])),
-						blu: new simpleFill(solidFill, new simpleLine(solidLine, new DJColor([50, 84, 255]), 1.5), new DJColor([0, 0, 0, 0])),
-						red: new simpleFill(solidFill, new simpleLine(solidLine, new DJColor([255, 0, 0]), 1.5), new DJColor([0, 0, 0, 0])),
-						grehi: new simpleFill(solidFill, new simpleLine(solidLine, new DJColor([18, 160, 0]), 6), new DJColor([0, 0, 0, 0])),
-						maghi: new simpleFill(solidFill, new simpleLine(solidLine, new DJColor([221, 4, 178]), 6), new DJColor([0, 0, 0, 0])),
-						bluhi: new simpleFill(solidFill, new simpleLine(solidLine, new DJColor([50, 84, 255]), 6), new DJColor([0, 0, 0, 0])),
-						redhi: new simpleFill(solidFill, new simpleLine(solidLine, new DJColor([255, 0, 0]), 6), new DJColor([0, 0, 0, 0]))
+						gre: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([18, 160, 0]), 1.5), DJblack),
+						mag: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([221, 4, 178]), 1.5), DJblack),
+						blu: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([50, 84, 255]), 1.5), DJblack),
+						red: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([255, 0, 0]), 1.5), DJblack),
+						grehi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([18, 160, 0]), 6), DJblack),
+						maghi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([221, 4, 178]), 6), DJblack),
+						bluhi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([50, 84, 255]), 6), DJblack),
+						redhi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([255, 0, 0]), 6), DJblack)
 					}
 			, imSym ={
-					mag: new simpleFill(solidFill, new simpleLine(solidLine, new DJColor([252, 109, 224]), 1.5), new DJColor([0, 0, 0, 0])),
-					blu: new simpleFill(solidFill, new simpleLine(solidLine, new DJColor([119, 173, 255]), 1.5), new DJColor([0, 0, 0, 0])),
-					red: new simpleFill(solidFill, new simpleLine(solidLine, new DJColor([243, 63, 51]), 1.5), new DJColor([0, 0, 0, 0])),
-					gre: new simpleFill(solidFill, new simpleLine(solidLine, new DJColor([24, 211, 48]), 1.5), new DJColor([0, 0, 0, 0])),
-					maghi: new simpleFill(solidFill, new simpleLine(solidLine, new DJColor([252, 109, 224]), 6), new DJColor([0, 0, 0, 0])),
-					bluhi: new simpleFill(solidFill, new simpleLine(solidLine, new DJColor([119, 173, 255]), 6), new DJColor([0, 0, 0, 0])),
-					redhi: new simpleFill(solidFill, new simpleLine(solidLine, new DJColor([243, 63, 51]), 6), new DJColor([0, 0, 0, 0])),
-					grehi: new simpleFill(solidFill, new simpleLine(solidLine, new DJColor([24, 211, 48]), 6), new DJColor([0, 0, 0, 0])),
+					mag: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([252, 109, 224]), 1.5), DJblack),
+					blu: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([119, 173, 255]), 1.5), DJblack),
+					red: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([243, 63, 51]), 1.5), DJblack),
+					gre: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([24, 211, 48]), 1.5), DJblack),
+					maghi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([252, 109, 224]), 6), DJblack),
+					bluhi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([119, 173, 255]), 6), DJblack),
+					redhi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([243, 63, 51]), 6), DJblack),
+					grehi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([24, 211, 48]), 6), DJblack),
 			};
-
    		ie9 =(DOC.all&&DOC.addEventListener&&!window.atob)?true:false;
    		if(ie9) fx = require("dojo/_base/fx", function(fx){return fx});
 		rpCon.style.height = rP.scrollHeight-32+"px";
@@ -786,9 +821,9 @@ function( BorderContainer
 				timeSlider.setThumbIndexes([6*(yr-2010), 6*(yr-2010)+6]);
 		});
 
-		DJ.connect(timeSlider, "onTimeExtentChange", gridObject.timeUpdate); //handle time extent change
+		timeSlider.on("time-extent-change", gridObject.timeUpdate); //handle time extent change
 
-		DJ.connect(tiout,"onUpdateEnd", function(e, f, g, h){ //called on every zoom (due to refresh). allows feature updating
+		tiout.on("update-end", function(e, f, g, h){ //called on every zoom (due to refresh). allows feature updating
    		redrawAllGraphics(tiout.graphics);							//setup an onupdatestart that sets the visibility to false to avoid _surface typeerrors if they come
     	});
 
@@ -821,23 +856,12 @@ function( BorderContainer
 			domClass.remove(phys,"currentbmap");
 		};
 
-		on(bmaps,"mousedown", function(e){                            //basemap handling
-			var et = e.target, typ = et.innerHTML;
-			if(typ == "Satellite"&&!imageIsOn){
-				enableImagery();
-				if(!zoomEnd)
-				zoomEnd = DJ.connect(MAP,"onZoomEnd", adjustOnZoom);
-			}else if(typ == "Map"&&!mapIsOn){
-				enableMap();
-				if(!zoomEnd)
-				zoomEnd = DJ.connect(MAP,"onZoomEnd", adjustOnZoom);
-			}
-			else {
-				laOff();
-			}
-		});
 
-		adjustOnZoom = function(ext, zF, anc, lev){	//logic on ZoomEnd	
+		adjustOnZoom = function(zoomObj){	//logic on ZoomEnd	
+			var ext = zoomObj.extent
+			  , lev = zoomObj.level
+				, offs = ext.getWidth()/map.width
+				;
 			if(basemapImagery&&basemapTopo){
 				if(lev>= 15&&previousLevel<15&&mapIsOn)
 					enableImagery();
@@ -845,12 +869,24 @@ function( BorderContainer
 					enableMap();
 			}
 			previousLevel = lev;
-			var offs = ext.getWidth()/MAP.width;
 			offs = offs>10?offs:10;
 			tiout.setMaxAllowableOffset(offs);
 			tiout.refresh();
-		}; 
-   		zoomEnd = DJ.connect(MAP,"onZoomEnd", adjustOnZoom);
+		};
+
+   	zoomEnd = map.on("zoom-end", adjustOnZoom);
+
+   	on(bmaps,"mousedown", function(e){                            //basemap handling
+			var et = e.target, typ = et.innerHTML;
+			if(typ == "Satellite"&&!imageIsOn){
+				enableImagery();
+			}else if(typ == "Map"&&!mapIsOn){
+				enableMap();
+			}
+			else {
+				laOff();
+			}
+		});
 
 	toggleRightPane = function(e){
 		if(rP.isShowing()){//close button logic
@@ -863,7 +899,7 @@ function( BorderContainer
 			dataNode.style.marginTop = 0;
 			clearNode(dataNode);
 			dataNode.innerHTML = toggleRightPane.introText;
-			WIN.setTimeout(rP.showPane, 0);
+			W.setTimeout(rP.showPane, 0);
 		}
 	};
 
@@ -890,7 +926,7 @@ function( BorderContainer
 					if(rP.isShowing()){
 						dataNode.style.opacity = 0;
 						downloadNode.style.opacity = 0;
-						WIN.setTimeout(function(){
+						W.setTimeout(function(){
 							infoFunc.setHTML(attributes);
 							dataNode.style.opacity = 1;
 							downloadNode.style.opacity = 1;
@@ -1031,7 +1067,7 @@ function( BorderContainer
    			}
 
    			if(lastButt === e.target){
-   				WIN.setTimeout(clearHelp, 205);
+   				W.setTimeout(clearHelp, 205);
    				if(ie9){
    					fx.animateProperty({node:infoPane, duration:200, properties:{height:0}}).play();
    					fx.animateProperty({node:rpCon, duration:200, properties:{height:rpCon.clientHeight+250}}).play();
@@ -1072,16 +1108,16 @@ function( BorderContainer
 	}();
 
 		on(fex,"mousedown", function(e){                  //go to initial extent
-			MAP.setExtent(inExt);
+			map.setExtent(inExt);
 		});
 
 
 
-		on(WIN, "resize", function(e){			//resize map on browser resize
-			var winHeight = WIN.innerHeight
+		on(W, "resize", function(e){			//resize map on browser resize
+			var winHeight = W.innerHeight
 				, oHeightAndMarginTop
 				, idCon=identTool?identTool.getNode():null;
-			MAP.resize();
+			map.resize();
 			gridObject.expand();
 			if(+dataNode.style.marginTop.slice(0, 1)) dataNode.style.marginTop =(winHeight-257)/2-15+"px";
 			oHeightAndMarginTop =+dataNode.style.marginTop.slice(0,-2)+dataNode.offsetHeight+15;
@@ -1168,7 +1204,7 @@ function( BorderContainer
    		node.replaceDefault=function(){
    			if(rP.isShowing()){
    				previous.style.opacity=0;
-   				WIN.setTimeout(node.performReplace, 100);
+   				W.setTimeout(node.performReplace, 100);
    			}else{
    				node.performReplace();
    				rP.showPane();
@@ -1199,9 +1235,7 @@ function( BorderContainer
 		tooltip = Tooltip(noClick);
 
 		on.once(crossAnchor,"mousedown", function(e){
-				var options = { map:MAP
-											, dojo:DJ
-											, esri:E
+				var options = { map:map
 											, rastersShowing:rastersShowing
 											, eventFeatures:eventFeatures
 											, chartNames:outlines
@@ -1213,9 +1247,7 @@ function( BorderContainer
 		});
 
 		on.once (identAnchor,"mousedown", function(e){
-				var options= { map: MAP
-										 , dojo: DJ
-										 , esri: E
+				var options= { map: map
 										 , rastersShowing: rastersShowing
 										 , eventFeatures:eventFeatures
 										 , names:outlines
@@ -1226,9 +1258,9 @@ function( BorderContainer
 		}); 
 
 		meaTool = MeasureTool( measureAnchor
-			                   , new simpleLine(solidLine, new DJColor([0, 0, 0]), 2)
-												 , new Symbol.SimpleMarkerSymbol({"size":6,"color":new DJColor([0, 0, 0])})
-												 , { map:MAP
+			                   , new SimpleLine(solidLine, new Color([0, 0, 0]), 2)
+												 , new SimpleMarker({"size":6,"color":new Color([0, 0, 0])})
+												 , { map:map
 												 	 , eventFeatures:eventFeatures
 												 	 }
 												 );
@@ -1239,9 +1271,9 @@ function( BorderContainer
 		on(shoP,"mousedown", toggleRightPane);//handle close button click
 
 
-		DJ.connect(outlines, "onMouseOver", function(e) {//map mouseover handler
-			DJ.disconnect(outlineMouseMove);
-			outlineMouseMove = DJ.connect(outlines, "onMouseMove", mmManager);    	
+		outlines.on("mouse-over", function(e) {//map mouseover handler
+			if(outlineMouseMove) outlineMouseMove.remove();
+			outlineMouseMove = outlines.on("mouse-move", mmManager);    	
 		});
 
 		function mmManager(e){
@@ -1256,30 +1288,31 @@ function( BorderContainer
 		}
 
 
-		DJ.connect(outlines,"onMouseOut", function(e){		//map mouseout handler
-				if(identOff)MAP.setMapCursor("default");
-				DJ.disconnect(outlineMouseMove);
+		outlines.on("mouse-out", function(e){		//map mouseout handler
+				if(identOff)map.setMapCursor("default");
+				outlineMouseMove.remove();
+				outlineMouseMove = null;
 				geoSearch({mapPoint:{x:0, y:0}}, 0);
 
 		});
 
-		DJ.connect(outlines, "onMouseDown", function(e){mouseDownX = e.pageX;mouseDownY = e.pageY;});
+		outlines.on("mouse-down", function(e){mouseDownX = e.pageX;mouseDownY = e.pageY;});
 
-		DJ.connect(outlines, "onMouseUp", function(e){            //map click handler
+		outlines.on("mouse-up", function(e){            //map click handler
 			if(e.pageX < mouseDownX+10&&e.pageX > mouseDownX-10&&e.pageY < mouseDownY+10&&e.pageY > mouseDownY-10){
 				justMousedUp = true;
 				var attributes = e.graphic.attributes, oid = attributes.OBJECTID;
 				if(oid!== previousRecentTarget){//prevent click before double click
-					WIN.clearTimeout(mouseDownTimeout);
+					W.clearTimeout(mouseDownTimeout);
 					previousRecentTarget = oid;
-					mouseDownTimeout = WIN.setTimeout(nullPrevious, 400);
+					mouseDownTimeout = W.setTimeout(nullPrevious, 400);
 					geoSearch(e, 1);				
 					if(!gridObject.clickSort()) gridObject.scrollToRow(oid);
 				}
 			}
 		});
 
-		DJ.connect(outlines, "onDblClick", function(e){						//map dblclick handler
+		outlines.on("dbl-click", function(e){						//map dblclick handler
 			var selected,
 			oid = e.graphic.attributes.OBJECTID,
 			reSearch = selectedGraphics.indexOf(oid)===-1; //might need to copy, not assign
@@ -1289,8 +1322,8 @@ function( BorderContainer
 			}
 			selected = geoSearch.prevArr;
 			if(selected.length){
-				if(MAP.getScale()>73000)                          
-					MAP.setExtent(oidToGraphic(selected[0])._extent.expand(1.3));
+				if(map.getScale()>73000)                          
+					map.setExtent(oidToGraphic(selected[0])._extent.expand(1.3));
 				gridObject.setVisibleRasters(selected, 0);
 				gridObject.checkImageInputs(selected);
 			}
@@ -1331,7 +1364,7 @@ function( BorderContainer
 					if(curr.xmax>= mapX&&curr.xmin<= mapX&&curr.ymin<= mapY&&curr.ymax>= mapY){
 						someTargeted = 1;
 						caCh(oid,"hi", 0);
-						if(identOff)MAP.setMapCursor("pointer");
+						if(identOff)map.setMapCursor("pointer");
 						if(mouseDown){
 							if(currArr.indexOf(oid)==-1){
 								currArr.push(oid);
@@ -1353,7 +1386,7 @@ function( BorderContainer
 				if(selectedGraphicsCount>currArr.length){ //clear a previous click in grid
 					clearStoredOID(selectedGraphics[0], 1, 0);
 				}
-				if(WIN.JSON.stringify(prevArr)=== WIN.JSON.stringify(currArr)){
+				if(W.JSON.stringify(prevArr)=== W.JSON.stringify(currArr)){
 					clearAllStoredOIDs();
 					geoSearch.prevArr.length = 0;
 					geoSearch.currArr.length = 0;
@@ -1395,11 +1428,11 @@ function( BorderContainer
 			  , graphic
 				,	row
 				;
-			if(fs.features[oid-1]){
+			if(features[oid-1]){
 				graphic = oidToGraphic(oid);
 				if(!graphic) return;
 				
-				date = fs.features[oid-1].attributes.Date;
+				date = features[oid-1].attributes.Date;
 				color = getColor(date);
 				row = gridObject.oidToRow(oid);
 				graphic.setSymbol(symbo[color+hi]);
@@ -1448,21 +1481,12 @@ function( BorderContainer
 
 		(function checkRAF(W){
 			if(!W.requestAnimationFrame)(function(W){var eaf = 'equestAnimationFrame', raf = 'r'+eaf, Raf = 'R'+eaf;W[raf] = W['webkit'+Raf]||W['moz'+Raf]||W[raf]||(function(callback){setTimeout(callback, 16)})})(W);
-		})(WIN)
+		})(W)
 		
-	WIN.setTimeout(toggleRightPane, 300);
+	W.setTimeout(toggleRightPane, 300);
 	});
 
 	});
 
 //return from the require
 });
-		//,{plot: "default", stroke: {color:"blue"}, fill: "lightblue"});
-			/*, styleFunc: function(item){
-		 						  if(item.y < 10){
-		    							  return { fontColor : "red" };
-		   						 }else if(item.y > 60){
-		    						  return { fill: "green" };
-		    					}
-		   						 return {};
-		 						 }*/

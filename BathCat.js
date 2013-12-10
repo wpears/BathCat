@@ -129,23 +129,16 @@ function( BorderContainer
    		var timeSlider;
    		var spatialRef = new SpatialReference(102100);
    		var intExt = new Extent(-13612000, 4519000,-13405000, 4662600,spatialRef)
-      var map = new Map("mapDiv", {extent:intExt})
-
-     var rasterLayer = new DynamicLayer(rasterUrl, {id:"raster"})
-     var basemapImagery = new TiledLayer(imageryUrl, {id:"imagery"})
-     var basemapTopo = new TiledLayer(topoUrl, {id:"topo"})
-		 var imageryOn
-		 var topoOn;
-
-		 on.once(basemapImagery, "load", function(){
-				map.addLayer(basemapImagery);
-				basemapImagery.hide();
-				imageryOn = true;
-			});
-		on.once(basemapTopo, "load", function(){
-			map.addLayer(basemapTopo);
-			topoOn = true;
-		});
+      var map = new Map("mapDiv", {extent:intExt,basemap:"topo"})
+      var tiout
+      var solidLine = SimpleLine.STYLE_SOLID;
+			var solidFill = SimpleFill.STYLE_SOLID
+      var blank = new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([255, 255, 255, 0.001]), 1), new Color([0, 0, 0, 0.001]))
+     	var rasterLayer = new DynamicLayer(rasterUrl, {id:"raster"})
+			var topoOn = 1;
+			var satOn = 0;
+window.map = map
+	
 		rasterLayer.setVisibleLayers([-1]);
 
 		(function loadDots(){
@@ -203,6 +196,21 @@ function( BorderContainer
 		map.setTimeSlider(timeSlider);	  
 	})();
 
+	tiout = new FeatureLayer("http://mrsbmapp00642/ArcGIS/rest/services/BATH/s_ti/MapServer/0",
+			{
+		  	id:"tiout",
+       	mode: 0,
+       	outFields: ["OBJECTID"],
+       	maxAllowableOffset:map.extent.getWidth()/map.width
+  		});
+
+	on.once(tiout, "load", function(){
+		console.log("OI")
+    tiout.setRenderer(new SimpleRenderer(blank));
+    map.addLayer(tiout);
+  });
+
+
 	on.once(qt, "complete", function(fs){ //declare most variables upfront for fewer vars/hoisting trouble
 	var W = window, DOC = document, DJ = dojo, featureSet = fs.featureSet,
 	  features = featureSet.features, featureCount=features.length, IE =!!document.all, ie9, fx,
@@ -212,13 +220,10 @@ function( BorderContainer
 	 	crossTool, identTool, meaTool;
 		var geoArr, splitGeoArr, geoBins, selectedGraphics =[], selectedGraphicsCount = 0,
 		infoPaneOpen = 0, legend, toggleRightPane, eventFeatures= [],
-		zoomEnd, adjustOnZoom, enableImagery, enableMap, imageIsOn = 0, mapIsOn = 1, laOff, previousLevel = 8,
+		zoomEnd, adjustOnZoom, showSat, showTopo, basemapOff, previousLevel = 8,
 		processTimeUpdate,
-		tiout,
 		mouseDownX = 0, mouseDownY = 0;
-
 	var	layerArray = new Array(featureCount);
-
 		var oidArray = new Array(featureCount),
 		oidStore = new Array(featureCount),
 		outsideTimeBoundary = new Array(featureCount),
@@ -242,8 +247,8 @@ function( BorderContainer
 		shoP = dom.byId("shoP"),
 		spl = dom.byId("lP_splitter"),
 		fex = dom.byId("fex"),
-		phys = dom.byId("phys"),
-		imag = dom.byId("imag"),
+		topo = dom.byId("topo"),
+		sat = dom.byId("sat"),
 		movers = dquery(".mov"),
 		rpCon = dom.byId("rpCon");
 
@@ -253,35 +258,21 @@ function( BorderContainer
        	 	outFields: ["*"]
   		});
 
-		eventFeatures[eventFeatures.length]=outlines;
+		outlines.setRenderer(new SimpleRenderer(blank));
+     map.addLayer(outlines);
 
-		tiout = new FeatureLayer("http://mrsbmapp00642/ArcGIS/rest/services/BATH/s_ti/MapServer/0",
-			{
-		  	id:"tiout",
-       	mode: 0,
-       	outFields: ["OBJECTID"],
-       	maxAllowableOffset:map.extent.getWidth()/map.width
-  		});
-
-
-  	on.once(tiout, "load", function(){
-     	tiout.setRenderer(new SimpleRenderer(blank));
-     	outlines.setRenderer(new SimpleRenderer(blank));
-     	function addLays(){ //need a caching map service in first at this API version
-     		console.log("addlayers")
-     		if(imageryOn||topoOn){
-     			console.log("adding")
-					map.addLayer(tiout);
-					map.addLayer(outlines);
-				}else{
-					W.setTimeout(addLays, 50);
-				}
-			}
-			addLays();
+		on.once(outlines,"load",function(){
+			console.log("OI outlines")
+			
 		});
 
+
+		eventFeatures[eventFeatures.length]=outlines;
+
+
+
 		(function(){
-			for(var i = 0, j = layerArray.length;i<j;i++){
+			for(var i = 0; i<featureCount; i++){
 				layerArray[i] = i;
 				oidArray[i] = i+1;
 				oidStore[i] = 0;
@@ -320,7 +311,7 @@ function( BorderContainer
   				}
   			}
   	})();
-	
+
 		//*****initialize grid and attach all handlers*******\\
 console.log('grid')
 		gridObject =(function(){
@@ -754,10 +745,7 @@ console.log('post grid');
 			return arr;
 		}
 
-		var solidLine = SimpleLine.STYLE_SOLID
-			, solidFill = SimpleFill.STYLE_SOLID
-      , DJblack = new Color([0, 0, 0, 0])
-		  , blank = new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([255, 255, 255, 0.001]), 1), new Color([0, 0, 0, 0.001]))
+		var DJblack = new Color([0, 0, 0, 0])
 			, symbols = {
 						gre: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([18, 160, 0]), 1.5), DJblack),
 						mag: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([221, 4, 178]), 1.5), DJblack),
@@ -768,7 +756,7 @@ console.log('post grid');
 						bluhi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([50, 84, 255]), 6), DJblack),
 						redhi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([255, 0, 0]), 6), DJblack)
 					}
-			, imSym ={
+			, satSym ={
 					mag: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([252, 109, 224]), 1.5), DJblack),
 					blu: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([119, 173, 255]), 1.5), DJblack),
 					red: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([243, 63, 51]), 1.5), DJblack),
@@ -783,7 +771,7 @@ console.log('post grid');
 		rpCon.style.height = rP.scrollHeight-32+"px";
     	
 		function setLinkColor(){
-			if(imageIsOn){
+			if(satOn){
 				linArr[0].style.cssText = "text-shadow:0 0 1px #73ef83;color:rgb(24, 211, 48);";
 				linArr[3].style.cssText = "text-shadow:0 0 1px #faa9a3;color:rgb(243, 63, 51);";
 				linArr[2].style.cssText = "text-shadow:0 0 1px #eef5ff;color:rgb(119, 173, 255);";
@@ -824,36 +812,33 @@ console.log('post grid');
 		timeSlider.on("time-extent-change", gridObject.timeUpdate); //handle time extent change
 
 		tiout.on("update-end", function(e, f, g, h){ //called on every zoom (due to refresh). allows feature updating
-   		redrawAllGraphics(tiout.graphics);							//setup an onupdatestart that sets the visibility to false to avoid _surface typeerrors if they come
-    	});
+   		redrawAllGraphics(tiout.graphics);							
+    });
 
-		enableImagery = function(){										//turn on imagery
-			mapIsOn = 0;
-			imageIsOn = 1;
-			basemapImagery.setVisibility(true);                     //there is crud here. 
-			basemapTopo.setVisibility(false);					//the layers aren't defined
-			domClass.remove(phys,"currentbmap");
-			domClass.add(imag,"currentbmap");
+		showSat = function(){										//turn on imagery
+			map.setBasemap('satellite'); //convenient... yet slower on cached tiles. Used to use visibility
+			satOn=1;
+			topoOn=0;
+			domClass.remove(topo,"currentbmap");
+			domClass.add(sat,"currentbmap");
 			setLinkColor();
 			redrawAllGraphics(tiout.graphics);
 		};
-		enableMap = function(){
-			mapIsOn = 1;                                            //turn on he map
-			imageIsOn = 0;
-			basemapTopo.setVisibility(true);
-			basemapImagery.setVisibility(false);
-			domClass.remove(imag,"currentbmap");
-			domClass.add(phys,"currentbmap");
-				setLinkColor();
+		showTopo = function(){
+			map.setBasemap('topo');
+			satOn=0;
+			topoOn=1;
+			domClass.remove(sat,"currentbmap");
+			domClass.add(topo,"currentbmap");
+			setLinkColor();
 			redrawAllGraphics(tiout.graphics);
 		};
-		laOff = function(){
-			mapIsOn = 0;
-			imageIsOn = 0;                                          //turn off both
-			basemapTopo.setVisibility(false);
-			basemapImagery.setVisibility(false);
-			domClass.remove(imag,"currentbmap");
-			domClass.remove(phys,"currentbmap");
+		basemapOff = function(){
+			map.getLayersVisibleAtScale()[0].hide();
+			satOn=0;
+			topoOn=0;
+			domClass.remove(sat,"currentbmap");
+			domClass.remove(topo,"currentbmap");
 		};
 
 
@@ -861,13 +846,13 @@ console.log('post grid');
 			var ext = zoomObj.extent
 			  , lev = zoomObj.level
 				, offs = ext.getWidth()/map.width
+				, bmap = map.getBasemap()
 				;
-			if(basemapImagery&&basemapTopo){
-				if(lev>= 15&&previousLevel<15&&mapIsOn)
-					enableImagery();
-				else if(lev<15&&previousLevel>= 15&&imageIsOn)
-					enableMap();
-			}
+				if(lev>= 15&&previousLevel<15&&bmap==="topo")
+					showSat();
+				else if(lev<15&&previousLevel>= 15&&bmap==="satellite")
+					showTopo();
+
 			previousLevel = lev;
 			offs = offs>10?offs:10;
 			tiout.setMaxAllowableOffset(offs);
@@ -876,17 +861,15 @@ console.log('post grid');
 
    	zoomEnd = map.on("zoom-end", adjustOnZoom);
 
-   	on(bmaps,"mousedown", function(e){                            //basemap handling
-			var et = e.target, typ = et.innerHTML;
-			if(typ == "Satellite"&&!imageIsOn){
-				enableImagery();
-			}else if(typ == "Map"&&!mapIsOn){
-				enableMap();
-			}
-			else {
-				laOff();
-			}
-		});
+   	on(topo, "mousedown", function(e){
+   		if(topoOn) basemapOff();
+   		else showTopo();
+   	});
+
+   	on(sat, "mousedown", function(e){
+   		if(satOn) basemapOff();
+   		else showSat();
+   	});
 
 	toggleRightPane = function(e){
 		if(rP.isShowing()){//close button logic
@@ -1000,8 +983,8 @@ console.log('post grid');
 		   				domClass.toggle(fex,"helpglow");
 		   				break;
 		   			case "Bas":
-		   				domClass.toggle(phys,"helpglow");
-		   				domClass.toggle(imag,"helpglow");
+		   				domClass.toggle(topo,"helpglow");
+		   				domClass.toggle(sat,"helpglow");
 		   				break;
 		   			case "Sli":
 		   				//domClass.toggle(lP,"helpglow");
@@ -1423,7 +1406,7 @@ console.log('post grid');
 		}
 																//main highlighting logic, separated by year with different basemap
 		function caCh(oid, hi, refresh){
-			var symbo = basemapImagery&&basemapImagery.visible?imSym:symbols
+			var symbo = topoOn?symbols:satSym
 				, date
 			  , graphic
 				,	row

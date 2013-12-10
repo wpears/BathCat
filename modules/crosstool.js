@@ -7,17 +7,26 @@ define( ['modules/colorrampobject.js'
         ,'modules/cleargraphics.js'
         ,'modules/featureevents.js'
         ,'modules/canvasidentify.js'
+
         ,'dojo/aspect'
         ,'dojo/on'
         ,'dojo/dom-class'
         ,'dojo/dom-construct'
-        ,'esri/tasks/geometry'
+        ,'dojo/_base/Color'
+
         ,'dojox/charting/Chart'
         ,'dojox/charting/themes/PurpleRain'
         ,'dojox/charting/axis2d/Default'
         ,'dojox/charting/plot2d/MarkersOnly'
         ,'dojox/charting/action2d/Tooltip'
         ,'dojox/charting/action2d/Magnify'
+
+        ,'esri/tasks/geometry'
+        ,'esri/geometry/Polyline'
+        ,'esri/geometry/Point'
+        ,'esri/symbols/SimpleLineSymbol'
+        ,'esri/symbols/SimpleMarkerSymbol'
+
         ],
 function( rampObject
         , addSymbol
@@ -28,17 +37,26 @@ function( rampObject
         , clearGraphics
         , featureEvents
         , CanvasId
+
         , aspect
         , on
         , domClass
         , construct
-        , geo
+        , Color
+
         , Chart
         , chartTheme
         , axis2d
         , plot2dMarkers
         , Tooltip
         , Magnify
+
+        , geo
+        , Polyline
+        , Point
+        , SimpleLine
+        , SimpleMarker
+
         ){  
   return function ( container, anchor, url, layerArray, options) {
 
@@ -48,13 +66,11 @@ function( rampObject
         , W = window
         , DOC = document
         , identify = Identify(url)
-        , map = options.map||W.esri.map
+        , map = options.map||W.esri.map||W.map
         , rastersShowing = options.rastersShowing||layerArray //Use rastersShowing if you turn off rasters
         , eventFeatures = options.eventFeatures||[]
         , chartNames = options.chartNames||null
         , tooltip = options.tooltip||null
-        , Symbol = esri.symbol //note this stuff isn't AMD. Esri's old requires used to just add 
-        , geometry = esri.geometry //to their esri namespace. FIXME   
         , spatialRef = map.spatialReference
         , mapGfx = map.graphics
         , graphics = [[]]
@@ -78,19 +94,16 @@ function( rampObject
         , point1Found = 0
         , ie9 = (DOC.all&&DOC.addEventListener&&!window.atob)?true:false
 
-        , simpleLine = Symbol.SimpleLineSymbol
-        , simpleMarker = Symbol.SimpleMarkerSymbol
-        , DJColor = dojo.Color
-        , solidLine = Symbol.SimpleLineSymbol.STYLE_SOLID
-        , lineSymbol = new simpleLine(solidLine, new dojo.Color([0, 0, 0]), 2)
-        , dataPointSymbol = new simpleMarker({"size":6,"color":new dojo.Color([0, 0, 0])})
-        , noDataLineSymbol = new simpleLine(solidLine, new dojo.Color([180, 180, 180]), 2)
-        , noDataPointSymbol = new simpleMarker(simpleMarker.STYLE_CIRCLE, 6, new simpleLine(solidLine, new dojo.Color([180, 180, 180]), 1), new DJColor([140, 140, 140]))
-        , hoverPointSymbol = new simpleMarker(simpleMarker.STYLE_CIRCLE, 15, lineSymbol, new dojo.Color('#4879bc'))
+        , solidLine = SimpleLine.STYLE_SOLID
+        , lineSymbol = new SimpleLine(solidLine, new Color([0, 0, 0]), 2)
+        , dataPointSymbol = new SimpleMarker({"size":6,"color":new Color([0, 0, 0])})
+        , noDataLineSymbol = new SimpleLine(solidLine, new Color([180, 180, 180]), 2)
+        , noDataPointSymbol = new SimpleMarker(SimpleMarker.STYLE_CIRCLE, 6, new SimpleLine(solidLine, new Color([180, 180, 180]), 1), new Color([140, 140, 140]))
+        , hoverPointSymbol = new SimpleMarker(SimpleMarker.STYLE_CIRCLE, 15, lineSymbol, new Color('#4879bc'))
       
 
       , update = function(p1, p2){
-          lineGeometry = new geometry.Polyline(spatialRef);
+          lineGeometry = new Polyline(spatialRef);
           lineGeometry.addPath([p1, p2]);
           mouseLine.setGeometry(lineGeometry);
           updateReady = 1;  
@@ -120,11 +133,9 @@ function( rampObject
           moveLine(p1, p2);
           if(p2.x === p1.x&&p2.y === p1.y)return;
           addSymbol(map, p2, dataPointSymbol, graphics[crCount]);
-          dojo.disconnect(self.handlers[2]);
-          dojo.disconnect(self.handlers[3]);
-          self.handlers[2] = null;
-          self.handlers[3] = null;
-          self.handlers[1] = dojo.connect(map,"onMouseUp", secondMouseUp);
+          self.handlers[2].remove();
+          self.handlers[3].remove();
+          self.handlers[1] = map.on("mouse-up", secondMouseUp);
           findLayerIds(p2, p1, chCount, crCount);
         }
 
@@ -140,12 +151,11 @@ function( rampObject
           addSymbol(map, point, dataPointSymbol, graphics[crCount]);
           mouseLine = addSymbol(map, null, lineSymbol, graphics[crCount]);
 
-          dojo.disconnect(self.handlers[1]);
-          self.handlers[1] = null;
-          self.handlers[2] = dojo.connect(map, "onMouseMove", function(e){
+          self.handlers[1].remove();
+          self.handlers[2] = map.on("mouse-move", function(e){
             moveLine(point, e.mapPoint)
           });
-          self.handlers[3] = dojo.connect(map,"onMouseUp", function(e){
+          self.handlers[3] = map.on("mouse-up", function(e){
             if(e.pageX < mouseDownX+10&&e.pageX > mouseDownX-10&&e.pageY < mouseDownY+10&&e.pageY > mouseDownY-10)
               addSecondPoint(point, e.mapPoint, chCount, crCount);
           });
@@ -246,7 +256,7 @@ function( rampObject
             chartArr = chartArray,
             ii = 0,
             requestStep = 15,
-            curP = new geometry.Point(p1.x, p1.y, spatialRef),
+            curP = new Point(p1.x, p1.y, spatialRef),
             addSymb = addSymbol,
             makeReq;
           freeToReq = 0;
@@ -466,16 +476,15 @@ function( rampObject
       },
       idle:function(){
         for(var i = 0;i < self.handlers.length;i++){
-          dojo.disconnect(self.handlers[i]);
-          self.handlers[i] = null;
+          self.handlers[i].remove();
         }
         self.handlers.length = 0;   
         featureEvents.enable(eventFeatures)
       },
       revive:function(){
         featureEvents.disable(eventFeatures)
-        self.handlers[0] = dojo.connect(map, "onMouseDown", function(e){mouseDownX = e.pageX;mouseDownY = e.pageY;});
-        self.handlers[1] = dojo.connect(map,"onMouseUp", function(e){
+        self.handlers[0] = map.on("mouse-down", function(e){mouseDownX = e.pageX;mouseDownY = e.pageY;});
+        self.handlers[1] = map.on("mouse-up", function(e){
         if(e.pageX < mouseDownX+10&&e.pageX > mouseDownX-10&&e.pageY < mouseDownY+10&&e.pageY > mouseDownY-10)
           addFirstPoint(e.mapPoint)});
       },

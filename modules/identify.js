@@ -11,7 +11,7 @@ function( ident
       , idP = new IdentifyParameters()
       , currentRasters
       ;
-    idP.layerOption = eT.IdentifyParameters.LAYER_OPTION_VISIBLE;
+    idP.layerOption = IdentifyParameters.LAYER_OPTION_VISIBLE;
     idP.tolerance = 1;
     idP.returnGeometry = true;
     

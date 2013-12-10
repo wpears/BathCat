@@ -11,7 +11,7 @@ define(['modules/addsymbol.js'
 
        ,'dojo/on'
        ,'dojo/dom-class'
-       ,'dojo/_base/color'
+       ,'dojo/_base/Color'
        ],
 function( addSymbol
         , addTextSymbol

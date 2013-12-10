@@ -552,11 +552,11 @@ background-image:-moz-linear-gradient(top, rgba(243,243,243,1), rgba(210,225,249
   background-image:-webkit-linear-gradient(top,#a0bce5,#f0f5fd);
   background-image:-moz-linear-gradient(top,#a0bce5,#f0f5fd);
 }
-#phys{
+#topo{
   float:left;
   width:50px;
 }
-#imag{
+#sat{
 float:left;
 margin-left:2px;
 }

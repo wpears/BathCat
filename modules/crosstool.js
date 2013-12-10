@@ -126,38 +126,45 @@ function( rampObject
 
       , secondMouseUp = function(e){
           if(e.pageX < mouseDownX+10&&e.pageX > mouseDownX-10&&e.pageY < mouseDownY+10&&e.pageY > mouseDownY-10)
-            addFirstPoint(e.mapPoint)
+            addFirstPoint(e)
         }
 
-      , addSecondPoint = function(p1, p2, chCount, crCount){
+      , addSecondPoint = function(p1, p2, chCount, crCount, task){
           moveLine(p1, p2);
           if(p2.x === p1.x&&p2.y === p1.y)return;
           addSymbol(map, p2, dataPointSymbol, graphics[crCount]);
           self.handlers[2].remove();
           self.handlers[3].remove();
           self.handlers[1] = map.on("mouse-up", secondMouseUp);
-          findLayerIds(p2, p1, chCount, crCount);
+          findLayerIds(p2, p1, chCount, crCount).then(function(v){
+            task.execute(v[0],points,renderGraph);
+          });
+          var points = generatePoints(p1,p2);
         }
 
-      , addFirstPoint = function(point){
-          var chCount = chartCount, crCount = crossCount;
+      , addFirstPoint = function(e1){
+          var chCount = chartCount
+            , crCount = crossCount
+            , task = new CanvasId.task()
+            , mapPoint = e1.mapPoint
+            ;
           chartCount++;
           crossCount++;
           point1Found = 0;
           graphics[crCount] = graphics[crCount] === undefined?[]:graphics[crCount];
 
-          findLayerIds(point, null, chCount, crCount);
-
+          findLayerIds(mapPoint, null, chCount, crCount).then(function(v){
+            task.prepare(v[0])
+          })
           addSymbol(map, point, dataPointSymbol, graphics[crCount]);
           mouseLine = addSymbol(map, null, lineSymbol, graphics[crCount]);
-
           self.handlers[1].remove();
           self.handlers[2] = map.on("mouse-move", function(e){
             moveLine(point, e.mapPoint)
           });
           self.handlers[3] = map.on("mouse-up", function(e){
             if(e.pageX < mouseDownX+10&&e.pageX > mouseDownX-10&&e.pageY < mouseDownY+10&&e.pageY > mouseDownY-10)
-              addSecondPoint(point, e.mapPoint, chCount, crCount);
+              addSecondPoint(mapPoint, e.mapPoint, chCount, crCount, task);
           });
         }
 
@@ -166,6 +173,10 @@ function( rampObject
         }
 
       , findLayerIds = function(mapPoint, p1ForReq2, chCount, crCount){
+          return identify(mapPoint, true, layerArray, rastersShowing, map)
+      }
+
+     /* , findLayerIds = function(mapPoint, p1ForReq2, chCount, crCount, task){
         console.log(arguments);
           if(!p1ForReq2){
             identify(mapPoint, true, layerArray, rastersShowing, map).then(function(v){ //v is an array with an array of layerIds and one of values
@@ -203,7 +214,7 @@ function( rampObject
               });
             }
           }         
-        }
+        }*/
 
       , execNextReq = function(rq){
           var next = rq.shift();
@@ -231,7 +242,44 @@ function( rampObject
             charts[charts.length] = chart;
             containerNode.scrollTop = containerNode.scrollHeight;
             return chart;
-        }
+      }
+
+
+      , generatePoints = function(p1, p2){
+          var M = Math
+            , p1x = p1.x
+            , p1y = p1.y
+            , dx = p1x-p2.x
+            , dy = p1y-p2.y
+            , xng
+            , yng
+            , ang = M.atan(dy/dx)
+            , fromWmm = 0.3048*1.272 // 0.3048 meters in a foot 1.272 WM meters for normal meters at this latitude
+            , ftlen = M.sqrt(dx*dx+dy*dy)/fromWmm       //increase distance between points starting
+            , maxPointsCorrection = M.ceil(ftlen/600)*3 //at 600 in multiples of 3ft
+            , pointsInProfile = M.ceil(ftlen/maxPointsCorrection)
+            , arr = new Array(pointsInProfile*2)
+            ;
+
+          if(dx < 0){
+            xng = maxPointsCorrection*fromWmm*M.cos(ang);
+            yng = maxPointsCorrection*fromWmm*M.sin(ang);
+          }else if(dx > 0){
+            xng =-maxPointsCorrection*fromWmm*M.cos(ang);
+            yng =-maxPointsCorrection*fromWmm*M.sin(ang);
+          }else{
+            yng =-maxPointsCorrection*fromWmm*M.sin(ang);
+            xng = 0;
+          }
+
+          for(var i=0, len=arr.length; i<len; i+=2){
+            arr[i]=p1x;
+            arr[i+1]=p1y;
+            p1x+= xng;
+            p1y+= yng;
+          }
+      }
+
 
       , rendGr = function(sy, p1, p2, chartCount, crossCount){ 
           var M = Math,
@@ -242,7 +290,7 @@ function( rampObject
             xng,
             yng,
             ang = M.atan(dy/dx),
-            fromWmm = 0.3048*1.272,// 0.3048 meters in a foot 1.272 WM meters for normal meters at this latitude
+            fromWmm = 0.3048*1.272, // 0.3048 meters in a foot 1.272 WM meters for normal meters at this latitude
             ftlen = M.sqrt(dx*dx+dy*dy)/fromWmm,        //increase distance between points starting
             maxPointsCorrection = M.ceil(ftlen/600)*3,  //at 600 in multiples of 3ft
             pointsInProfile = M.ceil(ftlen/maxPointsCorrection),

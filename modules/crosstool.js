@@ -143,6 +143,7 @@ function( rampObject
           self.handlers[1] = map.on("mouse-up", secondMouseUp);
 
           findLayerIds(mp2, mp1, chCount, crCount).then(function(v){
+            console.log("about to execute")
             task.execute(v[0],points,renderGraph);
           });
           points = generatePoints(e1,e2);
@@ -230,12 +231,17 @@ function( rampObject
           }
 
           for(var i=0, len=points.length; i<len; i+=2){
-            points[i]=initialX;
-            points[i+1]=initialY;
+            points[i]= M.round(initialX);
+            points[i+1]=M.round(initialY);
             initialX+= xGapPx;
             initialY+= yGapPx;
           }
           return points;
+      }
+
+
+      , renderGraph = function(results){
+        console.log(results);
       }
 
 

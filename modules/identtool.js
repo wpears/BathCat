@@ -32,12 +32,12 @@ function( addSymbol
       var W = window
         , DOC = document
         , identify = Identify(url)
-        , map = options.map||W.esri.map
+        , map = options.map||W.esri.map||W.map
         , rastersShowing = options.rastersShowing||layerArray
         , eventFeatures = options.eventFeatures||[]
         , names = options.names
         , tooltip = options.tooltip||null
-        , solidLine = Symbol.SimpleLineSymbol.STYLE_SOLID
+        , solidLine = SimpleLine.STYLE_SOLID
         , lineSymbol = new SimpleLine(solidLine, new Color([0, 0, 0]), 2)
         , dataPointSymbol = new SimpleMarker({"size":6,"color":new Color([0, 0, 0])})
         , noDataPointSymbol = new SimpleMarker(SimpleMarker.STYLE_CIRCLE, 6, new SimpleLine(solidLine, new Color([180, 180, 180]), 1), new Color([140, 140, 140]))
@@ -152,8 +152,8 @@ function( addSymbol
           this.idle();
           idCon.style.display = "none";
           clearNode(resCon);
-          clearGraphics(this.graphics);
-          clearGraphics(this.labels);
+          clearGraphics(map,this.graphics);
+          clearGraphics(map,this.labels);
           this.graphics.length = 0;
           this.labels.length = 0;
           idCount = 0;

@@ -58,7 +58,7 @@ function( rampObject
         , SimpleMarker
 
         ){  
-  return function ( container, anchor, url, layerArray, options) {
+  return function ( rasterLayer, container, anchor, url, layerArray, options) {
 
       options=options?options:{};
       var crossTool
@@ -71,6 +71,7 @@ function( rampObject
         , eventFeatures = options.eventFeatures||[]
         , chartNames = options.chartNames||null
         , tooltip = options.tooltip||null
+        , canId = CanvasId(rasterLayer, map)
         , spatialRef = map.spatialReference
         , mapGfx = map.graphics
         , graphics = [[]]
@@ -112,7 +113,7 @@ function( rampObject
       , moveLine = function(p1, p2){
           if(updateReady){
             updateReady = 0;
-            update(p1, p2)            
+            update(p1, p2)
           }
         }
 
@@ -129,23 +130,28 @@ function( rampObject
             addFirstPoint(e)
         }
 
-      , addSecondPoint = function(p1, p2, chCount, crCount, task){
-          moveLine(p1, p2);
-          if(p2.x === p1.x&&p2.y === p1.y)return;
+      , addSecondPoint = function(e1, e2, chCount, crCount, task){
+          var mp1 = e1.mapPoint
+            , mp2 = e2.mapPoint
+            , points
+            ;
+          moveLine(mp1, mp2);
+          if(mp2.x === mp1.x&&mp2.y === mp1.y)return;
           addSymbol(map, p2, dataPointSymbol, graphics[crCount]);
           self.handlers[2].remove();
           self.handlers[3].remove();
           self.handlers[1] = map.on("mouse-up", secondMouseUp);
-          findLayerIds(p2, p1, chCount, crCount).then(function(v){
+
+          findLayerIds(mp2, mp1, chCount, crCount).then(function(v){
             task.execute(v[0],points,renderGraph);
           });
-          var points = generatePoints(p1,p2);
+          points = generatePoints(e1,e2);
         }
 
       , addFirstPoint = function(e1){
           var chCount = chartCount
             , crCount = crossCount
-            , task = new CanvasId.task()
+            , task = new canId.task()
             , mapPoint = e1.mapPoint
             ;
           chartCount++;
@@ -153,18 +159,22 @@ function( rampObject
           point1Found = 0;
           graphics[crCount] = graphics[crCount] === undefined?[]:graphics[crCount];
 
+
           findLayerIds(mapPoint, null, chCount, crCount).then(function(v){
             task.prepare(v[0])
           })
-          addSymbol(map, point, dataPointSymbol, graphics[crCount]);
+
+          addSymbol(map, mapPoint, dataPointSymbol, graphics[crCount]);
           mouseLine = addSymbol(map, null, lineSymbol, graphics[crCount]);
+
           self.handlers[1].remove();
           self.handlers[2] = map.on("mouse-move", function(e){
-            moveLine(point, e.mapPoint)
+            moveLine(mapPoint, e.mapPoint)
           });
-          self.handlers[3] = map.on("mouse-up", function(e){
+
+          self.handlers[3] = map.on("mouse-up", function(e2){
             if(e.pageX < mouseDownX+10&&e.pageX > mouseDownX-10&&e.pageY < mouseDownY+10&&e.pageY > mouseDownY-10)
-              addSecondPoint(mapPoint, e.mapPoint, chCount, crCount, task);
+              addSecondPoint(e1, e2, chCount, crCount, task);
           });
         }
 
@@ -173,8 +183,57 @@ function( rampObject
         }
 
       , findLayerIds = function(mapPoint, p1ForReq2, chCount, crCount){
+        console.log(mapPoint);
           return identify(mapPoint, true, layerArray, rastersShowing, map)
       }
+      /*
+       * Get difference in pixels and difference in feet.
+       * Find the distance between points in feet (3,6,9, etc)
+       * Convert this into pixels.
+       * Get the rise/run in px (gapInFt*M.sin(ang))
+       */
+      , generatePoints = function(e1, e2){
+          var M = Math
+            , mp1 = e1.mapPoint
+            , mp2 = e2.mapPoint
+            , sp1 = e1.screenPoint
+            , sp2 = e2.screenPoint
+            , mpdx = mp1.x-mp2.x
+            , mpdy = mp1.y-mp2.y
+            , spdx = sp1.x-sp2.x
+            , spdy = sp1.y-sp2.y
+            , xGapPx
+            , yGapPx
+            , ang = M.atan(mpdy/mpdx)
+            , mPerWmm = M.cos((mp1.getLatitude()+mp2.getLatitude())/360*M.PI
+            , ftPerM = 3.28084
+            , distInFt = M.sqrt(mpdx*mpdx+mpdy*mpdy)*mPerWmm*ftperM
+            , distInPx = M.sqrt(spdx*spdx+spdy*spdy)
+            , gapInFt = M.ceil(distInFt/600)*3
+            , gapInPx = gapInFt*distInPx/distInFx
+            , pointsInProfile = M.ceil(distInFt/gapInFt)
+            , arr = new Array(pointsInProfile*2)
+            ;
+
+          if(dx < 0){
+            xGapPx = gapInFt*fromWmm*M.cos(ang);
+            yGapPx = gapInFt*fromWmm*M.sin(ang);
+          }else if(dx > 0){
+            xGapPx =-gapInFt*fromWmm*M.cos(ang);
+            yGapPx =-gapInFt*fromWmm*M.sin(ang);
+          }else{
+            yGapPx =-gapInFt*fromWmm*M.sin(ang);
+            xGapPx = 0;
+          }
+
+          for(var i=0, len=arr.length; i<len; i+=2){
+            arr[i]=p1x;
+            arr[i+1]=p1y;
+            p1x+= xGapPx;
+            p1y+= yGapPx;
+          }
+      }
+
 
      /* , findLayerIds = function(mapPoint, p1ForReq2, chCount, crCount, task){
         console.log(arguments);
@@ -242,42 +301,6 @@ function( rampObject
             charts[charts.length] = chart;
             containerNode.scrollTop = containerNode.scrollHeight;
             return chart;
-      }
-
-
-      , generatePoints = function(p1, p2){
-          var M = Math
-            , p1x = p1.x
-            , p1y = p1.y
-            , dx = p1x-p2.x
-            , dy = p1y-p2.y
-            , xng
-            , yng
-            , ang = M.atan(dy/dx)
-            , fromWmm = 0.3048*1.272 // 0.3048 meters in a foot 1.272 WM meters for normal meters at this latitude
-            , ftlen = M.sqrt(dx*dx+dy*dy)/fromWmm       //increase distance between points starting
-            , maxPointsCorrection = M.ceil(ftlen/600)*3 //at 600 in multiples of 3ft
-            , pointsInProfile = M.ceil(ftlen/maxPointsCorrection)
-            , arr = new Array(pointsInProfile*2)
-            ;
-
-          if(dx < 0){
-            xng = maxPointsCorrection*fromWmm*M.cos(ang);
-            yng = maxPointsCorrection*fromWmm*M.sin(ang);
-          }else if(dx > 0){
-            xng =-maxPointsCorrection*fromWmm*M.cos(ang);
-            yng =-maxPointsCorrection*fromWmm*M.sin(ang);
-          }else{
-            yng =-maxPointsCorrection*fromWmm*M.sin(ang);
-            xng = 0;
-          }
-
-          for(var i=0, len=arr.length; i<len; i+=2){
-            arr[i]=p1x;
-            arr[i+1]=p1y;
-            p1x+= xng;
-            p1y+= yng;
-          }
       }
 
 
@@ -534,7 +557,7 @@ function( rampObject
         self.handlers[0] = map.on("mouse-down", function(e){mouseDownX = e.pageX;mouseDownY = e.pageY;});
         self.handlers[1] = map.on("mouse-up", function(e){
         if(e.pageX < mouseDownX+10&&e.pageX > mouseDownX-10&&e.pageY < mouseDownY+10&&e.pageY > mouseDownY-10)
-          addFirstPoint(e.mapPoint)});
+          addFirstPoint(e)});
       },
       stop:function(){
         this.idle();

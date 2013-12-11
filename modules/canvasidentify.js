@@ -228,8 +228,8 @@ function task(){
 }
 
 
-identifyTask.prototype.prepare = prepare;
-identifyTask.prototype.execute = execute;
+task.prototype.prepare = prepare;
+task.prototype.execute = execute;
 
 
 function identify(layers, pnt){

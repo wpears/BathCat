@@ -137,7 +137,7 @@ function( rampObject
             ;
           moveLine(mp1, mp2);
           if(mp2.x === mp1.x&&mp2.y === mp1.y)return;
-          addSymbol(map, p2, dataPointSymbol, graphics[crCount]);
+          addSymbol(map, mp2, dataPointSymbol, graphics[crCount]);
           self.handlers[2].remove();
           self.handlers[3].remove();
           self.handlers[1] = map.on("mouse-up", secondMouseUp);
@@ -146,6 +146,7 @@ function( rampObject
             task.execute(v[0],points,renderGraph);
           });
           points = generatePoints(e1,e2);
+          console.log(points);
         }
 
       , addFirstPoint = function(e1){
@@ -173,7 +174,7 @@ function( rampObject
           });
 
           self.handlers[3] = map.on("mouse-up", function(e2){
-            if(e.pageX < mouseDownX+10&&e.pageX > mouseDownX-10&&e.pageY < mouseDownY+10&&e.pageY > mouseDownY-10)
+            if(e2.pageX < mouseDownX+10&&e2.pageX > mouseDownX-10&&e2.pageY < mouseDownY+10&&e2.pageY > mouseDownY-10)
               addSecondPoint(e1, e2, chCount, crCount, task);
           });
         }
@@ -198,40 +199,43 @@ function( rampObject
             , mp2 = e2.mapPoint
             , sp1 = e1.screenPoint
             , sp2 = e2.screenPoint
+            , initialX = sp1.x
+            , initialY = sp1.y
             , mpdx = mp1.x-mp2.x
             , mpdy = mp1.y-mp2.y
-            , spdx = sp1.x-sp2.x
-            , spdy = sp1.y-sp2.y
+            , spdx = initialX-sp2.x
+            , spdy = initialY-sp2.y
             , xGapPx
             , yGapPx
             , ang = M.atan(mpdy/mpdx)
-            , mPerWmm = M.cos((mp1.getLatitude()+mp2.getLatitude())/360*M.PI
+            , mPerWmm = M.cos((mp1.getLatitude()+mp2.getLatitude())/360*M.PI)
             , ftPerM = 3.28084
-            , distInFt = M.sqrt(mpdx*mpdx+mpdy*mpdy)*mPerWmm*ftperM
+            , distInFt = M.sqrt(mpdx*mpdx+mpdy*mpdy)*mPerWmm*ftPerM
             , distInPx = M.sqrt(spdx*spdx+spdy*spdy)
             , gapInFt = M.ceil(distInFt/600)*3
-            , gapInPx = gapInFt*distInPx/distInFx
-            , pointsInProfile = M.ceil(distInFt/gapInFt)
-            , arr = new Array(pointsInProfile*2)
+            , gapInPx = gapInFt*distInPx/distInFt
+            , pointsInProfile = M.ceil(distInFt/gapInFt + 1)
+            , points = new Array(pointsInProfile*2)
             ;
-
-          if(dx < 0){
-            xGapPx = gapInFt*fromWmm*M.cos(ang);
-            yGapPx = gapInFt*fromWmm*M.sin(ang);
-          }else if(dx > 0){
-            xGapPx =-gapInFt*fromWmm*M.cos(ang);
-            yGapPx =-gapInFt*fromWmm*M.sin(ang);
+          console.log("distInFt",distInFt,"points",pointsInProfile)
+          if(spdx < 0){
+            xGapPx = gapInPx*M.cos(ang);
+            yGapPx = -gapInPx*M.sin(ang); 
+          }else if(spdx > 0){
+            xGapPx =-gapInPx*M.cos(ang);
+            yGapPx = gapInPx*M.sin(ang);
           }else{
-            yGapPx =-gapInFt*fromWmm*M.sin(ang);
+            yGapPx = gapInPx*M.sin(ang);
             xGapPx = 0;
           }
 
-          for(var i=0, len=arr.length; i<len; i+=2){
-            arr[i]=p1x;
-            arr[i+1]=p1y;
-            p1x+= xGapPx;
-            p1y+= yGapPx;
+          for(var i=0, len=points.length; i<len; i+=2){
+            points[i]=initialX;
+            points[i+1]=initialY;
+            initialX+= xGapPx;
+            initialY+= yGapPx;
           }
+          return points;
       }
 
 

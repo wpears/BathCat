@@ -147,7 +147,7 @@ function( rampObject
             task.execute(v[0],points,renderGraph);
           });
           points = generatePoints(e1,e2);
-          console.log(points);
+    //      console.log(points);
         }
 
       , addFirstPoint = function(e1){
@@ -185,7 +185,6 @@ function( rampObject
         }
 
       , findLayerIds = function(mapPoint, p1ForReq2, chCount, crCount){
-        console.log(mapPoint);
           return identify(mapPoint, true, layerArray, rastersShowing, map)
       }
       /*

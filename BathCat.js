@@ -1089,7 +1089,7 @@ console.log('post grid');
 	}();
 
 		on(fex,"mousedown", function(e){                  //go to initial extent
-			map.setExtent(inExt);
+			map.setExtent(intExt);
 		});
 
 

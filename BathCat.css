@@ -17,6 +17,7 @@
  color:#555a6e;
 }
 
+
 .dijitTooltip {
    position: absolute;
    z-index: 2000;
@@ -552,11 +553,11 @@ background-image:-moz-linear-gradient(top, rgba(243,243,243,1), rgba(210,225,249
   background-image:-webkit-linear-gradient(top,#a0bce5,#f0f5fd);
   background-image:-moz-linear-gradient(top,#a0bce5,#f0f5fd);
 }
-#phys{
+#topo{
   float:left;
   width:50px;
 }
-#imag{
+#sat{
 float:left;
 margin-left:2px;
 }
@@ -617,7 +618,10 @@ user-select: none;
   line-height:1.5em;
   text-overflow:ellipsis;
   white-space:nowrap;
-  border-color:#cbd5ed;
+  border-color:#eee;/*#cbd5ed*/
+}
+.dgrid-cell{
+  border-bottom:1px solid #ddddff;
 }
 .dgrid-sortable{
   text-overflow:clip;

@@ -1,11 +1,17 @@
-define(["esri/tasks/identify"],function(){
+define( ["esri/tasks/identify"
+        ,"esri/tasks/IdentifyTask"
+        ,"esri/tasks/IdentifyParameters"
+        ],
+function( ident
+        , IdentifyTask
+        , IdentifyParameters
+         ){
   return function(url){
-    var eT = esri.tasks
-      , idT = new eT.IdentifyTask(url)
-      , idP = new eT.IdentifyParameters()
+    var idT = new IdentifyTask(url)
+      , idP = new IdentifyParameters()
       , currentRasters
       ;
-    idP.layerOption = eT.IdentifyParameters.LAYER_OPTION_VISIBLE;
+    idP.layerOption = IdentifyParameters.LAYER_OPTION_VISIBLE;
     idP.tolerance = 1;
     idP.returnGeometry = true;
     

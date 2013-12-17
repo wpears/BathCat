@@ -10,25 +10,25 @@ function( ramp
     var getImage=rasterLayer.getImageUrl
       , width = map.width
       , height = map.height
-      , prefix = rasterLayer.url+"export?dpi=96&transparent=true&format=png8&layers=show%3A"
-      , suffix = makeSuffix(width,height)
       , srText = "&bboxSR=102100&imageSR=102100&size="
+      , prefix = rasterLayer.url+"/export?dpi=96&transparent=true&format=png8&layers=show%3A"
+      , suffix = makeSuffix(width,height)
+      , extent = map.extent
       , points
       , currentLayers = []
-      , currentBbox = 'curr'
+      , currentBbox = "&bbox="+extent.xmin+"%2C"+extent.ymin+"%2C"+extent.xmax+"%2C"+extent.ymax
       , lastBbox = 'last'
       , canCache = elCache('canvas')
       , imgCache = elCache('img')
       , layerCache = {}
       ;
-    rasterLayer.getImageUrl = function(){
+    rasterLayer.getImageUrl = function(){  //might not need the monkey patch.. just grab the Bbox from extent on('extent-change')
       var args = Array.prototype.slice.call(arguments,0,3)
         , cb = arguments[3]
         , fn = function(){
                  var urlArr = arguments[0].split('&');
                  currentLayers = urlArr[3].slice(19).split('%2C');
-                 currentBbox = urlArr[4].slice(5);
-                 console.log(currentLayers,currentBbox);
+                 currentBbox = '&'+urlArr[4];
                  cb.apply(this,arguments);
                }
         ;
@@ -47,52 +47,52 @@ function setDim(){
 
 
 function makeSuffix(width,height){
+  //console.log(srText,width,srText + width + "%2C" + height + "&f=image")
   return srText + width + "%2C" + height + "&f=image"
 }
 
 
 
 function getElevation(x,y,ctx){
-  console.log('get elev')
    var data = ctx.getImageData(x, y, 1, 1).data
     , key = (data[0]<<16)+(data[1]<<8)+data[2]
     ;
-    console.log(data,key)
+ //   console.log(data,key)
     return ramp[key];
 }
 
 
 function getElevations(arr,ctx){
-  var elevs = new Array(arr.length);
-  for(var i = 0, j = arr.length; i<j; i++){
-    var pnt = arr[i];
-    elevs[i] = getElevation(pnt.x,pnt.y,ctx);
+  var elevs = new Array(arr.length/2);
+  for(var i = 0, j = arr.length; i<j; i+=2){
+    elevs[i/2]=getElevation(arr[i],arr[i+1],ctx);
   }
   return elevs;
 }
 
 
 function testCache(){
-  if (lastBbox !== currBbox){
+  if(lastBbox !== currentBbox){
     for(var key in layerCache){
       var item = layerCache[key]
         , can = item.can
         , ctx = item.ctx
         , img = item.img
         ;
+//      console.log("Returning img and can to cache!");
       ctx.clearRect(0,0,can.width,can.height)
       imgCache.reclaim(img)
       canCache.reclaim(can)
-      layerCache[key] = null;
+      delete layerCache[key]
     }
-    lastBbox = currBbox;
-  }
+    lastBbox = currentBbox;
 }
 
 
 function prepare(layers){
   testCache();
   for(var i=0, len=layers.length; i < len; i++){
+    this.prepared[layers[i]] = 1;
     var cachedContext = getCanvas(layers[i], createPrepare, this)
     if(cachedContext){
       runPrep(layers[i], cachedContext, this);
@@ -101,19 +101,24 @@ function prepare(layers){
 }
 
 
-function execute(layers,points,cb){
+function execute(layers,points,cb){ //points is a flattened array [x0,y0,x1,y1,x2,y2,...]
   this.points = points;
   this.cb = cb;
   this.executing = 1;
   testCache();
-  var prep = this.prepared
+  var prep = this.prepared;
+ // console.log("prepped for executing",prep)
   for(var i=0, len=layers.length; i < len; i++){
     if(prep[layers[i]]) continue;
     getCanvas(layers[i], createExecute, this);
   }
+//  console.log("checking for layers in prep")
   for(var layer in prep){
-    getElevations(this.points,prep[layer]);
-    decLayerCount(this);
+    //console.log(layer,prep[layer])
+    if(prep[layer] !== 1){
+      this.results[layer] = getElevations(this.points,prep[layer]);
+      decLayerCount(this);
+    }
   }
 
   /*loop through layers, if in prepared continue, else build or pull from cache. execute from prepared.
@@ -124,8 +129,9 @@ function execute(layers,points,cb){
 
 
 function getCanvas(layer, createOnload, that){
+  //console.log("Getting canvas",arguments)
   that.layerCount++;
-  var cachedContext = layerCache[layer];
+  var cachedContext = layerCache[layer]?layerCache[layer].ctx:null;
   if(cachedContext) return cachedContext;
   createCanvas(layer, createOnload, that);
   return false;
@@ -159,10 +165,12 @@ function getCanvas(layer, createOnload, that){
 
 
 function buildQuery(layer){
+//  console.log(prefix,layer,currentBbox,suffix)
   return prefix+layer+currentBbox+suffix;
 }
 
 function decLayerCount(that){
+ // console.log("decrementing",that,that.layerCount,that.results)
   that.layerCount--;
   if(that.layerCount === 0){
     that.cb(that.results);
@@ -170,6 +178,7 @@ function decLayerCount(that){
 }
 
 function runPrep(layer, ctx, that){
+//  console.log("runPrep", arguments,that.executing)
   if(that.executing){
       that.results[layer] = getElevations(that.points,ctx);
       decLayerCount(that);
@@ -179,6 +188,7 @@ function runPrep(layer, ctx, that){
 }
 
 function createPrepare(layer, ctx, img){
+ // console.log("createPrep",arguments)
   return function(){
     ctx.drawImage(img,0,0);
     runPrep(layer, ctx, this);
@@ -195,16 +205,22 @@ function createExecute(layer, ctx, img){
 
 
 function createCanvas(layer, createOnload, that){
-  console.log("create")
+  //console.log("creating canvas", arguments)
   var can = canCache.get()  //watch garbage.. recreate canvas/img trackers
-    , img = imgCache.get()
-    , ctx  =can.getContext('2d')
-    , onload = createOnload(layer, ctx, img);
-    layerCache[layer]=ctx;  
+  //console.log(can)
+  var img = imgCache.get()
+    //console.log(img)
+  var ctx  =can.getContext('2d')
+  //console.log(ctx)
+  var onload = createOnload(layer, ctx, img);
+
+  //  console.log("Created",can,img,ctx,onload)
+    layerCache[layer]={ctx:ctx,can:can,img:img};
     can.width = width;
     can.height = height;
     img.onload = onload.bind(that);
     img.src = buildQuery(layer);
+  //  console.log("waiting for onload");
 }
 
 
@@ -221,32 +237,21 @@ function release(){
   images.length = 0;
 }
 
-function identifyTask(){
+function task(){
   this.points=null;
   this.executing = 0;
+  this.layerCount = 0;
   this.prepared = {};
   this.results ={};
 }
 
 
-identifyTask.prototype.prepare = prepare;
-identifyTask.prototype.execute = execute;
+task.prototype.prepare = prepare;
+task.prototype.execute = execute;
 
-
-function identify(layers, pnt){
-  console.log('ident');
-  testCache();
-
-  if(currentRaster !== lastRaster){
-    createCanvas(pnt);
-    lastRaster=currentRaster;
-  }else{
-    console.log(getElevation(pnt.x,pnt.y,thisCtx))
-  }
-}
 
   return {
-    identifyTask:identifyTask
+    task:task
   }
 }
 });

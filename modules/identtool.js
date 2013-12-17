@@ -5,8 +5,14 @@ define(['modules/addsymbol.js'
        ,'modules/featureevents.js'
        ,'modules/clearnode.js'
        ,'modules/cleargraphics.js'
+
+        ,"esri/symbols/SimpleLineSymbol"
+        ,"esri/symbols/SimpleMarkerSymbol"
+
        ,'dojo/on'
-       ,'dojo/dom-class'],
+       ,'dojo/dom-class'
+       ,'dojo/_base/Color'
+       ],
 function( addSymbol
         , addTextSymbol
         , Identify
@@ -14,28 +20,27 @@ function( addSymbol
         , FeatureEvents
         , clearNode
         , clearGraphics
+
+        , SimpleLine
+        , SimpleMarker
+
         , on
         , domClass
+        , Color
         ){    
   return function( container, anchor, url, layerArray, options ){
       var W = window
         , DOC = document
         , identify = Identify(url)
-        , map = options.map||W.esri.map
-        , esri = options.esri||W.esri
-        , dojo = options.dojo||W.dojo
+        , map = options.map||W.esri.map||W.map
         , rastersShowing = options.rastersShowing||layerArray
         , eventFeatures = options.eventFeatures||[]
         , names = options.names
         , tooltip = options.tooltip||null
-        , Symbol = esri.symbol
-        , DJColor = dojo.Color
-        , simpleLine = Symbol.SimpleLineSymbol
-        , simpleMarker = Symbol.SimpleMarkerSymbol
-        , solidLine = Symbol.SimpleLineSymbol.STYLE_SOLID
-        , lineSymbol = new simpleLine(solidLine, new DJColor([0, 0, 0]), 2)
-        , dataPointSymbol = new simpleMarker({"size":6,"color":new DJColor([0, 0, 0])})
-        , noDataPointSymbol = new simpleMarker(simpleMarker.STYLE_CIRCLE, 6, new simpleLine(solidLine, new DJColor([180, 180, 180]), 1), new DJColor([140, 140, 140]))
+        , solidLine = SimpleLine.STYLE_SOLID
+        , lineSymbol = new SimpleLine(solidLine, new Color([0, 0, 0]), 2)
+        , dataPointSymbol = new SimpleMarker({"size":6,"color":new Color([0, 0, 0])})
+        , noDataPointSymbol = new SimpleMarker(SimpleMarker.STYLE_CIRCLE, 6, new SimpleLine(solidLine, new Color([180, 180, 180]), 1), new Color([140, 140, 140]))
         , textLabel
         , idCount = 0
         , self
@@ -63,13 +68,13 @@ function( addSymbol
 
       function addIdentGraphic(point){
         idCount++;
-        addSymbol(map, esri, point, dataPointSymbol, self.graphics);
-        textLabel = addTextSymbol(map, esri, idCount, point, 12, 12, self.labels);
+        addSymbol(map, point, dataPointSymbol, self.graphics);
+        textLabel = addTextSymbol(map, idCount, point, 12, 12, self.labels);
       }
       function setNoData(frag){
         var sp=DOC.createElement('span');
         sp.innerHTML=idCount+".&nbsp;"+"No Data";
-        textLabel.setColor(new DJColor([180, 180, 180]));
+        textLabel.setColor(new Color([180, 180, 180]));
         frag.appendChild(sp);
         self.graphics[self.graphics.length-1].setSymbol(noDataPointSymbol);
         self.labels[self.labels.length-1].setSymbol(textLabel);
@@ -130,17 +135,15 @@ function( addSymbol
         idle:function(){
           FeatureEvents.enable(eventFeatures)
           map.setMapCursor("default");
-          dojo.disconnect(this.handlers[0]);
-          dojo.disconnect(this.handlers[1]);
-          this.handlers[0] = null;
-          this.handlers[1] = null;
+          this.handlers[0].remove();
+          this.handlers[1].remove();
           identOff = 1;
         },
         revive:function(){
           FeatureEvents.disable(eventFeatures)
           map.setMapCursor("help");
-          this.handlers[0] = dojo.connect(map, "onMouseDown", function(evt){mouseDownX = evt.pageX;mouseDownY = evt.pageY;});
-          this.handlers[1] = dojo.connect(map,"onMouseUp", function(e){
+          this.handlers[0] = map.on("mouse-down", function(evt){mouseDownX = evt.pageX;mouseDownY = evt.pageY;});
+          this.handlers[1] = map.on("mouse-up", function(e){
           if(e.pageX<mouseDownX+10&&e.pageX>mouseDownX-10&&e.pageY<mouseDownY+10&&e.pageY>mouseDownY-10)
             clickCallback(e.mapPoint)});
           identOff = 0;
@@ -149,8 +152,8 @@ function( addSymbol
           this.idle();
           idCon.style.display = "none";
           clearNode(resCon);
-          clearGraphics(this.graphics);
-          clearGraphics(this.labels);
+          clearGraphics(map,this.graphics);
+          clearGraphics(map,this.labels);
           this.graphics.length = 0;
           this.labels.length = 0;
           idCount = 0;

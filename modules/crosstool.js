@@ -235,18 +235,52 @@ function( rampObject
             initialX+= xGapPx;
             initialY+= yGapPx;
           }
-          return {points:points,xGap:xGapWmm,yGap:yGapWmm};
+          return {points:points,xGap:xGapWmm,yGap:yGapWmm,dist:distInFt};
       }
 
 
       , buildGraph = function(profile){
+      
+
           return function(results){
-            addExportLink(profile)
-            console.log(results); //Build dlstring on click, utilizing args from closure.
+            var chart = createChart(profile);
+
+            console.log(results); 
+                                    //Build dlstring on click, utilizing args from closure.
+           containerNode.scrollTop = containerNode.scrollHeight;
           }                       //Create chart goes here. With some other stuff from late in
                                   // renderG.. since we know it is finished
         }
 
+
+      , createChart = function(profile){
+          var chartContainer = construct.create("div", {height:"350px"}, containerNode)
+            , chart = new Chart(chartCointainer)
+            ;
+          chart.addPlot("default", {type: plot2dMarkers});
+          chart.addAxis("x",{min:-1
+                           , max:Math.ceil(profile.pointObj.dist)
+                           , title:"(ft)"
+                           , titleGap:8
+                           , titleOrientation:"away"
+                        });
+          chart.addAxis("y", {vertical: true, min:-30, max:5, title:"(ft)", titleGap:8});
+          chart.title = "Profile "+profile.chartNumber+ ": "+ profile.chartName;
+          chart.titleFont = "italic bold normal 24px Harabara";
+          chart.titleFontColor = "#99ceff"
+          chartTheme.setMarkers({ CIRCLE:        "m-3, 0 c0,-5 7,-5 7, 0 m-7, 0 c0, 5 7, 5 7, 0",
+                  SQUARE:        "m-3,-3 l0, 7 7, 0 0,-7 z",
+                  DIAMOND:    "m0,-3 l3, 3 -3, 3 -3,-3 z",
+                  CROSS:        "m0,-3 l0, 7 m-3,-3 l7, 0",
+                  X:        "m-3,-3 l7, 7 m0,-7 l-7, 7",
+                  TRIANGLE:    "m-3, 3 l3,-7 3, 7 z",
+                  TRIANGLE_INVERTED:"m-3,-3 l3, 7 3,-7 z"}); 
+          chart.setTheme(chartTheme);
+          addExportLink(profile)
+          profile.chart = chart;
+          profile.chartContainer = chartContainer;
+          return chart
+      }
 
       , generateString = function(profile){
           var linkString = "x,y,z\n"
@@ -293,29 +327,6 @@ function( rampObject
           }
           if(ie9)exLink.style.color = "#FF0000";
           containerNode.appendChild(exLink);
-      }
-
-      , createChart = function(xmax){
-          charDivs[charDivs.length] = construct.create("div", {height:"350px"}, containerNode);
-          var chart = new Chart(charDivs[charDivs.length-1]);
-          chart.addPlot("default", {type: plot2dMarkers});
-          chart.addAxis("x",{min:-1, max:Math.ceil(xmax), title:"(ft)", titleGap:8, titleOrientation:"away"});
-          chart.addAxis("y", {vertical: true, min:-30, max:5, title:"(ft)", titleGap:8});
-            chart.title = "Profile "+(chartCount++)+ ": "+ chartId;
-            chart.titleFont = "italic bold normal 24px Harabara";
-            chart.titleFontColor = "#99ceff"
-            chartTheme.setMarkers({ CIRCLE:        "m-3, 0 c0,-5 7,-5 7, 0 m-7, 0 c0, 5 7, 5 7, 0",
-                    SQUARE:        "m-3,-3 l0, 7 7, 0 0,-7 z",
-                    DIAMOND:    "m0,-3 l3, 3 -3, 3 -3,-3 z",
-                    CROSS:        "m0,-3 l0, 7 m-3,-3 l7, 0",
-                    X:        "m-3,-3 l7, 7 m0,-7 l-7, 7",
-                    TRIANGLE:    "m-3, 3 l3,-7 3, 7 z",
-                    TRIANGLE_INVERTED:"m-3,-3 l3, 7 3,-7 z"}); 
-            chart.setTheme(chartTheme);
-            chart.render();
-            charts[charts.length] = chart;
-            containerNode.scrollTop = containerNode.scrollHeight;
-            return chart;
       }
 
  
@@ -382,7 +393,7 @@ function( rampObject
             curP.x+= xng;
             curP.y+= yng;
             }
-          };
+          }
 
 
       , exportImage = function(){

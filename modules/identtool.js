@@ -69,7 +69,7 @@ function( addSymbol
       function addIdentGraphic(point){
         idCount++;
         addSymbol(map, point, dataPointSymbol, self.graphics);
-        textLabel = addTextSymbol(map, idCount, point, 12, 12, self.labels);
+        textLabel = addTextSymbol(map, idCount, point, 0, self.labels, self.handlers);
       }
       function setNoData(frag){
         var sp=DOC.createElement('span');
@@ -137,6 +137,8 @@ function( addSymbol
           map.setMapCursor("default");
           this.handlers[0].remove();
           this.handlers[1].remove();
+          if(this.handlers[2]) this.handlers[2].remove();
+          this.handlers.length = 0;
           identOff = 1;
         },
         revive:function(){

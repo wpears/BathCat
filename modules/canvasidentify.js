@@ -62,10 +62,18 @@ function getElevation(x,y,ctx){
 }
 
 
-function getElevations(arr,ctx){
-  var elevs = new Array(arr.length/2);
-  for(var i = 0, j = arr.length; i<j; i+=2){
-    elevs[i/2]=getElevation(arr[i],arr[i+1],ctx);
+function getElevations(points, ctx){
+  var elevs = new Array(points.length/2);
+  for(var i = 0, j = points.length; i<j; i+=2){
+    elevs[i/2]=getElevation(points[i],points[i+1],ctx);
+  }
+  return elevs;
+}
+
+function getElevsForChart(points, ftGap, ctx){
+  var elevs = new Array(points.length/2);
+  for(var i = 0, j = points.length; i<j; i+=2){
+    elevs[i/2]={x:ftGap*i/2,y:getElevation(points[i],points[i+1],ctx)};
   }
   return elevs;
 }
@@ -87,6 +95,7 @@ function testCache(){
     }
     lastBbox = currentBbox;
 }
+}
 
 
 function prepare(layers){
@@ -101,8 +110,9 @@ function prepare(layers){
 }
 
 
-function execute(layers,points,cb){ //points is a flattened array [x0,y0,x1,y1,x2,y2,...]
-  this.points = points;
+function execute(layers,pointObj,cb){ //points is a flattened array [x0,y0,x1,y1,x2,y2,...]
+  this.points = pointObj.points;
+  this.ftGap = pointObj.ftGap;
   this.cb = cb;
   this.executing = 1;
   testCache();
@@ -116,7 +126,7 @@ function execute(layers,points,cb){ //points is a flattened array [x0,y0,x1,y1,x
   for(var layer in prep){
     //console.log(layer,prep[layer])
     if(prep[layer] !== 1){
-      this.results[layer] = getElevations(this.points,prep[layer]);
+      this.results[layer] = getElevsForChart(this.points, this.ftGap, prep[layer]);
       decLayerCount(this);
     }
   }
@@ -160,7 +170,7 @@ function getCanvas(layer, createOnload, that){
 
 
    heyyyyyyyo. So the cache. It's done loading... I'll need to just store the context and call
-   getElevations on the pnt arr and context
+   getElevsForChart on the pnt arr and context
   */
 
 
@@ -180,7 +190,7 @@ function decLayerCount(that){
 function runPrep(layer, ctx, that){
 //  console.log("runPrep", arguments,that.executing)
   if(that.executing){
-      that.results[layer] = getElevations(that.points,ctx);
+      that.results[layer] = getElevsForChart(that.points, that.ftGap, ctx);
       decLayerCount(that);
   }else{
       that.prepared[layer]=ctx;
@@ -198,7 +208,7 @@ function createPrepare(layer, ctx, img){
 function createExecute(layer, ctx, img){
   return function(){
     ctx.drawImage(img,0,0);
-    this.results[layer] = getElevations(this.points,ctx);
+    this.results[layer] = getElevsForChart(this.points, this.ftGap, ctx);
     decLayerCount(this);
   }
 }

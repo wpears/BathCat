@@ -176,7 +176,7 @@ function( rampObject
 
           findLayerIds(mp2).then(function(v){
             console.log("about to execute");
-            profile.task.execute(v[0],profile.pointObj.points,buildGraph(profile));
+            profile.task.execute(v[0],profile.pointObj,buildGraph(profile));
           });
           profile.pointObj = generatePoints(profile);
         }
@@ -205,7 +205,7 @@ function( rampObject
             , distInFt = M.sqrt(mpdx*mpdx+mpdy*mpdy)*mPerWmm*ftPerM
             , distInPx = M.sqrt(spdx*spdx+spdy*spdy)
             , gapInFt = M.ceil(distInFt/600)*3
-            , gapInWmm = gapInFt/ftperM/mPerWmm
+            , gapInWmm = gapInFt/ftPerM/mPerWmm
             , gapInPx = gapInFt*distInPx/distInFt
             , pointsInProfile = M.ceil(distInFt/gapInFt + 1)
             , points = new Array(pointsInProfile*2)
@@ -235,7 +235,13 @@ function( rampObject
             initialX+= xGapPx;
             initialY+= yGapPx;
           }
-          return {points:points,xGap:xGapWmm,yGap:yGapWmm,dist:distInFt};
+          return { points:points
+                 , xGap:xGapWmm
+                 , yGap:yGapWmm
+                 , ftGap:gapInFt
+                 , dist:distInFt
+                 , ang:ang
+                 };
       }
 
 
@@ -243,12 +249,36 @@ function( rampObject
       
 
           return function(results){
-            var chart = createChart(profile);
+            console.log(results)
+            addTextSymbol(map
+                         ,profile.chartNumber
+                         ,profile.e1.mapPoint
+                         ,profile.pointObj.ang
+                         ,profile.graphics
+                         ,self.handlers
+                         );
+            var chart = createChart(profile)
+              , min = 0
+              ;
 
-            console.log(results); 
+            for (var layer in results){
+              var series = results[layer];
+              for(var i=0, len=series.length; i<len; i++){
+                if (series[i].y < min) min = series[i].y;
+              }
+              chart.addSeries(layer, series);
+            }
+
+            chart.addAxis("y", {vertical:true, min:min-5, max:5, title:"(ft)", titleGap:8});
+            new Tooltip(chart, "default"); //edits in the module for positioning/height tooltip.js
+            new Magnify(chart, "default");
+            chart.render();
+
+           // addSwellHandlers(graphics[crossCount], getOffset(), hoverPointSymbol);
+            console.log(results);
                                     //Build dlstring on click, utilizing args from closure.
            containerNode.scrollTop = containerNode.scrollHeight;
-          }                       //Create chart goes here. With some other stuff from late in
+          };                       //Create chart goes here. With some other stuff from late in
                                   // renderG.. since we know it is finished
         }
 
@@ -329,18 +359,7 @@ function( rampObject
           containerNode.appendChild(exLink);
       }
 
- 
-
-      , rendGr = function(sy, p1, p2, chartCount, crossCount){ 
-         
-            chart, 
-            chartArr = chartArray,
-
-          addTextSymbol(map, chartCount, p1, 10*M.cos(0.87+ang), 10*M.sin(0.87+ang), graphics[crossCount]);
-          chartArr.length = 0;
-
-          chart = createChart(ftlen, chartMin, chartCount);
-
+/*
 
           makeReq = function(start, end){
             var gfx = graphics[crossCount], sy = dataPointSymbol;
@@ -395,7 +414,7 @@ function( rampObject
             }
           }
 
-
+*/
       , exportImage = function(){
           //var sv = document.getElementsByTagName('svg')[1]
           //sv.setAttribute("xlmns", "http://www.w3.org/1999/xhtml");
@@ -479,7 +498,9 @@ function( rampObject
             gOffset+= offsetStep; //accomodate overlapping rasters
             offsetStep = 0;
           }
-        };
+        }
+      ;
+
 
 
     crossTool={

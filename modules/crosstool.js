@@ -78,6 +78,7 @@ console.log(options.chartNames)
         , mapGfx = map.graphics
         , mouseDownY
         , mouseDownX
+        , profiles = []
         , currentNumber = 1
         , mouseLine
         , lineGeometry
@@ -526,10 +527,11 @@ console.log(options.chartNames)
         currentNumber = 1;
         
         for(var i = 0, j = profiles.length;i < j;i++){
-          removeChart(profile[i]); 
+          removeChart(profiles[i]); 
         } 
         clearNode(containerNode);
         container.hide();
+        profiles.length = 0;
       } 
     };
     return crossTool;

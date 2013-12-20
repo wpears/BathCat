@@ -20,6 +20,7 @@ define( ['modules/colorrampobject.js'
         ,'dojox/charting/plot2d/MarkersOnly'
         ,'dojox/charting/action2d/Tooltip'
         ,'dojox/charting/action2d/Magnify'
+        ,'dojox/charting/widget/SelectableLegend'
     //    ,'dojox/fx/scroll'
 
         ,'esri/tasks/geometry'
@@ -51,6 +52,7 @@ function( rampObject
         , plot2dMarkers
         , Tooltip
         , Magnify
+        , Legend
   //      , fx
 
         , geo
@@ -127,6 +129,7 @@ console.log(options.chartNames)
           this.task = new canId.task();
           this.pointObj =null;
           this.graphics = [];
+          this.legend = null
           this.swellOver = null;
           this.swellOut = null;
           this.chart = null;
@@ -381,6 +384,13 @@ console.log(options.chartNames)
           box.className = "closebox";
           profile.chartContainer.appendChild(box);
           on.once(box, mousedown, function(){removeChart(profile);});
+      }
+
+      , addLegend = function(profile){
+        var legendDiv = DOC.createElement('div');
+        legendDiv.className = "chartLegend";
+        profile.chartContainer.appendChild(legendDiv);
+        profile.legend = new Legend({chart:profile.chart, outline:true},legendDiv);
       }
 
       , exportImage = function(){

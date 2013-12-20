@@ -76,17 +76,9 @@ console.log(options.chartNames)
         , canId = CanvasId(rasterLayer, map)
         , spatialRef = map.spatialReference
         , mapGfx = map.graphics
-        , graphHandlers =[]
         , mouseDownY
         , mouseDownX
-        , charts = []
-        , charDivs = []
-        , chartArray = []
-        , chartId
         , currentNumber = 1
-        , reqQueue = []
-        , freeToReq = 1
-        , updateReady = 1
         , mouseLine
         , lineGeometry
         , containerNode
@@ -134,7 +126,8 @@ console.log(options.chartNames)
           this.task = new canId.task();
           this.pointObj =null;
           this.graphics = [];
-          this.graphHandlers = [];
+          this.swellOver = null;
+          this.swellOut = null;
           this.chart = null;
           this.chartContainer = null;
           this.chartNumber = currentNumber++;
@@ -324,10 +317,11 @@ console.log(options.chartNames)
           chartTheme.setMarkers(chartMarkers); 
           chart.setTheme(chartTheme);
 
-          addExportLink(profile);
-
           profile.chart = chart;
           profile.chartContainer = chartContainer;
+          
+          addExportLink(profile);
+          addCloseBox(profile);
 
           chart.render();
           return chart
@@ -380,6 +374,13 @@ console.log(options.chartNames)
           containerNode.appendChild(exLink);
       }
 
+      , addCloseBox = function(profile){
+          var box = DOC.createElement('div');
+          box.textContent = "X";
+          box.className = "closebox";
+          profile.chartContainer.appendChild(box);
+          on.once(box, mousedown, function(){removeChart(profile);});
+      }
 
       , exportImage = function(){
           //var sv = document.getElementsByTagName('svg')[1]
@@ -388,47 +389,47 @@ console.log(options.chartNames)
           //lin.href = "data:application/octet-stream;base64," + btoa(serialized)
           //
         }
+      
+      , removeChart = function(profile){
+          clearSwellHandlers(profile);
+          profile.chart.destroy();
+          clearNode(profile.chartContainer)
+          clearGraphics(map,profile.graphics)
+        }
 
-      , clearGraphHandlers = function(arr){
-          for(var i = arr.length-1;i>= 0;i--){
-            arr[i].remove();
-            arr[i] = null;
-            arr.length = i;
+      , clearSwellHandlers = function(profile){
+            profile.swellOver.remove();
+            profile.swellOver = null;
+            profile.swellOut.remove();
+            profile.swellOut = null;
+        }
+       
+      , reattachGraph = function(profiles){
+          for (var i = 0, len = profiles.length; i < len; i++){
+            addSwellHandlers(profiles[i]);
           }
         }
 
-      , reattachGraph = function(gList){
-          var len = gList.length, i = len-1, twolen = len*2;
-            while(len < twolen){
-              var curr = gList[i];
-              addSwellHandlers.apply(null, curr);
-              len++;
-            }
-          gList.length = i+1;
-        }
-
-      , resizeCharts = function(charts, con){
-          clearGraphHandlers(graphHandlers);
-          var charDivNumb = con.childNodes.length, conStyle = con.style,
-          mup = on(W,"mouseup", function(e){
-            conStyle.visibility = "hidden";
-            for(var i = 0;i < charDivNumb;i+= 2){
-              charts[i/2].resize();
+      , resizeCharts = function(profiles){
+        //maybe var frag = DOC.createDocumentFragment();
+        //container node display none to prevent reflows
+        //attach each graph to frag, remove from doc
+        //append Child will do
+        //This is a pain point. It takes a while.
+          for(var i = 0, len = profiles.length;i<len;i++){
+            clearSwellHandlers(profiles[i]);
+          }
+          on.once(W,"mouseup", function(e){
+            containerNode.style.visibility = "hidden";
+            for(var i = 0, len = profiles.length; i < len ;i++){
+              profiles[i].chart.resize();
             }
             conStyle.visibility = "visible";
-            reattachGraph(graphList);
-            mup.remove();
-            mup = null;
+            reattachGraph(profiles);
           });
         }
 
-      , getOffset = function(){
-          var gs=DOC.getElementsByTagName("g")
-            , offset = gs.length-4
-            ;
-            gs = null;
-            return offset;
-        }
+      
 
       , addSwellHandlers = function(profile){
         "use strict"; //arguments allocates context if nonstrict
@@ -445,20 +446,20 @@ console.log(options.chartNames)
 
           paths = null;
 
-          profile.graphHandlers.push(on(graph,"mouseover", function(e){
+          profile.swellOver = on(graph,"mouseover", function(e){
               var et = e.target.getAttribute("path").slice(1, 6);
               if(pathObj[et]!== undefined){
                 currNum = pathObj[et];
               }
               if(currNum!== undefined)
                 addSymbol(map, getPointFromProfile(currNum,profile), hoverPointSymbol, graphics);
-          }));
-          profile.graphHandlers.push(on(graph,"mouseout", function(){
+          });
+          profile.swellOut= on(graph,"mouseout", function(){
             if(currNum!== undefined){
               mapGfx.remove(graphics[graphics.length-1]);
               graphics.length = graphics.length-1;
             }
-          }));
+          });
         }
 
       , getPointFromProfile = function(numb, profile){
@@ -522,25 +523,14 @@ console.log(options.chartNames)
       },
       stop:function(){
         this.idle();
-        chartCount = 1;
-        crossCount = 0;
-        clearGraphHandlers(graphHandlers);
-        for(var i = 0, j = charts.length;i < j;i++){
-          charts[i].destroy();
-          charts[i] = null;
-          clearNode(charDivs[i])
-        }
-        charts.length = 0;
-        charDivs.length = 0;
-        reqQueue.length = 0;
-        chartArray.length = 0;
+        currentNumber = 1;
+        
+        for(var i = 0, j = profiles.length;i < j;i++){
+          removeChart(profile[i]); 
+        } 
         clearNode(containerNode);
         container.hide();
-        for(var i = 0, j = graphics.length;i < j;i++){  
-          clearGraphics(map,graphics[i]);
-          graphics[i].length = 0;
-        }
-      }
+      } 
     };
     return crossTool;
   };

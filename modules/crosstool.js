@@ -20,6 +20,7 @@ define( ['modules/colorrampobject.js'
         ,'dojox/charting/plot2d/MarkersOnly'
         ,'dojox/charting/action2d/Tooltip'
         ,'dojox/charting/action2d/Magnify'
+    //    ,'dojox/fx/scroll'
 
         ,'esri/tasks/geometry'
         ,'esri/geometry/Polyline'
@@ -50,6 +51,7 @@ function( rampObject
         , plot2dMarkers
         , Tooltip
         , Magnify
+  //      , fx
 
         , geo
         , Polyline
@@ -59,7 +61,7 @@ function( rampObject
 
         ){  
   return function ( rasterLayer, container, anchor, url, layerArray, options) {
-
+console.log(options.chartNames)
       options=options?options:{};
       var crossTool
         , self
@@ -74,9 +76,7 @@ function( rampObject
         , canId = CanvasId(rasterLayer, map)
         , spatialRef = map.spatialReference
         , mapGfx = map.graphics
-        , gfxOffset = 4
         , graphHandlers =[]
-        , graphList =[]
         , mouseDownY
         , mouseDownX
         , charts = []
@@ -97,7 +97,16 @@ function( rampObject
         , dataPointSymbol = new SimpleMarker({"size":6,"color":new Color([0, 0, 0])})
         , noDataLineSymbol = new SimpleLine(solidLine, new Color([180, 180, 180]), 2)
         , noDataPointSymbol = new SimpleMarker(SimpleMarker.STYLE_CIRCLE, 6, new SimpleLine(solidLine, new Color([180, 180, 180]), 1), new Color([140, 140, 140]))
-        , hoverPointSymbol = new SimpleMarker(SimpleMarker.STYLE_CIRCLE, 15, lineSymbol, new Color('#4879bc'))
+        , hoverPointSymbol = new SimpleMarker(SimpleMarker.STYLE_CIRCLE, 10, lineSymbol, new Color('#4879bc'))
+
+        , chartMarkers ={
+                  CIRCLE:        "m-3, 0 c0,-5 7,-5 7, 0 m-7, 0 c0, 5 7, 5 7, 0",
+                  SQUARE:        "m-3,-3 l0, 7 7, 0 0,-7 z",
+                  DIAMOND:    "m0,-3 l3, 3 -3, 3 -3,-3 z",
+                  CROSS:        "m0,-3 l0, 7 m-3,-3 l7, 0",
+                  X:        "m-3,-3 l7, 7 m0,-7 l-7, 7",
+                  TRIANGLE:    "m-3, 3 l3,-7 3, 7 z",
+                  TRIANGLE_INVERTED:"m-3,-3 l3, 7 3,-7 z"}
       
 
       , update = function(p1, p2){
@@ -125,8 +134,12 @@ function( rampObject
           this.task = new canId.task();
           this.pointObj =null;
           this.graphics = [];
+          this.graphHandlers = [];
+          this.chart = null;
+          this.chartContainer = null;
           this.chartNumber = currentNumber++;
           this.chartName = '';
+          this.prepared = null;
       
       }
 
@@ -136,7 +149,9 @@ function( rampObject
             ;
 
           findLayerIds(mapPoint).then(function(v){
-            profile.task.prepare(v[0])
+            profile.task.prepare(v[0]);
+            profile.chartName = chartNames[v[0][0]].attributes.Project
+            profile.prepared = v[0];
           });
 
           addSymbol(map, mapPoint, dataPointSymbol, profile.graphics);
@@ -174,11 +189,22 @@ function( rampObject
           self.handlers[3].remove();
           self.handlers[1] = map.on("mouse-up", startNewLine);
 
-          findLayerIds(mp2).then(function(v){
-            console.log("about to execute");
-            profile.task.execute(v[0],profile.pointObj,buildGraph(profile));
-          });
+     //     findLayerIds(mp2).then(function(v){
+      //      console.log(v,"about to execute");
+       //     profile.task.execute(v[0],profile.pointObj,buildGraph(profile));
+       //   });
+
           profile.pointObj = generatePoints(profile);
+          addTextSymbol(map
+                       ,profile.chartNumber
+                       ,profile.e1.mapPoint
+                       ,profile.pointObj.ang
+                       ,profile.graphics
+                       ,self.handlers
+                       );
+          setTimeout(function(){
+            profile.task.execute(profile.prepared,profile.pointObj,buildGraph(profile));
+          },10);
         }
 
       /*
@@ -246,20 +272,13 @@ function( rampObject
 
 
       , buildGraph = function(profile){
-      
-
-          return function(results){
-            console.log(results)
-            addTextSymbol(map
-                         ,profile.chartNumber
-                         ,profile.e1.mapPoint
-                         ,profile.pointObj.ang
-                         ,profile.graphics
-                         ,self.handlers
-                         );
             var chart = createChart(profile)
               , min = 0
               ;
+
+
+          return function(results){
+            setTimeout(function(){ //If cached, there is no release of the event loop
 
             for (var layer in results){
               var series = results[layer];
@@ -273,20 +292,24 @@ function( rampObject
             new Tooltip(chart, "default"); //edits in the module for positioning/height tooltip.js
             new Magnify(chart, "default");
             chart.render();
+          
+            addSwellHandlers(profile);
 
-           // addSwellHandlers(graphics[crossCount], getOffset(), hoverPointSymbol);
             console.log(results);
-                                    //Build dlstring on click, utilizing args from closure.
-           containerNode.scrollTop = containerNode.scrollHeight;
+          },0)                          //Build dlstring on click, utilizing args from closure.
           };                       //Create chart goes here. With some other stuff from late in
                                   // renderG.. since we know it is finished
         }
 
 
       , createChart = function(profile){
-          var chartContainer = construct.create("div", {height:"350px"}, containerNode)
-            , chart = new Chart(chartCointainer)
+          var chartContainer = construct.create("div", {height:350}, containerNode)
+            , chart = new Chart(chartContainer)
             ;
+            containerNode.scrollTop = containerNode.scrollHeight;
+
+        //   new fx({node:chartContainer,win:containerNode,duration:600}).play();
+
           chart.addPlot("default", {type: plot2dMarkers});
           chart.addAxis("x",{min:-1
                            , max:Math.ceil(profile.pointObj.dist)
@@ -298,17 +321,15 @@ function( rampObject
           chart.title = "Profile "+profile.chartNumber+ ": "+ profile.chartName;
           chart.titleFont = "italic bold normal 24px Harabara";
           chart.titleFontColor = "#99ceff"
-          chartTheme.setMarkers({ CIRCLE:        "m-3, 0 c0,-5 7,-5 7, 0 m-7, 0 c0, 5 7, 5 7, 0",
-                  SQUARE:        "m-3,-3 l0, 7 7, 0 0,-7 z",
-                  DIAMOND:    "m0,-3 l3, 3 -3, 3 -3,-3 z",
-                  CROSS:        "m0,-3 l0, 7 m-3,-3 l7, 0",
-                  X:        "m-3,-3 l7, 7 m0,-7 l-7, 7",
-                  TRIANGLE:    "m-3, 3 l3,-7 3, 7 z",
-                  TRIANGLE_INVERTED:"m-3,-3 l3, 7 3,-7 z"}); 
+          chartTheme.setMarkers(chartMarkers); 
           chart.setTheme(chartTheme);
-          addExportLink(profile)
+
+          addExportLink(profile);
+
           profile.chart = chart;
           profile.chartContainer = chartContainer;
+
+          chart.render();
           return chart
       }
 
@@ -359,62 +380,7 @@ function( rampObject
           containerNode.appendChild(exLink);
       }
 
-/*
 
-          makeReq = function(start, end){
-            var gfx = graphics[crossCount], sy = dataPointSymbol;
-            function parseResults (v){ //returning geometry to put in proper order on the graph
-              if(v[0]){
-              var i = 0, j = v.length, symCreated,
-                inPoi = v[0].feature.geometry,
-                xdiff = p1x-inPoi.x,
-                lengthForChart = xng?M.abs(M.round(xdiff/xng)):M.abs(M.round((p1y-inPoi.y)/yng));
-              //build chartArr from result data
-              if(!chartArr[j-1])for(;ii < j;ii++)chartArr[ii] =[]; //build array if not built
-              for (;i < j;i++){ //logic for multiple layers
-                if(v[i].value!== "NoData"){ //for each layer add the corrected x value and 
-                  dlString+= M.round(inPoi.x*10)/10+","+M.round(inPoi.y*10)/10+','+M.round(v[i].value*10)/10+"\r\n";
-                  chartArr[i].push({x:lengthForChart*maxPointsCorrection, //depth to 
-                            y:M.round(v[i].value*10)/10});       //tenths place
-                  if(v[i].value < chartMin)chartMin =(v[i].value-10)>>0; //adjust chart height
-                  if(!symCreated)symCreated =!!addSymb(map, inPoi, sy, gfx);//add once (for multiple)
-                }                   
-              }
-
-              if(chartArr[0].length > 0){
-                i = 0;
-                  if(resultCount > requestStep){ //add data from chartArr structure to chart
-                  for(;i < j;i++)chart.addSeries(i, chartArr[i]);
-                    chart.addAxis("y", {vertical:true, min:chartMin, max:5, title:"(ft)", titleGap:8});
-                    W.requestAnimationFrame(function(){chart.render()});
-                    requestStep+= 15;
-                  } 
-              
-                for(;i < j;i++)chart.addSeries(i, chartArr[i]);
-                chart.addAxis("y", {vertical:true, min:chartMin, max:5, title:"(ft)", titleGap:8});
-                
-                new Tooltip(chart, "default"); //edits in the module for positioning/height tooltip.js
-                new Magnify(chart, "default");
-
-
-                chart.render();
-                addSwellHandlers(graphics[crossCount], getOffset(), hoverPointSymbol);
-                chartArr.length = 0;
-                if(reqQueue.length)
-                  execNextReq(reqQueue);
-                else freeToReq = 1;
-              }
-            }
-
-            for(;start < end;start++){
-            deferredCount++;
-            identify(curP).then(parseResults);
-            curP.x+= xng;
-            curP.y+= yng;
-            }
-          }
-
-*/
       , exportImage = function(){
           //var sv = document.getElementsByTagName('svg')[1]
           //sv.setAttribute("xlmns", "http://www.w3.org/1999/xhtml");
@@ -464,40 +430,48 @@ function( rampObject
             return offset;
         }
 
-      , addSwellHandlers = function(gfxArr, offset, hoverPointSymbol){
+      , addSwellHandlers = function(profile){
         "use strict"; //arguments allocates context if nonstrict
           var currNum
-            , pathss
             , pathObj = {}
-            , gs = DOC.getElementsByTagName("g")
-            , graphh = gs[offset]
+            , graph = profile.chartContainer.querySelector('g>g')
+            , paths = graph.firstChild.childNodes
+            , graphics = profile.graphics
             ;
-          gs = null;
-            
-          if(graphh){
-            pathss = graphh.firstChild.childNodes;
-            for(var i = 1;i < pathss.length;i+= 2){ //below is distance from left edge
-              pathObj[pathss[i].getAttribute("path").slice(1, 6)] =(i/2>>0)+gfxOffset;
-            }
-            pathss = null;
-            graphHandlers.push(on(graphh,"mouseover", function(e){
-                var et = e.target.getAttribute("path").slice(1, 6);
-                if(pathObj[et]!== undefined){
-                    currNum = pathObj[et];
-                }
-                if(currNum!== undefined) //used to be setSymbol ->hoverPointSymbol ->dataPointSymbol
-                  addSymbol(map, gfxArr[currNum].geometry, hoverPointSymbol, gfxArr);
-            }));
-            graphHandlers.push(on(graphh,"mouseout", function(){
-              if(currNum!== undefined){ //there may be brittleness here. ie no hovered
-                mapGfx.remove(gfxArr[gfxArr.length-1]);
-                gfxArr.length = gfxArr.length-1;
-              }
-            }));
-            graphList.unshift(arguments);
-            gOffset+= offsetStep; //accomodate overlapping rasters
-            offsetStep = 0;
+          
+          for(var i = 0; i < paths.length; i+= 2){ //below is distance from left edge
+            pathObj[paths[i].getAttribute("path").slice(1, 6)] = i/2;
           }
+
+          paths = null;
+
+          profile.graphHandlers.push(on(graph,"mouseover", function(e){
+              var et = e.target.getAttribute("path").slice(1, 6);
+              if(pathObj[et]!== undefined){
+                currNum = pathObj[et];
+              }
+              if(currNum!== undefined)
+                addSymbol(map, getPointFromProfile(currNum,profile), hoverPointSymbol, graphics);
+          }));
+          profile.graphHandlers.push(on(graph,"mouseout", function(){
+            if(currNum!== undefined){
+              mapGfx.remove(graphics[graphics.length-1]);
+              graphics.length = graphics.length-1;
+            }
+          }));
+        }
+
+      , getPointFromProfile = function(numb, profile){
+          var obj = profile.pointObj
+            , e1 = profile.e1
+            , x = e1.mapPoint.x
+            , y = e1.mapPoint.y
+            , xDist = numb*obj.xGap
+            , yDist = numb*obj.yGap
+            ;
+            return new Point({x:x+xDist,y:y+yDist,spatialReference:spatialRef})
+
+
         }
       ;
 
@@ -551,7 +525,6 @@ function( rampObject
         chartCount = 1;
         crossCount = 0;
         clearGraphHandlers(graphHandlers);
-        graphList.length = 0;
         for(var i = 0, j = charts.length;i < j;i++){
           charts[i].destroy();
           charts[i] = null;

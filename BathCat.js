@@ -1219,7 +1219,7 @@ console.log('post grid');
 				var options = { map:map
 											, rastersShowing:rastersShowing
 											, eventFeatures:eventFeatures
-											, chartNames:outlines
+											, chartNames:outlines.graphics
 											, tooltip:tooltip
 										  };
 				allowMM = 1;						  

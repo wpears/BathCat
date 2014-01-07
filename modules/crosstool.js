@@ -347,6 +347,8 @@ console.log(options.chartNames)
                 y += yGap;
               }
             ;
+            alert(dataset)
+            console.log('dataset can be 0')
           for (var dataset in profile.pointObj.points){
             x = initialX;
             y = initialY;

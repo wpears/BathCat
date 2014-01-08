@@ -20,6 +20,7 @@ define( ['modules/colorrampobject.js'
         ,'dojox/charting/plot2d/MarkersOnly'
         ,'dojox/charting/action2d/Tooltip'
         ,'dojox/charting/action2d/Magnify'
+        ,'dojox/charting/widget/SelectableLegend'
     //    ,'dojox/fx/scroll'
 
         ,'esri/tasks/geometry'
@@ -51,6 +52,7 @@ function( rampObject
         , plot2dMarkers
         , Tooltip
         , Magnify
+        , Legend
   //      , fx
 
         , geo
@@ -76,19 +78,13 @@ console.log(options.chartNames)
         , canId = CanvasId(rasterLayer, map)
         , spatialRef = map.spatialReference
         , mapGfx = map.graphics
-        , graphHandlers =[]
         , mouseDownY
         , mouseDownX
-        , charts = []
-        , charDivs = []
-        , chartArray = []
-        , chartId
+        , profiles = []
         , currentNumber = 1
-        , reqQueue = []
-        , freeToReq = 1
-        , updateReady = 1
         , mouseLine
         , lineGeometry
+        , updateReady = 1
         , containerNode
         , ie9 = (DOC.all&&DOC.addEventListener&&!window.atob)?true:false
 
@@ -108,7 +104,12 @@ console.log(options.chartNames)
                   TRIANGLE:    "m-3, 3 l3,-7 3, 7 z",
                   TRIANGLE_INVERTED:"m-3,-3 l3, 7 3,-7 z"}
       
-
+      , round = function(numb, deci){
+          var M = Math
+            , offset = M.pow(10,deci)
+            ;
+          return M.round(numb*offset)/offset;
+      }
       , update = function(p1, p2){
           lineGeometry = new Polyline(spatialRef);
           lineGeometry.addPath([p1, p2]);
@@ -132,9 +133,12 @@ console.log(options.chartNames)
           this.e1 = e1;
           this.e2 = null;
           this.task = new canId.task();
+          this.results  =null;
           this.pointObj =null;
           this.graphics = [];
-          this.graphHandlers = [];
+          this.legend = null
+          this.swellOver = null;
+          this.swellOut = null;
           this.chart = null;
           this.chartContainer = null;
           this.chartNumber = currentNumber++;
@@ -195,6 +199,7 @@ console.log(options.chartNames)
        //   });
 
           profile.pointObj = generatePoints(profile);
+          console.log(profile.pointObj)
           addTextSymbol(map
                        ,profile.chartNumber
                        ,profile.e1.mapPoint
@@ -279,7 +284,7 @@ console.log(options.chartNames)
 
           return function(results){
             setTimeout(function(){ //If cached, there is no release of the event loop
-
+            profile.results = results;
             for (var layer in results){
               var series = results[layer];
               for(var i=0, len=series.length; i<len; i++){
@@ -303,8 +308,9 @@ console.log(options.chartNames)
 
 
       , createChart = function(profile){
-          var chartContainer = construct.create("div", {height:350}, containerNode)
-            , chart = new Chart(chartContainer)
+          var chartContainer = construct.create("div", {height:300}, containerNode)
+            , chartDiv = construct.create("div", {height:300}, chartContainer)
+            , chart = new Chart(chartDiv)
             ;
             containerNode.scrollTop = containerNode.scrollHeight;
 
@@ -324,10 +330,11 @@ console.log(options.chartNames)
           chartTheme.setMarkers(chartMarkers); 
           chart.setTheme(chartTheme);
 
-          addExportLink(profile);
-
           profile.chart = chart;
           profile.chartContainer = chartContainer;
+          
+          addExportLink(profile);
+          addCloseBox(profile);
 
           chart.render();
           return chart
@@ -335,25 +342,26 @@ console.log(options.chartNames)
 
       , generateString = function(profile){
           var linkString = "x,y,z\n"
-            , xGap = profile.pointObj.xGap
-            , yGap = profile.pointObj.yGap
-            , initialX = profile.e1.mapPoint.x
-            , initialY = profile.e1.mapPoint.y
+            , xGap = round(profile.pointObj.xGap,2)
+            , yGap = round(profile.pointObj.yGap,2)
+            , initialX = round(profile.e1.mapPoint.x,2)
+            , initialY = round(profile.e1.mapPoint.y,2)
             , x
             , y
-            , buildString = function(z){
+            , buildString = function(pnt){
+                var z = pnt.y;
                 linkString+= x +','+ y +',' + z +'\n';
-                x += xGap;
-                y += yGap;
+                x = round(x + xGap,2);
+                y = round(y + yGap,2);
               }
             ;
-            alert(dataset)
-            console.log('dataset can be 0')
-          for (var dataset in profile.pointObj.points){
+
+          for (var dataset in profile.results){
             x = initialX;
             y = initialY;
-            dataset.forEach(buildString);
+            profile.results[dataset].forEach(buildString);
           }
+          console.log(linkString)
           return linkString;
       }
 
@@ -361,15 +369,17 @@ console.log(options.chartNames)
           var dlFileName = profile.chartName+'_Profile'+profile.chartNumber+'_'+'WebMercator.txt'
             , exLink = DOC.createElement("a")
             ;
-          exLink.textContent = "Export"; 
+          exLink.textContent = "Export";
+          exLink.className = "export";
 
           if(W.Blob){
             if(W.navigator.msSaveBlob){
               exLink.onclick = function(){
                 W.navigator.msSaveBlob(new W.Blob([generateString(profile)]), dlFileName)};
             }else
-              exLink.onclick = function(){
-                W.URL.createObjectURL(new W.Blob([generateString(profile)]));
+              exLink.download = dlFileName;
+              exLink.onmousedown = function(){
+                exLink.href=W.URL.createObjectURL(new W.Blob([generateString(profile)]));
               }
           }else{
             exLink.onclick = function(e){
@@ -379,9 +389,23 @@ console.log(options.chartNames)
             }
           }
           if(ie9)exLink.style.color = "#FF0000";
-          containerNode.appendChild(exLink);
+          profile.chartContainer.appendChild(exLink);
       }
 
+      , addCloseBox = function(profile){
+          var box = DOC.createElement('div');
+          box.textContent = "X";
+          box.className = "closebox graphclose";
+          profile.chartContainer.appendChild(box);
+          on.once(box, "mousedown", function(){removeChart(profile);});
+      }
+
+      , addLegend = function(profile){
+        var legendDiv = DOC.createElement('div');
+        legendDiv.className = "chartLegend";
+        profile.chartContainer.appendChild(legendDiv);
+        profile.legend = new Legend({chart:profile.chart, outline:true},legendDiv);
+      }
 
       , exportImage = function(){
           //var sv = document.getElementsByTagName('svg')[1]
@@ -390,47 +414,49 @@ console.log(options.chartNames)
           //lin.href = "data:application/octet-stream;base64," + btoa(serialized)
           //
         }
+      
+      , removeChart = function(profile){
+          var chartCon = profile.chartContainer;
+          clearSwellHandlers(profile);
+          profile.chart.destroy();
+          clearNode(chartCon);
+          containerNode.removeChild(chartCon);
+          clearGraphics(map,profile.graphics)
+        }
 
-      , clearGraphHandlers = function(arr){
-          for(var i = arr.length-1;i>= 0;i--){
-            arr[i].remove();
-            arr[i] = null;
-            arr.length = i;
+      , clearSwellHandlers = function(profile){
+            profile.swellOver.remove();
+            profile.swellOver = null;
+            profile.swellOut.remove();
+            profile.swellOut = null;
+        }
+       
+      , reattachGraph = function(profiles){
+          for (var i = 0, len = profiles.length; i < len; i++){
+            addSwellHandlers(profiles[i]);
           }
         }
 
-      , reattachGraph = function(gList){
-          var len = gList.length, i = len-1, twolen = len*2;
-            while(len < twolen){
-              var curr = gList[i];
-              addSwellHandlers.apply(null, curr);
-              len++;
-            }
-          gList.length = i+1;
-        }
-
-      , resizeCharts = function(charts, con){
-          clearGraphHandlers(graphHandlers);
-          var charDivNumb = con.childNodes.length, conStyle = con.style,
-          mup = on(W,"mouseup", function(e){
-            conStyle.visibility = "hidden";
-            for(var i = 0;i < charDivNumb;i+= 2){
-              charts[i/2].resize();
+      , resizeCharts = function(profiles){
+        //maybe var frag = DOC.createDocumentFragment();
+        //container node display none to prevent reflows
+        //attach each graph to frag, remove from doc
+        //append Child will do
+        //This is a pain point. It takes a while.
+          for(var i = 0, len = profiles.length;i<len;i++){
+            clearSwellHandlers(profiles[i]);
+          }
+          on.once(W,"mouseup", function(e){
+            containerNode.style.visibility = "hidden";
+            for(var i = 0, len = profiles.length; i < len ;i++){
+              profiles[i].chart.resize();
             }
             conStyle.visibility = "visible";
-            reattachGraph(graphList);
-            mup.remove();
-            mup = null;
+            reattachGraph(profiles);
           });
         }
 
-      , getOffset = function(){
-          var gs=DOC.getElementsByTagName("g")
-            , offset = gs.length-4
-            ;
-            gs = null;
-            return offset;
-        }
+      
 
       , addSwellHandlers = function(profile){
         "use strict"; //arguments allocates context if nonstrict
@@ -447,20 +473,20 @@ console.log(options.chartNames)
 
           paths = null;
 
-          profile.graphHandlers.push(on(graph,"mouseover", function(e){
+          profile.swellOver = on(graph,"mouseover", function(e){
               var et = e.target.getAttribute("path").slice(1, 6);
               if(pathObj[et]!== undefined){
                 currNum = pathObj[et];
               }
               if(currNum!== undefined)
                 addSymbol(map, getPointFromProfile(currNum,profile), hoverPointSymbol, graphics);
-          }));
-          profile.graphHandlers.push(on(graph,"mouseout", function(){
+          });
+          profile.swellOut= on(graph,"mouseout", function(){
             if(currNum!== undefined){
               mapGfx.remove(graphics[graphics.length-1]);
               graphics.length = graphics.length-1;
             }
-          }));
+          });
         }
 
       , getPointFromProfile = function(numb, profile){
@@ -484,7 +510,7 @@ console.log(options.chartNames)
       init:function(e){
         function handleClick (e){
           if(domClass.contains(anchor,"clickable")){
-            if(freeToReq) tools.toggle(e, self);
+            tools.toggle(e, self);
           }else{
             if (tooltip) tooltip(e);
           }
@@ -501,7 +527,6 @@ console.log(options.chartNames)
         on(anchor, "mousedown", handleClick);
 
         on(container.getClose(),"mousedown", function(){
-          if(freeToReq)
             tools.wipe(crossTool, anchor, eventFeatures);
         }); 
       },
@@ -524,25 +549,15 @@ console.log(options.chartNames)
       },
       stop:function(){
         this.idle();
-        chartCount = 1;
-        crossCount = 0;
-        clearGraphHandlers(graphHandlers);
-        for(var i = 0, j = charts.length;i < j;i++){
-          charts[i].destroy();
-          charts[i] = null;
-          clearNode(charDivs[i])
-        }
-        charts.length = 0;
-        charDivs.length = 0;
-        reqQueue.length = 0;
-        chartArray.length = 0;
+        currentNumber = 1;
+        
+        for(var i = 0, j = profiles.length;i < j;i++){
+          removeChart(profiles[i]); 
+        } 
         clearNode(containerNode);
         container.hide();
-        for(var i = 0, j = graphics.length;i < j;i++){  
-          clearGraphics(map,graphics[i]);
-          graphics[i].length = 0;
-        }
-      }
+        profiles.length = 0;
+      } 
     };
     return crossTool;
   };

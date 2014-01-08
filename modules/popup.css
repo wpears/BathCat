@@ -21,22 +21,36 @@ box-shadow: 0 1px 2px 1px #a5b6e0,
 }
 #popContainer>div{
   height:300px;
+  position:relative;
 }
-#popContainer a{
+.export{
   font-size:15px;
   color:#5ADE6B;
   cursor:pointer;
   position:absolute;
-  right:15px;
+  right:45px;
   text-decoration: underline;
   font-weight:600;
-  margin-top:-285px;
+  margin-top:-300px;
+  padding:0 2px 0 2px;
+  line-height: 1.2em;
 }
+
+.export:hover{
+  color:#fff;
+  background-color:#5ADE6B;
+}
+
+.export:active{
+  margin-top:-299px;
+}
+
+
 #popContainer strong{
   margin-top:-305px;
   position:absolute;
 }
-#popContainer >div >div:nth-last-child(2){
+#popContainer >div >div>div:nth-last-child(2){
   text-shadow:1px 1px 1px #007FDE;
   letter-spacing: 1px;
 }
@@ -86,7 +100,6 @@ user-select: none;
 }
 .closebox{
   font-family:sans-serif;
-  height:0px;
   width:17px;
   font-size:18px;
   color:rgb(255,255,255);
@@ -100,10 +113,13 @@ user-select: none;
   cursor:pointer;
 }
 .closebox:hover{
-  color:#eee;
+  color:#ffcccc;
   text-shadow: 1px 1px 1px #555;
 }
-
+.graphclose{
+color:#f6f6f6;
+padding:0;
+}
 #popSplitterV{
   position:absolute;
   right:0;

@@ -199,7 +199,6 @@ console.log(options.chartNames)
        //   });
 
           profile.pointObj = generatePoints(profile);
-          console.log(profile.pointObj)
           addTextSymbol(map
                        ,profile.chartNumber
                        ,profile.e1.mapPoint
@@ -361,7 +360,6 @@ console.log(options.chartNames)
             y = initialY;
             profile.results[dataset].forEach(buildString);
           }
-          console.log(linkString)
           return linkString;
       }
 

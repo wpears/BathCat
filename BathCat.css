@@ -166,7 +166,14 @@ body{
 .movd{
 	 transform:translate3d(-285px,0,0);
   -webkit-transform:translate3d(-285px,0,0);
-	}
+}
+
+a{
+ -webkit-transition: background-color 0.1s ease, color 0.1s ease;
+ -moz-transition: background-color 0.1s ease, color 0.1s ease;
+  transition: background-color 0.1s ease, color 0.1s ease;
+ -o-transition: background-color 0.1s ease, color 0.1s ease;
+}
 
 #rP{
   background: url(images/bg.png);

@@ -104,7 +104,12 @@ console.log(options.chartNames)
                   TRIANGLE:    "m-3, 3 l3,-7 3, 7 z",
                   TRIANGLE_INVERTED:"m-3,-3 l3, 7 3,-7 z"}
       
-
+      , round = function(numb, deci){
+          var M = Math
+            , offset = M.pow(10,deci)
+            ;
+          return M.round(numb*offset)/offset;
+      }
       , update = function(p1, p2){
           lineGeometry = new Polyline(spatialRef);
           lineGeometry.addPath([p1, p2]);
@@ -128,6 +133,7 @@ console.log(options.chartNames)
           this.e1 = e1;
           this.e2 = null;
           this.task = new canId.task();
+          this.results  =null;
           this.pointObj =null;
           this.graphics = [];
           this.legend = null
@@ -193,6 +199,7 @@ console.log(options.chartNames)
        //   });
 
           profile.pointObj = generatePoints(profile);
+          console.log(profile.pointObj)
           addTextSymbol(map
                        ,profile.chartNumber
                        ,profile.e1.mapPoint
@@ -277,7 +284,7 @@ console.log(options.chartNames)
 
           return function(results){
             setTimeout(function(){ //If cached, there is no release of the event loop
-
+            profile.results = results;
             for (var layer in results){
               var series = results[layer];
               for(var i=0, len=series.length; i<len; i++){
@@ -335,23 +342,25 @@ console.log(options.chartNames)
 
       , generateString = function(profile){
           var linkString = "x,y,z\n"
-            , xGap = profile.pointObj.xGap
-            , yGap = profile.pointObj.yGap
-            , initialX = profile.e1.mapPoint.x
-            , initialY = profile.e1.mapPoint.y
+            , xGap = round(profile.pointObj.xGap,2)
+            , yGap = round(profile.pointObj.yGap,2)
+            , initialX = round(profile.e1.mapPoint.x,2)
+            , initialY = round(profile.e1.mapPoint.y,2)
             , x
             , y
-            , buildString = function(z){
+            , buildString = function(pnt){
+                var z = pnt.y;
                 linkString+= x +','+ y +',' + z +'\n';
-                x += xGap;
-                y += yGap;
+                x = round(x + xGap,2);
+                y = round(y + yGap,2);
               }
             ;
-          for (var dataset in profile.pointObj.points){
+          for (var dataset in profile.results){
             x = initialX;
             y = initialY;
-            profile.pointObj.points[dataset].forEach(buildString);
+            profile.results[dataset].forEach(buildString);
           }
+          console.log(linkString)
           return linkString;
       }
 
@@ -367,8 +376,9 @@ console.log(options.chartNames)
               exLink.onclick = function(){
                 W.navigator.msSaveBlob(new W.Blob([generateString(profile)]), dlFileName)};
             }else
-              exLink.onclick = function(){
-                W.URL.createObjectURL(new W.Blob([generateString(profile)]));
+              exLink.download = dlFileName;
+              exLink.onmousedown = function(){
+                exLink.href=W.URL.createObjectURL(new W.Blob([generateString(profile)]));
               }
           }else{
             exLink.onclick = function(e){

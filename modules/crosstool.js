@@ -84,6 +84,7 @@ console.log(options.chartNames)
         , currentNumber = 1
         , mouseLine
         , lineGeometry
+        , updateReady = 1
         , containerNode
         , ie9 = (DOC.all&&DOC.addEventListener&&!window.atob)?true:false
 
@@ -300,8 +301,9 @@ console.log(options.chartNames)
 
 
       , createChart = function(profile){
-          var chartContainer = construct.create("div", {height:350}, containerNode)
-            , chart = new Chart(chartContainer)
+          var chartContainer = construct.create("div", {height:300}, containerNode)
+            , chartDiv = construct.create("div", {height:300}, chartContainer)
+            , chart = new Chart(chartDiv)
             ;
             containerNode.scrollTop = containerNode.scrollHeight;
 
@@ -348,7 +350,7 @@ console.log(options.chartNames)
           for (var dataset in profile.pointObj.points){
             x = initialX;
             y = initialY;
-            dataset.forEach(buildString);
+            profile.pointObj.points[dataset].forEach(buildString);
           }
           return linkString;
       }
@@ -375,15 +377,15 @@ console.log(options.chartNames)
             }
           }
           if(ie9)exLink.style.color = "#FF0000";
-          containerNode.appendChild(exLink);
+          profile.chartContainer.appendChild(exLink);
       }
 
       , addCloseBox = function(profile){
           var box = DOC.createElement('div');
           box.textContent = "X";
-          box.className = "closebox";
+          box.className = "closebox graphclose";
           profile.chartContainer.appendChild(box);
-          on.once(box, mousedown, function(){removeChart(profile);});
+          on.once(box, "mousedown", function(){removeChart(profile);});
       }
 
       , addLegend = function(profile){
@@ -402,9 +404,11 @@ console.log(options.chartNames)
         }
       
       , removeChart = function(profile){
+          var chartCon = profile.chartContainer;
           clearSwellHandlers(profile);
           profile.chart.destroy();
-          clearNode(profile.chartContainer)
+          clearNode(chartCon);
+          containerNode.removeChild(chartCon);
           clearGraphics(map,profile.graphics)
         }
 
@@ -494,7 +498,7 @@ console.log(options.chartNames)
       init:function(e){
         function handleClick (e){
           if(domClass.contains(anchor,"clickable")){
-            if(freeToReq) tools.toggle(e, self);
+            tools.toggle(e, self);
           }else{
             if (tooltip) tooltip(e);
           }
@@ -511,7 +515,6 @@ console.log(options.chartNames)
         on(anchor, "mousedown", handleClick);
 
         on(container.getClose(),"mousedown", function(){
-          if(freeToReq)
             tools.wipe(crossTool, anchor, eventFeatures);
         }); 
       },

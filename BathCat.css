@@ -167,7 +167,7 @@ body{
 
 #rP{
   background: url(images/bg.png);
-  top:85px;
+  top:90px;
   right:0px;
   margin-right:-285px;
   width:302px;
@@ -250,6 +250,12 @@ body{
   float:right;
   font-size:0.9em;
   line-height: 1.2em;
+  padding:0 1px 0 1px;
+}
+
+.lrp:hover{
+  color:#fff;
+  background-color:#5ADE6B;
 }
 
 #dlLink{
@@ -294,14 +300,7 @@ background-image:-webkit-linear-gradient(top, #e1ebfb, #b4cdf5);
   background-image:-moz-linear-gradient(top,#a0bce5,#f0f5fd);
   padding-top:4px;
 }
-.activeTool{
-  box-shadow:0 0 16px 6px #99ceff !important;
-   			 background-color:#99ceff;
-}
-.helpglow{
-  box-shadow:0 0 16px 6px #5ADE6B !important;
-  background-color:#5ADE6B;             
-}
+
 #infopane{
   overflow-y:scroll;
   padding:3px 5px 0 0;
@@ -344,24 +343,45 @@ li{
   margin-bottom:1px;
 }
 #ident{
-  font-family:'Palatino Linotype', serif;
-  font-style:italic;
-  font-weight:bold;
-  height:20px;
-  width:13px;
-  padding:0 0 0 7px;
-  top:42px;
-  right:46px;
+  background-image:url(images/ident.png);
+  height:32px;
+  width:32px;
+  top:45px;
+  right:78px;
   border-radius:14px;
 }
 
 #cros{
-  height:19px;
-  width:19px;
-  top:42px;
-  right:75px;
+  height:32px;
+  width:32px;
+  top:45px;
+  right:135px;
   border-radius:2px;
-  background:rgba(235,235,235,0.9) center url(images/grap.png) no-repeat;
+  background-image:url(images/graph.png);
+}
+
+#mea{
+  background-image: url(images/ruler2.png);
+  width:32px;
+  height:32px;
+  top:45px;
+  right:25px;
+  border-radius:2px;
+}
+
+
+
+#measur{
+  z-index: 500;
+  display:none;
+  background-color:rgba(245,245,245,0.8);
+  width:214px;
+  height:120px;
+  top:80px;
+  right:18px;
+  border-radius: 6px;
+  border:1px solid;
+  box-shadow:0px 2px 2px -1px #a5b6e0;
 }
 .lab{
   width:28px;
@@ -387,29 +407,22 @@ li{
 }
 
 .unclick{
-  line-height:1.1em;
-  color:#c9c9c9;
-  background-color:#898989;
+  opacity:0.4;
+  background-color:rgba(230,237,255,0.5);
+  cursor:default
 }
-.unclick:hover{
-  cursor:default;
-}
+
 .clickable{
-  line-height:1.1em;
-  color:#fff;
-  background-color:#0040e2;
-  box-shadow: 1px 1px 1px 0 #b2b2b2;
+  background-color:rgba(230,237,255,0.8);
+  opacity:1;
 }
 .clickable:hover{
   cursor:pointer;
-  background-color:#3277ff;
-  box-shadow: 1px 1px 1px 0 #003793,
-              inset 1px 0px 1px 0 #b2b2b2;
+  box-shadow: 0 1px 1px 0 #003793;
 }
 .clickable:active{
   margin-top:1px;
-  box-shadow: 0 0 1px 0 #2d7bff,
-             inset 1px 0px 1px 0 #4088fd;
+  box-shadow: 0 0 1px 0 #2d7bff;
 }
 
 .selectable{
@@ -460,35 +473,7 @@ li{
 	margin:7px 0;
 }
 
-#mea{
-  background-image: url(images/dis.png);
-  background-position:1px;
-  background-repeat:no-repeat;
-  width:20px;
-  height:20px;
-  top:41px;
-  right:18px;
-  border-radius:6px;
-}
-#mea:hover{
-  cursor:pointer;
-}
-#mea:active{
-  background-position:1px 3px;
-}
 
-#measur{
-  z-index: 500;
-  display:none;
-  background-color:rgba(245,245,245,0.8);
-  width:214px;
-  height:120px;
-  top:66px;
-  right:8px;
-  border-radius: 6px;
-  border:1px solid;
-  box-shadow:0px 2px 2px -1px #a5b6e0;
-}
 #fex{
   background: rgb(0,0,255) url(images/fex.png) no-repeat;
   width:20px;
@@ -580,6 +565,14 @@ margin-left:2px;
  -moz-transition:    transform 0.2s ease-out;
   transition:        transform 0.2s ease-out;
  -o-transition:      transform 0.2s ease-out;
+}
+.activeTool{
+  box-shadow:0 0 12px 4px #99ceff !important;
+  background-color:#a3d4f3;
+}
+.helpglow{
+  box-shadow:0 0 16px 6px #5ADE6B !important;
+  background-color:#5ADE6B;             
 }
  ::selection{
     background:rgba(110,235,110,0.7);

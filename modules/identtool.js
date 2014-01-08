@@ -117,12 +117,14 @@ function( addSymbol
         init:function(e){
           self = this;
           buildPane();
-          tools.toggle(e, self);
-          on(ident,"mousedown", function(e){
+          function handleClick(e){
             if(domClass.contains(ident,"clickable"))
               return tools.toggle(e, self);
-            else tooltip(e);
-          });   
+            else 
+              if (tooltip) tooltip(e);
+          }
+          handleClick(e);
+          on(ident,"mousedown", handleClick);   
         },              
         start:function(){
           this.revive();

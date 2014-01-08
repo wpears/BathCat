@@ -359,7 +359,8 @@ console.log(options.chartNames)
           var dlFileName = profile.chartName+'_Profile'+profile.chartNumber+'_'+'WebMercator.txt'
             , exLink = DOC.createElement("a")
             ;
-          exLink.textContent = "Export"; 
+          exLink.textContent = "Export";
+          exLink.className = "export";
 
           if(W.Blob){
             if(W.navigator.msSaveBlob){

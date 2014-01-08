@@ -148,6 +148,9 @@ body{
   color: #5ADE6B;
   text-shadow:1px 1px 1px #23ad35;
 }
+#heaR:active{
+  margin-top:1px;
+}
 .atop{
    position:absolute;
   z-index:100;
@@ -256,6 +259,10 @@ body{
 .lrp:hover{
   color:#fff;
   background-color:#5ADE6B;
+}
+
+.lrp:active{
+  margin-top:5px;
 }
 
 #dlLink{
@@ -405,6 +412,7 @@ li{
  -o-transition:      opacity 0.1s ease;
 
 }
+
 
 .unclick{
   opacity:0.4;

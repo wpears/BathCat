@@ -257,11 +257,10 @@ window.map = map
   		});
 
 		outlines.setRenderer(new SimpleRenderer(blank));
-     map.addLayer(outlines);
+    map.addLayer(outlines);
 
 		on.once(outlines,"load",function(){
-			console.log("OI outlines")
-			
+			console.log("OI outlines")	
 		});
 
 
@@ -339,14 +338,17 @@ console.log('grid')
 				intData.OBJECTID = featureAttr.OBJECTID;
 				gdata.push(intData);
 			}
+			
 			gridLoaded = 1;
 			grid.renderArray(gdata);
-			gridHeader = dom.byId("ilP-header");
-			if(IE)gridHeader = gridHeader.firstChild;
+			
+			gridHeader = dom.byId("ilP-header").firstChild;
 			headerNodes = gridHeader.childNodes;
+			
 			headerNodes[0].title = "Sort by Name"; //maybe pass these into constructor
 			headerNodes[1].title = "Sort by Date";         
 			headerNodes[3].title = "Turn images on or off";
+			
 			gridCon = dquery(".dgrid-content")[0];
 			dScroll = dquery(".dgrid-scroller")[0];
 
@@ -1121,7 +1123,6 @@ console.log('post grid');
 			}
 		});
 
-
   	rP.isShowing = function(){
     	return rP.showing;
     }
@@ -1445,10 +1446,7 @@ console.log('post grid');
 		}
 
 		function getInputBox(oid){
-			var box;
-			if(IE) box = gridObject.oidToRow(oid).childNodes[0].childNodes[0].childNodes[3].childNodes[0];
-			else box = gridObject.oidToRow(oid).childNodes[0].childNodes[3].childNodes[0];
-			return box;
+			return gridObject.oidToRow(oid).firstChild.firstChild.childNodes[3].firstChild;
 		}
 
 		function isNumber(n) {

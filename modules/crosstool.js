@@ -151,6 +151,7 @@ console.log(options.chartNames)
           var profile = new Profile(e1)
             , mapPoint = e1.mapPoint
             ;
+          profiles.push(profile);
 
           findLayerIds(mapPoint).then(function(v){
             profile.task.prepare(v[0]);
@@ -437,6 +438,7 @@ console.log(options.chartNames)
         }
 
       , resizeCharts = function(profiles){
+        console.log("oi");
         //maybe var frag = DOC.createDocumentFragment();
         //container node display none to prevent reflows
         //attach each graph to frag, remove from doc
@@ -445,12 +447,15 @@ console.log(options.chartNames)
           for(var i = 0, len = profiles.length;i<len;i++){
             clearSwellHandlers(profiles[i]);
           }
+          console.log("hm")
           on.once(W,"mouseup", function(e){
             containerNode.style.visibility = "hidden";
+            console.log("qwe")
             for(var i = 0, len = profiles.length; i < len ;i++){
               profiles[i].chart.resize();
             }
-            conStyle.visibility = "visible";
+            containerNode.style.visibility = "visible";
+            console.log("@")
             reattachGraph(profiles);
           });
         }
@@ -519,8 +524,9 @@ console.log(options.chartNames)
         handleClick(e);
 
         aspect.after(container,"resize", function(e, dim){
-          if(dim === "width"&&charts.length)
-            resizeCharts(charts, containerNode);
+          console.log("Resizeinnnnng",dim,profiles)
+          if(dim === "width"&&profiles.length)
+            resizeCharts(profiles);
           }, true);
 
         on(anchor, "mousedown", handleClick);

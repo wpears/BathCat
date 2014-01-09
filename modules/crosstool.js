@@ -414,6 +414,7 @@ console.log(options.chartNames)
         }
       
       , removeChart = function(profile){
+          if(profile.chartNumber === currentNumber-1)currentNumber--;
           var chartCon = profile.chartContainer;
           clearSwellHandlers(profile);
           profile.chart.destroy();

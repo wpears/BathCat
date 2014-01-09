@@ -27,9 +27,6 @@ return function(anchor, line, point, options){
                                     , pointSymbol: point
                                     , defaultLengthUnit:esri.Units.FEET
                                     , defaultAreaUnit:esri.Units.SQUARE_MILES
-                                    , areaIcon:"images/Measure_Area16.png"
-                                    , distanceIcon:"images/Distance_Area16.png"
-                                    , locationIcon:"images/Location_Area16.png"
                                     }, container);
           measure.startup();
           container = DOC.getElementById("measur"); //retain reference

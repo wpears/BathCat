@@ -16,6 +16,7 @@
  content:"  \25BC";
  color:#555a6e;
 }
+.esriMeasurement {padding:8px;}.distanceIcon {background-image:url(images/Measure_Distance16.png); width:16px;height:16px;} .areaIcon {background-image:url(images/Measure_Area16.png); width:16px;height:16px;} .locationIcon {background-image:url(images/Measure_Point16.png);width:16px; height:16px;} .esriButton .dijitButtonNode {color: #666666 !important;height: 30px;width: 32px;vertical-align:middle;padding-top: 3px !important;padding-bottom:0;padding-left:0;padding-right:0;font-size:medium !important;border-color:none !important;border:none !important;background:none;}.esriButtonHover .dijitButtonNode {border-color:#a5beda !important;border: none !important;color:#000 !important;background:#fcfdff url(images/button-hover.png) repeat-x bottom !important;}.esriButtonActive .dijitButtonNode {background-color: white !important;color: black !important;border: none !important;background: #ededed url(images/button-active.png) no-repeat !important;}.esriButtonChecked .dijitButtonNode{background-color: white !important;color: black !important;border: none;background: #ededed url(images/button-active.png) bottom repeat-x !important;}.esriToggleButton .dijitButtonNode {color: black !important;height: 30px;width: 28px;vertical-align:middle;font-size:40px;padding-top: 3px !important;padding-bottom:0;padding-left:0;padding-right:0;font-size:medium !important;border-color:none !important;border:none !important;background:none;}.esriToggleButtonDisabled .dijitButtonNode {color:red;}.esriUnitButton .dijitButtonText{font-size:16px !important;}.resultLabel {margin-top:10px;margin-bottom:5px;border-bottom: thin solid rgb(51, 51, 51);}.result {padding:5px;}.unitDropDown {}
 
 
 .dijitTooltip {
@@ -735,9 +736,6 @@ th:hover{
   background-color:rgba(243,63,51,0.7);
 }
 
-.logo-med,.map.logo-sm {
-  display:none !important;
- }
  strong{
   color: #99ceff;
   text-shadow:1px 1px 1px #007FDE;
@@ -762,35 +760,19 @@ th:hover{
 .map .container .layersDiv { position:relative; left:0px; top:0px; width:100%; height:100%; }
 .map .container .layersDiv .layerTile { position:absolute; border:none; margin:0px; padding:0px; }
 
-.map .container .container {
+/*.map .container .container {
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);  
-}
+}*/
 
 .esriControlsBR { 
+  display:none;
   position: absolute; 
   right: 5px; 
   bottom: 5px; 
   z-index: 30; 
 }
 
-.esriControlsBR.withPanArrows {
-  right: 25px;
-}
 
-
-/* To customize fixed pan image:
- * - Customize <jsapi>/images/map/fixed-pan-sprite.pdf and save as fixed-pan-sprite.png
- * - Or modify images & CSS appropriately
- */
-.map .container .fixedPan { position:absolute; width:15px; height:15px; background-image:url(../images/map/fixed-pan-sprite.png); overflow:hidden; cursor:pointer; }
-.map .container .panUp { background-position:-16px 0px; top:5px; }
-.map .container .panUpperRight { background-position:-32px 0px; right:5px; top:5px; }
-.map .container .panRight { background-position:-32px -16px; right:5px; }
-.map .container .panLowerRight { background-position:-32px -32px; right:5px; bottom:5px; }
-.map .container .panDown { background-position:-16px -32px; bottom:5px; }
-.map .container .panLowerLeft { background-position:-47px -32px; left:5px; bottom:5px; }
-.map .container .panLeft { background-position:-47px -16px; left:5px; }
-.map .container .panUpperLeft { background-position:-47px 0px; left:5px; top:5px; }
 
 
 .esriSimpleSlider {

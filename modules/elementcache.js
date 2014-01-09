@@ -7,12 +7,12 @@ define([],function(){
 
     function get(){
       var el;
-      console.log("getting from elcache",pointer,cache,cache.length)
+      //console.log("getting from elcache",pointer,cache,cache.length)
       if(pointer === cache.length){
-        console.log("Equal, creating anew")
+        //console.log("Equal, creating anew")
         el = doc.createElement(element);
       }else{
-        console.log("Unequal",cache[pointer],"being returned")
+        //console.log("Unequal",cache[pointer],"being returned")
         el = cache[pointer]
         cache[pointer] = null;
         pointer++;
@@ -21,14 +21,14 @@ define([],function(){
           pointer = 0;
         }
       }
-      console.log("returning",el,pointer,cache,cache.length)
+      //console.log("returning",el,pointer,cache,cache.length)
       return el
     }
 
     function reclaim(el){
-      console.log("reclaiming", pointer, cache, cache.length)
+      //console.log("reclaiming", pointer, cache, cache.length)
       cache[cache.length] = el;
-      console.log("reclaimed",pointer,cache,cache.length)
+      //console.log("reclaimed",pointer,cache,cache.length)
     }
 
     return {

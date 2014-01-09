@@ -21,7 +21,6 @@ define( ['modules/colorrampobject.js'
         ,'dojox/charting/action2d/Tooltip'
         ,'dojox/charting/action2d/Magnify'
         ,'dojox/charting/widget/SelectableLegend'
-    //    ,'dojox/fx/scroll'
 
         ,'esri/tasks/geometry'
         ,'esri/geometry/Polyline'
@@ -53,7 +52,6 @@ function( rampObject
         , Tooltip
         , Magnify
         , Legend
-  //      , fx
 
         , geo
         , Polyline
@@ -63,7 +61,6 @@ function( rampObject
 
         ){  
   return function ( rasterLayer, container, anchor, url, layerArray, options) {
-console.log(options.chartNames)
       options=options?options:{};
       var crossTool
         , self
@@ -134,6 +131,7 @@ console.log(options.chartNames)
           this.e2 = null;
           this.task = new canId.task();
           this.results  =null;
+          this.seriesCount = 0;
           this.pointObj =null;
           this.graphics = [];
           this.legend = null
@@ -148,6 +146,7 @@ console.log(options.chartNames)
       }
 
       , addFirstPoint = function(e1){
+        window.chartNames=chartNames;
           var profile = new Profile(e1)
             , mapPoint = e1.mapPoint
             ;
@@ -257,7 +256,6 @@ console.log(options.chartNames)
             , xGapWmm = gapInWmm*xComponent
             , yGapWmm = gapInWmm*yComponent
             ;
-          console.log("distInFt",distInFt,"points",pointsInProfile)
           if(spdx < 0){
             yGapPx = -yGapPx;
           }else if(spdx > 0){
@@ -300,17 +298,16 @@ console.log(options.chartNames)
               for(var i=0, len=series.length; i<len; i++){
                 if (series[i].y < min) min = series[i].y;
               }
-              chart.addSeries(layer, series);
+              chart.addSeries(getDate(chartNames[layer].attributes.Date), series);
+              profile.seriesCount++;
             }
 
             chart.addAxis("y", {vertical:true, min:min-5, max:5, title:"(ft)", titleGap:8});
             new Tooltip(chart, "default"); //edits in the module for positioning/height tooltip.js
             new Magnify(chart, "default");
             chart.render();
-          
+            addLegend(profile);
             addSwellHandlers(profile);
-
-            console.log(results);
           },0)                          //Build dlstring on click, utilizing args from closure.
           };                       //Create chart goes here. With some other stuff from late in
                                   // renderG.. since we know it is finished
@@ -323,8 +320,6 @@ console.log(options.chartNames)
             , chart = new Chart(chartDiv)
             ;
             containerNode.scrollTop = containerNode.scrollHeight;
-
-        //   new fx({node:chartContainer,win:containerNode,duration:600}).play();
 
           chart.addPlot("default", {type: plot2dMarkers});
           chart.addAxis("x",{min:-1
@@ -411,9 +406,8 @@ console.log(options.chartNames)
 
       , addLegend = function(profile){
         var legendDiv = DOC.createElement('div');
-        legendDiv.className = "chartLegend";
         profile.chartContainer.appendChild(legendDiv);
-        profile.legend = new Legend({chart:profile.chart, outline:true},legendDiv);
+        profile.legend = new Legend({chart:profile.chart, outline:false},legendDiv);
       }
 
       , exportImage = function(){
@@ -437,6 +431,7 @@ console.log(options.chartNames)
           var chartCon = profile.chartContainer;
           if(chartCon){
             clearSwellHandlers(profile);
+            profile.legend.destroy();
             profile.chart.destroy();
             clearNode(chartCon);
             containerNode.removeChild(chartCon);
@@ -458,7 +453,6 @@ console.log(options.chartNames)
         }
 
       , resizeCharts = function(profiles){
-        console.log("oi");
         //maybe var frag = DOC.createDocumentFragment();
         //container node display none to prevent reflows
         //attach each graph to frag, remove from doc
@@ -467,15 +461,12 @@ console.log(options.chartNames)
           for(var i = 0, len = profiles.length;i<len;i++){
             clearSwellHandlers(profiles[i]);
           }
-          console.log("hm")
           on.once(W,"mouseup", function(e){
             containerNode.style.visibility = "hidden";
-            console.log("qwe")
             for(var i = 0, len = profiles.length; i < len ;i++){
               profiles[i].chart.resize();
             }
             containerNode.style.visibility = "visible";
-            console.log("@")
             reattachGraph(profiles);
           });
         }
@@ -525,6 +516,12 @@ console.log(options.chartNames)
 
 
         }
+      , getDate = function(date){
+          var dte = new Date(date);
+          var dst = dte.toUTCString();
+          dst = dst.charAt(6)=== " "?dst.substring(0, 5)+"0"+dst.substring(5):dst; //ieFix
+          return dst.slice(12, 16)+"-"+((1+dte.getUTCMonth())<10?"0"+(1+dte.getUTCMonth()):(1+dte.getUTCMonth()))+"-"+dst.slice(5, 7);
+        }
       ;
 
 
@@ -544,7 +541,6 @@ console.log(options.chartNames)
         handleClick(e);
 
         aspect.after(container,"resize", function(e, dim){
-          console.log("Resizeinnnnng",dim,profiles)
           if(dim === "width"&&profiles.length)
             resizeCharts(profiles);
           }, true);

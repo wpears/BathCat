@@ -45,6 +45,18 @@ box-shadow: 0 1px 2px 1px #a5b6e0,
   margin-top:-299px;
 }
 
+.dojoxLegendNode{
+  position:absolute;
+  top:33px;
+  right:15px;
+  font-size:14px;
+}
+.dojoxLegendText{
+  margin-right:5px;
+}
+.dijitCheckBoxInput{
+  margin-left:5px;
+}
 
 #popContainer strong{
   margin-top:-305px;

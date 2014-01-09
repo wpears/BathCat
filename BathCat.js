@@ -313,7 +313,7 @@ window.map = map
 console.log('grid')
 		gridObject =(function(){
 			var i = 0, j = featureCount, gdata =[], gridCon, expandReady=1,
-				intData, featureAttr, dte, dst, lastNodePos =[],nameSorted = 0, dateSorted = 1,
+				intData, featureAttr, lastNodePos =[],nameSorted = 0, dateSorted = 1,
 				adGr = declare([Grid, ColumnResizer]), gridHeader, headerNodes;
 
 				grid = new adGr({columns:{
@@ -329,11 +329,8 @@ console.log('grid')
 			for(;i<j;i++){
 				intData ={};
 				featureAttr = features[i].attributes;
-				dte = new Date(featureAttr.Date);
-				dst = dte.toUTCString();
-				dst = dst.charAt(6)=== " "?dst.substring(0, 5)+"0"+dst.substring(5):dst; //ieFix
 				intData.__Date = featureAttr.Date;
-				intData.Date = dst.slice(12, 16)+"-"+((1+dte.getUTCMonth())<10?"0"+(1+dte.getUTCMonth()):(1+dte.getUTCMonth()))+"-"+dst.slice(5, 7);
+				intData.Date = getDate(featureAttr.Date);
 				intData.Project =(featureAttr.Project.length<6?"Soil Sed. "+featureAttr.Project:featureAttr.Project);
 				intData.OBJECTID = featureAttr.OBJECTID;
 				gdata.push(intData);
@@ -354,6 +351,13 @@ console.log('grid')
 
 			for(var i = 0, j = gdata.length;i<j;i++){
 				lastNodePos[i] = i;
+			}
+
+			function getDate(date){
+				var dte = new Date(date);
+				var dst = dte.toUTCString();
+				dst = dst.charAt(6)=== " "?dst.substring(0, 5)+"0"+dst.substring(5):dst; //ieFix
+				return dst.slice(12, 16)+"-"+((1+dte.getUTCMonth())<10?"0"+(1+dte.getUTCMonth()):(1+dte.getUTCMonth()))+"-"+dst.slice(5, 7);
 			}
 
 			function dateSortSeq(a, b){

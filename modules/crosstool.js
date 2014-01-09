@@ -171,7 +171,24 @@ console.log(options.chartNames)
             if(e2.pageX < mouseDownX+10&&e2.pageX > mouseDownX-10&&e2.pageY < mouseDownY+10&&e2.pageY > mouseDownY-10)
               addSecondPoint(e1, e2, profile);
           });
+          self.handlers[4] = map.on("zoom-start",cancelProfile);
+          self.handlers[5] = map.on("pan-start", cancelProfile);
         }
+
+      , resetHandlers = function(){
+          self.handlers[2].remove();
+          self.handlers[3].remove();
+          self.handlers[4].remove();
+          self.handlers[5].remove();
+          self.handlers[1] = map.on("mouse-up", startNewLine);
+        }
+
+      , cancelProfile = function(){
+        var profile = profiles.pop();
+        removeChart(profile);
+        currentNumber--;
+        resetHandlers();
+      }
 
 
       , findLayerIds = function(mapPoint){
@@ -189,15 +206,8 @@ console.log(options.chartNames)
           if(mp2.x === mp1.x&&mp2.y === mp1.y)return;
 
           addSymbol(map, mp2, dataPointSymbol, profile.graphics);
-
-          self.handlers[2].remove();
-          self.handlers[3].remove();
-          self.handlers[1] = map.on("mouse-up", startNewLine);
-
-     //     findLayerIds(mp2).then(function(v){
-      //      console.log(v,"about to execute");
-       //     profile.task.execute(v[0],profile.pointObj,buildGraph(profile));
-       //   });
+          
+          resetHandlers();
 
           profile.pointObj = generatePoints(profile);
           addTextSymbol(map
@@ -396,7 +406,7 @@ console.log(options.chartNames)
           box.textContent = "X";
           box.className = "closebox graphclose";
           profile.chartContainer.appendChild(box);
-          on.once(box, "mousedown", function(){removeChart(profile);});
+          on.once(box, "mousedown", function(){removeChart(profile,1);});
       }
 
       , addLegend = function(profile){
@@ -414,13 +424,23 @@ console.log(options.chartNames)
           //
         }
       
-      , removeChart = function(profile){
+      , removeChart = function(profile,single){
+        if(single){
           if(profile.chartNumber === currentNumber-1)currentNumber--;
+          for(var i = 0; i< profiles.length; i++){
+            if (profiles[i] === profile){
+              profiles.splice(i,1);
+              break;
+            }
+          }
+        }
           var chartCon = profile.chartContainer;
-          clearSwellHandlers(profile);
-          profile.chart.destroy();
-          clearNode(chartCon);
-          containerNode.removeChild(chartCon);
+          if(chartCon){
+            clearSwellHandlers(profile);
+            profile.chart.destroy();
+            clearNode(chartCon);
+            containerNode.removeChild(chartCon);
+          }
           clearGraphics(map,profile.graphics)
         }
 
@@ -554,8 +574,7 @@ console.log(options.chartNames)
       },
       stop:function(){
         this.idle();
-        currentNumber = 1;
-        
+        currentNumber = 1;   
         for(var i = 0, j = profiles.length;i < j;i++){
           removeChart(profiles[i]); 
         } 

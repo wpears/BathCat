@@ -1,5 +1,4 @@
-define( ['modules/chartrampobject.js'
-        ,'modules/addsymbol.js'
+define( ['modules/addsymbol.js'
         ,'modules/addtextsymbol.js'
         ,'modules/identify.js'
         ,'modules/tools.js'
@@ -29,8 +28,7 @@ define( ['modules/chartrampobject.js'
         ,'esri/symbols/SimpleMarkerSymbol'
 
         ],
-function( chartRamp
-        , addSymbol
+function( addSymbol
         , addTextSymbol
         , Identify
         , tools
@@ -321,9 +319,7 @@ function( chartRamp
             ;
             containerNode.scrollTop = containerNode.scrollHeight;
 
-          chart.addPlot("default", {type: plot2dMarkers, styleFunc:function(item){
-            return {fill:chartRamp[item.y]}
-          }});
+          chart.addPlot("default", {type: plot2dMarkers});
           chart.addAxis("x",{min:-1
                            , max:Math.ceil(profile.pointObj.dist)
                            , title:"(ft)"

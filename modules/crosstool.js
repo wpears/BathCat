@@ -321,7 +321,7 @@ function( chartRamp
             ;
             containerNode.scrollTop = containerNode.scrollHeight;
 
-          chart.addPlot("default", {type: plot2dMarkers, styleFunc:function(item){
+          chart.addPlot("default", {type: plot2dMarkers, outline:null, stroke:null,styleFunc:function(item){
             return {fill:chartRamp[item.y]}
           }});
           chart.addAxis("x",{min:-1

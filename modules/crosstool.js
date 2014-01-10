@@ -1,4 +1,4 @@
-define( ['modules/colorrampobject.js'
+define( ['modules/chartrampobject.js'
         ,'modules/addsymbol.js'
         ,'modules/addtextsymbol.js'
         ,'modules/identify.js'
@@ -29,7 +29,7 @@ define( ['modules/colorrampobject.js'
         ,'esri/symbols/SimpleMarkerSymbol'
 
         ],
-function( rampObject
+function( chartRamp
         , addSymbol
         , addTextSymbol
         , Identify
@@ -321,7 +321,9 @@ function( rampObject
             ;
             containerNode.scrollTop = containerNode.scrollHeight;
 
-          chart.addPlot("default", {type: plot2dMarkers});
+          chart.addPlot("default", {type: plot2dMarkers, styleFunc:function(item){
+            return {fill:chartRamp[item.y]}
+          }});
           chart.addAxis("x",{min:-1
                            , max:Math.ceil(profile.pointObj.dist)
                            , title:"(ft)"
@@ -331,8 +333,7 @@ function( rampObject
           chart.addAxis("y", {vertical: true, min:-30, max:5, title:"(ft)", titleGap:8});
           chart.title = "Profile "+profile.chartNumber+ ": "+ profile.chartName;
           chart.titleFont = "italic bold normal 24px Harabara";
-          chart.titleFontColor = "#99ceff"
-          chartTheme.setMarkers(chartMarkers); 
+          chart.titleFontColor = "#99ceff" 
           chart.setTheme(chartTheme);
 
           profile.chart = chart;
@@ -549,7 +550,8 @@ function( rampObject
 
         on(container.getClose(),"mousedown", function(){
             tools.wipe(crossTool, anchor, eventFeatures);
-        }); 
+        });
+        chartTheme.setMarkers(chartMarkers); 
       },
       start:function(){
         container.show();

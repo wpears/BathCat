@@ -547,6 +547,8 @@ function( addSymbol
         on(container.getClose(),"mousedown", function(){
             tools.wipe(crossTool, anchor, eventFeatures);
         });
+        chartTheme.chart.fill="rgba(0,0,0,0)"
+        chartTheme.plotarea.fill="rgba(0,0,0,0)"
         chartTheme.setMarkers(chartMarkers); 
       },
       start:function(){

@@ -446,6 +446,7 @@ function( addSymbol
       , reattachGraph = function(profiles){
           for (var i = 0, len = profiles.length; i < len; i++){
             addSwellHandlers(profiles[i]);
+            profiles[i].legend.refresh();
           }
         }
 

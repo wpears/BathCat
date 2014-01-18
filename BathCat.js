@@ -587,6 +587,18 @@ console.log('grid')
 				}
 			}
 
+			function makeViewable(oid){
+				var ex=oidToGraphic(oid)._extent.expand(1.3);
+				if(ex.xmax-ex.xmin > makeViewable.xcutoff || ex.ymax-ex.ymin > makeViewable.ycutoff){
+					map.setExtent(ex);
+				}else{
+				  map.setLevel(15);
+				  map.centerAt(oidToGraphic(oid)._extent.getCenter());
+			  }
+			}
+			makeViewable.xcutoff=6500;
+			makeViewable.ycutoff=4500;
+
 			grid.on(".dgrid-cell:dblclick", gridDbl);
 
 			setVisibleRasters.reusableArray =[];
@@ -685,7 +697,12 @@ console.log('grid')
 
 			on(grid,".dgrid-input:change", function(e){
 					var oid =+e.target.parentNode.parentNode.childNodes[2].innerHTML;
-					rastersShowing[oid-1]?rastersShowing[oid-1] = 0:rastersShowing[oid-1] = 1;        
+					if(rastersShowing[oid-1]){
+						rastersShowing[oid-1] = 0;
+					}else{
+						rastersShowing[oid-1] = 1;
+						makeViewable(oid);
+					}       
 					setVisibleRasters.reusableArray[0] = oid;
 					setVisibleRasters(setVisibleRasters.reusableArray, 1);
 			});

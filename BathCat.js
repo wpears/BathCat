@@ -206,6 +206,7 @@ window.map = map
 		console.log("OI")
     tiout.setRenderer(new SimpleRenderer(blank));
     map.addLayer(tiout);
+    redrawAllGraphics(tiout);
   });
 
 
@@ -214,7 +215,7 @@ window.map = map
 	  features = featureSet.features, featureCount=features.length, IE =!!document.all, ie9, fx,
 		outlines, grid, gridObject, dScroll, outlineMouseMove, outlineTimeout,
 		mouseDownTimeout, previousRecentTarget, justMousedUp = false,  outMoveTime = 0,
-	 	identifyUp, identOff = 1, measure, tooltip,
+	 	identifyUp, identOff = 1, measure, tooltip, allowAutoMapSwitch = 1,
 	 	crossTool, identTool, meaTool;
 		var geoArr, splitGeoArr, geoBins, selectedGraphics =[], selectedGraphicsCount = 0,
 		infoPaneOpen = 0, legend, toggleRightPane, eventFeatures= [],
@@ -833,6 +834,7 @@ console.log('post grid');
 		timeSlider.on("time-extent-change", gridObject.timeUpdate); //handle time extent change
 
 		tiout.on("update-end", function(e, f, g, h){ //called on every zoom (due to refresh). allows feature updating
+   		console.log("update-end");
    		redrawAllGraphics(tiout.graphics);							
     });
 
@@ -865,16 +867,18 @@ console.log('post grid');
 
 		adjustOnZoom = function(zoomObj){	//logic on ZoomEnd	
 			var ext = zoomObj.extent
-			  , lev = zoomObj.level
 				, offs = ext.getWidth()/map.width
-				, bmap = map.getBasemap()
 				;
-				if(lev>= 15&&previousLevel<15&&bmap==="topo")
-					showSat();
-				else if(lev<15&&previousLevel>= 15&&bmap==="satellite")
-					showTopo();
-
-			previousLevel = lev;
+				if(allowAutoMapSwitch){
+					var lev = zoomObj.level
+						, bmap = map.getBasemap()
+						;
+					if(lev>= 15&&previousLevel<15&&bmap==="topo")
+						showSat();
+					else if(lev<15&&previousLevel>= 15&&bmap==="satellite")
+						showTopo();
+					previousLevel = lev;
+				}
 			offs = offs>10?offs:10;
 			tiout.setMaxAllowableOffset(offs);
 			tiout.refresh();
@@ -883,11 +887,13 @@ console.log('post grid');
    	zoomEnd = map.on("zoom-end", adjustOnZoom);
 
    	on(topo, "mousedown", function(e){
+   		allowAutoMapSwitch = 0;
    		if(topoOn) basemapOff();
    		else showTopo();
    	});
 
    	on(sat, "mousedown", function(e){
+   		allowAutoMapSwitch = 0;
    		if(satOn) basemapOff();
    		else showSat();
    	});
@@ -1414,6 +1420,7 @@ console.log('post grid');
 
 																					//apply highlighting logic to an array
 		function redrawAllGraphics(graphics){    
+			console.log("redrawing")
 				darr.forEach(graphics, function(v){
 					var oid = v.attributes.OBJECTID;
 					if(oidStore[oid])

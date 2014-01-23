@@ -645,12 +645,61 @@ user-select: none;
  -o-transition:      height 0.4s ease;
 }
 
-.hiddenRow{
+.sedToggle{
+  position:relative;
+  border-bottom:1px solid #eeeeff;
+}
+.sedToggle:hover{
+  background-color:#f3f3f3;
+  background-image:-webkit-linear-gradient(top, #E1EBFB,#f3f3f3);
+  background-image:-moz-linear-gradient(top, #E1EBFB,#f3f3f3);
+}
+.sedToggle:active{
+  background-color:#E1EBFB;
+  background-image:-webkit-linear-gradient(top, #f3f3f3,#E1EBFB);
+  background-image:-moz-linear-gradient(top, #f3f3f3,#E1EBFB);
+}
+
+
+.sedToggleData::after{
+content:'';
+display:block;
+width:16px;
+height:16px;
+position:absolute;
+top:8px;
+right:21px;
+ -webkit-transition: -webkit-transform 0.2s ease-out;
+ -moz-transition:    transform 0.2s ease-out;
+  transition:        transform 0.2s ease-out;
+ -o-transition:      transform 0.2s ease-out;
+}
+
+.sedTogglePlus::after{
+  background-image:url(images/add.png);
+}
+
+.sedToggleX{
+  background-color:#f3f3f3;
+  background-image:-webkit-linear-gradient(top, #E1EBFB,#f3f3f3);
+  background-image:-moz-linear-gradient(top, #E1EBFB,#f3f3f3);
+}
+.sedToggleX::after{
+  transform:rotate(45deg);
+ -webkit-transform:rotate(45deg);
+}
+
+
+.hiddenRow, .hiddenSoilSed{
   height:0;
   visibility:hidden;
 }
+
 .dgrid-row-table:hover{
   cursor:pointer;
+}
+.dgrid-header tr{
+  border-bottom:2px solid #eeeeff;
 }
 th{
   background-color:#f3f3f3;
@@ -661,6 +710,11 @@ th:hover{
   background-color:#E1EBFB;
   background-image:-webkit-linear-gradient(top, #f3f3f3,#E1EBFB);
   background-image:-moz-linear-gradient(top, #f3f3f3,#E1EBFB);
+}
+th:active{
+  background-color:#f3f3f3;
+  background-image:-webkit-linear-gradient(top, #E1EBFB,#f3f3f3);
+  background-image:-moz-linear-gradient(top, #E1EBFB,#f3f3f3);
 }
 
 .dgrid-column-OBJECTID,.dgrid-column-__Date,td[align=right],td[align=left],.hiddenr{

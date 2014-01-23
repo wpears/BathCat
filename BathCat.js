@@ -314,6 +314,7 @@ window.map = map
 console.log('grid')
 		gridObject =(function(){
 			var i = 0, j = featureCount, gdata =[], gridCon, expandReady=1,
+				sedToggle,
 				intData, featureAttr, lastNodePos =[],nameSorted = 0, dateSorted = 1,
 				adGr = declare([Grid, ColumnResizer]), gridHeader, headerNodes;
 
@@ -336,22 +337,41 @@ console.log('grid')
 				intData.OBJECTID = featureAttr.OBJECTID;
 				gdata.push(intData);
 			}
-			
+			gdata.push({"__Date":Date.now(),Date:"Various",Project:"Soil Sedimentation",OBJECTID:gdata.length+1});
 			gridLoaded = 1;
 			grid.renderArray(gdata);
 			
 			gridHeader = dom.byId("ilP-header").firstChild;
 			headerNodes = gridHeader.childNodes;
-			
+
 			headerNodes[0].title = "Sort by Name"; //maybe pass these into constructor
 			headerNodes[1].title = "Sort by Date";         
 			headerNodes[3].title = "Turn images on or off";
 			
 			gridCon = dquery(".dgrid-content")[0];
 			dScroll = dquery(".dgrid-scroller")[0];
-
+			sedToggle = dom.byId("ilP-row-"+(gdata.length-1));
+			hideSoilSed(sedToggle);
+			
 			for(var i = 0, j = gdata.length;i<j;i++){
 				lastNodePos[i] = i;
+			}
+
+			function hideSoilSed (node){
+				var row = node.firstChild.firstChild;
+				var data = row.firstChild
+
+				row.removeChild(row.childNodes[3]);
+				row.removeChild(row.childNodes[1]);
+				domClass.add(node,"sedToggle")
+				domClass.add(data,"sedToggleData");
+				domClass.add(data,"sedTogglePlus");
+				domClass.remove(data,'dgrid-cell');
+
+				grid.on(".sedToggleData:mousedown",function(e){
+					domClass.toggle(e.target,"sedToggleX")
+				})
+
 			}
 
 			function getDate(date){
@@ -415,6 +435,7 @@ console.log('grid')
 					currRow = oidToRow(currOID);
 					currTime =+gridData[i].__Date
 					if(currTime<startTime||currTime>endTime){
+						if(currRow.id !== sedToggle.id){
 						domClass.add(currRow, "hiddenRow");
 						if(map.layerIds[2]){
 							oidRasterIndex = currOID-1;
@@ -428,6 +449,7 @@ console.log('grid')
 						}
 						outsideTimeBoundary[currOID] = 1;
 						currGraphic.setSymbol(blank);
+					}
 					}else{
 						if(domClass.contains(currRow, "hiddenRow")){
 							domClass.remove(currRow, "hiddenRow");
@@ -522,7 +544,6 @@ console.log('grid')
 			  });
 			});
 
-
 			grid.on(".dgrid-cell:mouseover", function(e){
 				var oid = getOIDFromGrid(e);
 				if(oid)caCh(oid,"hi", 0);	
@@ -547,12 +568,14 @@ console.log('grid')
 			}
 			grid.on(".dgrid-cell:mousedown", function(e){	//grid click handler
 				var et = e.target, oid = getOIDFromGrid(e), attributes;
-				if(!et.firstChild||				
+				if(!et.firstChild||		
 					domClass.contains(et.firstChild,"dgrid-resize-header-container")||
 					domClass.contains(et,"dgrid-resize-header-container")||
 					domClass.contains(et,"field-Image")||
-					domClass.contains(et,"dgrid-input"))
+					domClass.contains(et,"dgrid-input")){
+					  console.log("MISS");
 						return;
+					}
 				if(et!== previousRecentTarget){ //prevent click before double click
 					window.clearTimeout(mouseDownTimeout);
 					previousRecentTarget = et;
@@ -601,7 +624,6 @@ console.log('grid')
 			makeViewable.ycutoff=4500;
 
 			grid.on(".dgrid-cell:dblclick", gridDbl);
-
 			setVisibleRasters.reusableArray =[];
 			function setVisibleRasters(newOIDs, fromCheck){
 				if(!map.layerIds[2]){ //if the raster has not been added, add it.
@@ -653,7 +675,6 @@ console.log('grid')
 				setToolVisibility(visibleRasterOIDs);
 
 			}
-
 			function setToolVisibility(visibleRasterOIDs){
 				if(visibleRasterOIDs.length>1){//working identify logic below
 					domClass.replace(identAnchor,"clickable","unclick");

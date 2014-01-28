@@ -12,6 +12,7 @@ define( ['modules/addsymbol.js'
         ,'dojo/dom-class'
         ,'dojo/dom-construct'
         ,'dojo/_base/Color'
+        ,'dojo/Deferred'
 
         ,'dojox/charting/Chart'
         ,'dojox/charting/themes/PurpleRain'
@@ -42,6 +43,7 @@ function( addSymbol
         , domClass
         , construct
         , Color
+        , Deferred
 
         , Chart
         , chartTheme
@@ -152,7 +154,7 @@ function( addSymbol
 
           findLayerIds(mapPoint).then(function(v){
             profile.task.prepare(v[0]);
-            profile.chartName = chartNames[v[0][0]].attributes.Project
+            profile.chartName = chartNames[v[0][0]].attributes.Project;
             profile.prepared = v[0];
           });
 
@@ -189,6 +191,12 @@ function( addSymbol
 
 
       , findLayerIds = function(mapPoint){
+          var def = new Deferred()
+            , mapX = mapPoint.x
+            , mapY = mapPoint.y
+            , sr = mapPoint.spatialReference
+            ;
+
           return identify(mapPoint, true, layerArray, rastersShowing, map)
       }  
 

@@ -215,7 +215,7 @@ window.map = map
 	  features = featureSet.features, featureCount=features.length, IE =!!document.all, ie9, fx,
 		outlines, grid, gridObject, dScroll, outlineMouseMove, outlineTimeout,
 		mouseDownTimeout, previousRecentTarget, justMousedUp = false,  outMoveTime = 0,
-	 	identifyUp, identOff = 1, measure, tooltip, allowAutoMapSwitch = 1,
+	 	identifyUp, identOff = 1, measure, tooltip,
 	 	crossTool, identTool, meaTool;
 		var geoArr, splitGeoArr, geoBins, selectedGraphics =[], selectedGraphicsCount = 0,
 		infoPaneOpen = 0, legend, toggleRightPane, eventFeatures= [],
@@ -225,7 +225,7 @@ window.map = map
 	var	layerArray = new Array(featureCount);
 		var oidArray = new Array(featureCount),
 		oidStore = new Array(featureCount),
-		outsideTimeBoundary = new Array(featureCount),
+		insideTimeBoundary = new Array(featureCount),
 		rastersShowing = new Array(featureCount),
 		crossAnchor = dom.byId("cros"),
 		arro = dom.byId("arro"),
@@ -242,7 +242,6 @@ window.map = map
 		identAnchor = dom.byId("ident"),
 		tsNode = dom.byId("timeSlider"),
 		linArr = dquery(".dijitRuleLabelH", tsNode),
-		bmaps = dom.byId("bmaps"),
 		shoP = dom.byId("shoP"),
 		spl = dom.byId("lP_splitter"),
 		fex = dom.byId("fex"),
@@ -274,7 +273,7 @@ window.map = map
 				layerArray[i] = i;
 				oidArray[i] = i+1;
 				oidStore[i] = 0;
-				outsideTimeBoundary[i] = 0;
+				insideTimeBoundary[i] = 1;
 				rastersShowing[i] = 0;
 			}
 		})();
@@ -350,16 +349,21 @@ console.log('grid')
 			
 			gridCon = dquery(".dgrid-content")[0];
 			dScroll = dquery(".dgrid-scroller")[0];
-			sedToggle = dom.byId("ilP-row-"+(gdata.length-1));
-			hideSoilSed(sedToggle);
 			
 			for(var i = 0, j = gdata.length;i<j;i++){
 				lastNodePos[i] = i;
 			}
 
-			function hideSoilSed (node){
+			sedToggle = dom.byId("ilP-row-"+(gdata.length-1));
+			toggleSoilSed(sedToggle);
+			
+		
+
+			function toggleSoilSed (node){
 				var row = node.firstChild.firstChild;
 				var data = row.firstChild
+				var sedShowing=false;
+				var sedOIDs = {};
 
 				row.removeChild(row.childNodes[3]);
 				row.removeChild(row.childNodes[1]);
@@ -368,11 +372,63 @@ console.log('grid')
 				domClass.add(data,"sedTogglePlus");
 				domClass.remove(data,'dgrid-cell');
 
+				for(var i = 0, j = gdata.length;i<j;i++){
+						var curr = gdata[i];
+						if(curr.Project.slice(0,9)==="Soil Sed.") sedOIDs[curr.OBJECTID]=1;
+				}
+
+				function hideSoilSed(){
+					for(var i = 0, j = gdata.length;i<j;i++){
+						var currOID = gdata[i].OBJECTID;
+					  var currRow = oidToRow(currOID);
+					  if(sedOIDs[currOID]) domClass.add(currRow,"hiddenSoilSed") 
+					}
+				sedShowing = false;
+				}
+
+				function showSoilSed(){
+					for(var i = 0, j = gdata.length;i<j;i++){
+						var currOID = gdata[i].OBJECTID;
+					  var currRow = oidToRow(currOID);
+					  if(sedOIDs[currOID]) domClass.remove(currRow,"hiddenSoilSed")					  	
+					}
+						sedShowing = true;
+				}
+
+		/*		function showSoilSed(){
+					var newCon, currentNodes = gridCon.childNodes,
+					nodeIndex, frag = DOC.createDocumentFragment();
+
+					for(var i = 0, j = gdata.length;i<j;i++){
+
+						var currOID = gdata[i].OBJECTID;
+					  nodeIndex = currOID-1;
+					  var newNode = currentNodes[lastNodePos[nodeIndex]].cloneNode(true)
+					  if(sedOIDs[currOID]) domClass.remove(newNode,"hiddenSoilSed")					  	
+						frag.appendChild(newNode);
+						lastNodePos[nodeIndex] = i; 
+					}
+						newCon = gridCon.cloneNode(false);
+						newCon.appendChild(frag);
+						gridCon.parentNode.replaceChild(newCon, gridCon);
+						gridCon = newCon;
+						frag = null;
+						sedShowing = true;
+				}
+    */
 				grid.on(".sedToggleData:mousedown",function(e){
-					domClass.toggle(e.target,"sedToggleX")
+					if(sedShowing){
+						domClass.remove(e.target,"sedToggleX");
+						hideSoilSed();
+					}else{
+						domClass.add(e.target,"sedToggleX");
+						showSoilSed();
+					}
 				})
 
+				hideSoilSed();
 			}
+
 
 			function getDate(date){
 				var dte = new Date(date);
@@ -447,13 +503,13 @@ console.log('grid')
 								}
 							}
 						}
-						outsideTimeBoundary[currOID] = 1;
+						insideTimeBoundary[currOID] = 0;
 						currGraphic.setSymbol(blank);
 					}
 					}else{
 						if(domClass.contains(currRow, "hiddenRow")){
 							domClass.remove(currRow, "hiddenRow");
-							outsideTimeBoundary[currOID] = 0;
+							insideTimeBoundary[currOID] = 1;
 							caCh(currOID, "", 0);
 						}
 					}
@@ -568,14 +624,14 @@ console.log('grid')
 			}
 			grid.on(".dgrid-cell:mousedown", function(e){	//grid click handler
 				var et = e.target, oid = getOIDFromGrid(e), attributes;
+
 				if(!et.firstChild||		
 					domClass.contains(et.firstChild,"dgrid-resize-header-container")||
 					domClass.contains(et,"dgrid-resize-header-container")||
 					domClass.contains(et,"field-Image")||
-					domClass.contains(et,"dgrid-input")){
-					  console.log("MISS");
+					domClass.contains(et,"dgrid-input"))
 						return;
-					}
+
 				if(et!== previousRecentTarget){ //prevent click before double click
 					window.clearTimeout(mouseDownTimeout);
 					previousRecentTarget = et;
@@ -589,6 +645,7 @@ console.log('grid')
 					} 	
 		 		}
 			});
+
 			
 			function gridDbl(e){
 				var inputBox, oid = getOIDFromGrid(e);
@@ -611,13 +668,19 @@ console.log('grid')
 				}
 			}
 
-			function makeViewable(oid){
-				var ex=oidToGraphic(oid)._extent.expand(1.3);
+			function makeViewable(oid, level, center){
+				var mapX=center.x;
+				var mapY=center.y;
+				var ex1=oidToGraphic(oid)._extent;
+
+			  if(ex1.xmax>= mapX&&ex1.xmin<= mapX&&ex1.ymin<= mapY&&ex1.ymax>= mapY&&level>=14) return;
+				
+				var ex=ex1.expand(1.3);
 				if(ex.xmax-ex.xmin > makeViewable.xcutoff || ex.ymax-ex.ymin > makeViewable.ycutoff){
 					map.setExtent(ex);
 				}else{
 				  map.setLevel(15);
-				  map.centerAt(oidToGraphic(oid)._extent.getCenter());
+				  map.centerAt(ex1.getCenter());
 			  }
 			}
 			makeViewable.xcutoff=6500;
@@ -640,7 +703,7 @@ console.log('grid')
 				if(newOIDs.length>1){
 					(function(){
 						for(var i = 0, j = newOIDs.length;i<j;i++){
-							if(!outsideTimeBoundary[newOIDs[i]]&&visibleRasterOIDs.indexOf(newOIDs[i]-1)===-1)
+							if(insideTimeBoundary[newOIDs[i]]&&visibleRasterOIDs.indexOf(newOIDs[i]-1)===-1)
 								visibleRasterOIDs[visibleRasterOIDs.length] = newOIDs[i]-1;
 						}
 					})();
@@ -692,7 +755,7 @@ console.log('grid')
 			function checkImageInputs(oidArr){
 				var curr;
 				for(var i = 0, j = oidArr.length;i<j;i++){
-					if(!outsideTimeBoundary[oidArr[i]]){
+					if(insideTimeBoundary[oidArr[i]]){
 						curr = getInputBox(oidArr[i]);
 						curr.checked = true;
 						rastersShowing[oidArr[i]-1] = 1;
@@ -723,7 +786,7 @@ console.log('grid')
 						rastersShowing[oid-1] = 0;
 					}else{
 						rastersShowing[oid-1] = 1;
-						makeViewable(oid);
+						makeViewable(oid,map.getLevel(),map.extent.getCenter());
 					}       
 					setVisibleRasters.reusableArray[0] = oid;
 					setVisibleRasters(setVisibleRasters.reusableArray, 1);
@@ -889,17 +952,15 @@ console.log('post grid');
 		adjustOnZoom = function(zoomObj){	//logic on ZoomEnd	
 			var ext = zoomObj.extent
 				, offs = ext.getWidth()/map.width
+				, lev = zoomObj.level
 				;
-				if(allowAutoMapSwitch){
-					var lev = zoomObj.level
-						, bmap = map.getBasemap()
-						;
-					if(lev>= 15&&previousLevel<15&&bmap==="topo")
-						showSat();
-					else if(lev<15&&previousLevel>= 15&&bmap==="satellite")
-						showTopo();
-					previousLevel = lev;
-				}
+
+			if(lev > 17&&previousLevel<18&&topoOn) //extend topo to 18, 19 with satellite
+				map.setBasemap('satellite');
+			else if(lev<18&&previousLevel > 17&&topoOn)
+				map.setBasemap('topo');
+
+			previousLevel = lev;
 			offs = offs>10?offs:10;
 			tiout.setMaxAllowableOffset(offs);
 			tiout.refresh();
@@ -907,14 +968,13 @@ console.log('post grid');
 
    	zoomEnd = map.on("zoom-end", adjustOnZoom);
 
+
    	on(topo, "mousedown", function(e){
-   		allowAutoMapSwitch = 0;
    		if(topoOn) basemapOff();
    		else showTopo();
    	});
 
    	on(sat, "mousedown", function(e){
-   		allowAutoMapSwitch = 0;
    		if(satOn) basemapOff();
    		else showSat();
    	});
@@ -1390,7 +1450,7 @@ console.log('post grid');
 				oid = curr.oid;
 				if(curr.xmin>breakMax&&!mouseDown)
 					break;
-				if(!outsideTimeBoundary[oid]){
+				if(insideTimeBoundary[oid]){
 					if(curr.xmax>= mapX&&curr.xmin<= mapX&&curr.ymin<= mapY&&curr.ymax>= mapY){
 						someTargeted = 1;
 						caCh(oid,"hi", 0);
@@ -1405,9 +1465,9 @@ console.log('post grid');
 					}else{										
 						if(oidStore[oid]){
 							if(mouseDown) clearStoredOID(oid, 1, 0);
-							continue; //burned by return shortcircuit. Heh.
+							continue;
 						}else{
-							caCh(oid,"", 0);
+							caCh(oid,"", 0);//clear mouseover highlight
 						}
 					}
 				}
@@ -1447,7 +1507,7 @@ console.log('post grid');
 					if(oidStore[oid])
 						caCh(oid,"hi", 1);
 					else
-						if(!outsideTimeBoundary[oid])
+						if(insideTimeBoundary[oid])
 							caCh(oid,"", 1);
 				});
 		}

@@ -570,6 +570,7 @@ margin-left:2px;
   transform:translate3d(0,0,0);
  -webkit-transform:translate3d(0,0,0);
 }
+
 #legend{
   background-image:url(images/bg.png);
   width:250px;
@@ -582,20 +583,24 @@ margin-left:2px;
   transition:        transform 0.2s ease-out;
  -o-transition:      transform 0.2s ease-out;
 }
+
 .activeTool{
   box-shadow:0 0 12px 4px #99ceff !important;
   background-color:#a3d4f3;
 }
+
 .helpglow{
   box-shadow:0 0 16px 6px #5ADE6B !important;
   background-color:#5ADE6B;             
 }
- ::selection{
+
+::selection{
     background:rgba(110,235,110,0.7);
- }
- ::-moz-selection{
+}
+
+::-moz-selection{
     background:rgba(110,235,110,0.7);
- }
+}
 
 .dijitSplitter{
   margin: -1px 0 -1px 0 !important;
@@ -622,38 +627,43 @@ user-select: none;
   cursor:pointer;
 }
 
-
 .dgrid-cell{
   line-height:1.5em;
   text-overflow:ellipsis;
   white-space:nowrap;
   border-color:#eee;/*#cbd5ed*/
 }
+
 .dgrid-cell{
   border-bottom:1px solid #ddddff;
 }
+
 .dgrid-sortable{
   text-overflow:clip;
 }
+
 .dgrid-row{
   height:30px;
   visibility:visible;
   outline:none;
-  -webkit-transition: height 0.4s ease;
- -moz-transition:    height 0.4s ease;
-  transition:        height 0.4s ease;
- -o-transition:      height 0.4s ease;
+  -webkit-transition: height 0.2s ease-out;
+ -moz-transition:    height 0.2s ease-out;
+  transition:        height 0.2s ease-out;
+ -o-transition:      height 0.2s ease-out;
 }
 
 .sedToggle{
   position:relative;
   border-bottom:1px solid #eeeeff;
+  background-color:rgba(240,240,255,0.4);
 }
+
 .sedToggle:hover{
   background-color:#f3f3f3;
   background-image:-webkit-linear-gradient(top, #E1EBFB,#f3f3f3);
   background-image:-moz-linear-gradient(top, #E1EBFB,#f3f3f3);
 }
+
 .sedToggle:active{
   background-color:#E1EBFB;
   background-image:-webkit-linear-gradient(top, #f3f3f3,#E1EBFB);
@@ -693,6 +703,11 @@ right:21px;
 .hiddenRow, .hiddenSoilSed{
   height:0;
   visibility:hidden;
+  color:white;
+    -webkit-transition: height 0.4s ease;
+ -moz-transition:    height 0.4s ease;
+  transition:        height 0.4s ease;
+ -o-transition:      height 0.4s ease;
 }
 
 .dgrid-row-table:hover{

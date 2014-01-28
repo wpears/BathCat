@@ -105,7 +105,7 @@ function( addSymbol
       function clickCallback(point){
         addIdentGraphic(point);
         var identCount = idCount;
-        identify(point, true, layerArray, rastersShowing, map).then(function(idArr){
+        identify(point, layerArray, rastersShowing, map).then(function(idArr){
           renderIdent(idArr, identCount);
         });
       }

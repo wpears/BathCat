@@ -13,7 +13,7 @@ function( ident
       ;
     idP.layerOption = IdentifyParameters.LAYER_OPTION_VISIBLE;
     idP.tolerance = 1;
-    idP.returnGeometry = true;
+    idP.returnGeometry = false;
     
     function parsePromise(v){
       var output = processId.output
@@ -22,7 +22,6 @@ function( ident
         ;
       output[0].length = 0;
       output[1].length = 0;
-      output[2] = idP;
       lids.length = 0;
       if(v.length>0){
         for (var i = 0, j = v.length;i<j;i++){ //logic for multiple layers
@@ -37,7 +36,7 @@ function( ident
               }
             }     
           } 
-        } 
+        }
       }
       return output;
     }
@@ -48,19 +47,16 @@ function( ident
       return def.then(parsePromise);
     }
 
-    processId.output =[[],[], null];
+    processId.output =[[],[]];
     processId.lids =[];
 
-    return function(geom, query, layerArray, rastersShowing, map){
+    return function(geom, layerArray, rastersShowing, map){
       idP.geometry = geom;
-      if(query){
-        idP.mapExtent=map.extent;
-        idP.height=map.height;
-        idP.width=map.width;
-        idP.layerIds = layerArray;
-        return processId(idT, idP, rastersShowing);
-      }
-      return idT.execute(idP);
+      idP.mapExtent=map.extent;
+      idP.height=map.height;
+      idP.width=map.width;
+      idP.layerIds = layerArray;
+      return processId(idT, idP, rastersShowing);
     };
   };
 });

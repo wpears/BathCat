@@ -153,9 +153,10 @@ function( addSymbol
           profiles.push(profile);
 
           findLayerIds(mapPoint).then(function(v){
-            profile.task.prepare(v[0]);
-            profile.chartName = chartNames[v[0][0]].attributes.Project;
-            profile.prepared = v[0];
+            console.log(v)
+            profile.task.prepare(v[0][0]);
+            profile.chartName = chartNames[v[0][0][0]].attributes.Project;
+            profile.prepared = v[0][0];
           });
 
           addSymbol(map, mapPoint, dataPointSymbol, profile.graphics);
@@ -195,9 +196,25 @@ function( addSymbol
             , mapX = mapPoint.x
             , mapY = mapPoint.y
             , sr = mapPoint.spatialReference
+            , ids = []
+            , count=0
             ;
 
-          return identify(mapPoint, true, layerArray, rastersShowing, map)
+          function parseId(v){
+            ids.push(v);
+            if(++count === 9){
+              def.resolve(ids)
+            }
+          } 
+
+          for(var x=-100;x<200;x+=100){
+            for(var y=-100;y<200;y+=100){
+              identify(new Point({x:mapX+x, y:mapY+y, spatialReference:sr})
+                , layerArray, rastersShowing, map).then(parseId);
+            }
+          }
+
+          return def;
       }  
 
 

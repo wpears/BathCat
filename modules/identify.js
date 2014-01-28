@@ -11,6 +11,7 @@ function( ident
       , idP = new IdentifyParameters()
       , currentRasters
       ;
+
     idP.layerOption = IdentifyParameters.LAYER_OPTION_VISIBLE;
     idP.tolerance = 1;
     idP.returnGeometry = false;
@@ -25,9 +26,11 @@ function( ident
       lids.length = 0;
       if(v.length>0){
         for (var i = 0, j = v.length;i<j;i++){ //logic for multiple layers
+          console.log('v[i]',v[i])
           processId.lids[i]=v[i];//array of objects with OBJECTID and it's ident data
         }
         for(var oi = 0, oj = rastersShowing.length;oi<oj;oi++){
+          console.log(oi)
           if(rastersShowing[oi]){
             for(var i = 0, j = lids.length;i<j;i++){
               if(oi === lids[i].layerId){

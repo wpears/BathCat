@@ -226,7 +226,7 @@ window.map = map
 		var oidArray = new Array(featureCount),
 		oidStore = new Array(featureCount),
 		insideTimeBoundary = new Array(featureCount),
-		rastersShowing = new Array(featureCount),
+		rastersShowing = {},
 		crossAnchor = dom.byId("cros"),
 		arro = dom.byId("arro"),
 		zSlid = dom.byId("mapDiv_zoom_slider"),
@@ -274,7 +274,7 @@ window.map = map
 				oidArray[i] = i+1;
 				oidStore[i] = 0;
 				insideTimeBoundary[i] = 1;
-				rastersShowing[i] = 0;
+				rastersShowing[i+1] = 0;
 			}
 		})();
 
@@ -660,7 +660,7 @@ console.log('grid')
 						map.setExtent(graphic._extent.expand(1.3));
 						if(!inputBox.checked){
 							inputBox.checked = true;
-							rastersShowing[oid-1] = 1;
+							rastersShowing[oid] = 1;
 							setVisibleRasters.reusableArray[0] = oid;
 							setVisibleRasters(setVisibleRasters.reusableArray, 0);
 						}
@@ -758,7 +758,7 @@ console.log('grid')
 					if(insideTimeBoundary[oidArr[i]]){
 						curr = getInputBox(oidArr[i]);
 						curr.checked = true;
-						rastersShowing[oidArr[i]-1] = 1;
+						rastersShowing[oidArr[i]] = 1;
 					}
 				}
 			}
@@ -768,7 +768,7 @@ console.log('grid')
 				for(var i = 0, j = oidArr.length;i<j;i++){
 						curr = getInputBox(oidArr[i]);
 						curr.checked = false;
-						rastersShowing[oidArr[i]-1] = 0;
+						rastersShowing[oidArr[i]] = 0;
 					}
 			}
 
@@ -776,16 +776,16 @@ console.log('grid')
 				var inputArr = dquery(".dgrid-input", ilP);
 					for(var i = 0, j = inputArr.length;i<j;i++){
 						inputArr[i].checked = false;
-						rastersShowing[i] = 0;
+						rastersShowing[i+1] = 0;
 					}
 			}
 
 			on(grid,".dgrid-input:change", function(e){
 					var oid =+e.target.parentNode.parentNode.childNodes[2].innerHTML;
-					if(rastersShowing[oid-1]){
-						rastersShowing[oid-1] = 0;
+					if(rastersShowing[oid]){
+						rastersShowing[oid] = 0;
 					}else{
-						rastersShowing[oid-1] = 1;
+						rastersShowing[oid] = 1;
 						makeViewable(oid,map.getLevel(),map.extent.getCenter());
 					}       
 					setVisibleRasters.reusableArray[0] = oid;
@@ -795,7 +795,7 @@ console.log('grid')
 
 			on(headerNodes[3],"mousedown", function(e){      						//mass image display/clear
 				var someChecked = 0;
-				for(var i = 0, j = rastersShowing.length;i<j;i++){
+				for(var i = 1, j = layerArray.length;i<=j;i++){
 					if(rastersShowing[i]){
 						someChecked = 1;
 						break;

@@ -33,7 +33,7 @@ function( addSymbol
         , DOC = document
         , identify = Identify(url)
         , map = options.map||W.esri.map||W.map
-        , rastersShowing = options.rastersShowing||layerArray
+        , rastersShowing = options.rastersShowing||{}
         , eventFeatures = options.eventFeatures||[]
         , names = options.names
         , tooltip = options.tooltip||null

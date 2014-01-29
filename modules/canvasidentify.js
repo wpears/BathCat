@@ -101,10 +101,11 @@ function testCache(){
 function prepare(layers){
   testCache();
   for(var i=0, len=layers.length; i < len; i++){
-    this.prepared[layers[i]] = 1;
-    var cachedContext = getCanvas(layers[i], createPrepare, this)
+    var id=layers[i].layerId
+    this.prepared[id] = 1;
+    var cachedContext = getCanvas(id, createPrepare, this)
     if(cachedContext){
-      runPrep(layers[i], cachedContext, this);
+      runPrep(id, cachedContext, this);
     }
   }
 }
@@ -119,8 +120,9 @@ function execute(layers,pointObj,cb){ //points is a flattened array [x0,y0,x1,y1
   var prep = this.prepared;
  // console.log("prepped for executing",prep)
   for(var i=0, len=layers.length; i < len; i++){
-    if(prep[layers[i]]) continue;
-    getCanvas(layers[i], createExecute, this);
+    var id = layers[i].layerId;
+    if(prep[id]) continue;
+    getCanvas(id, createExecute, this);
   }
 //  console.log("checking for layers in prep")
   for(var layer in prep){

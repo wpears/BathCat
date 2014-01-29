@@ -31,12 +31,12 @@ function( addSymbol
   return function( container, anchor, url, layerArray, options ){
       var W = window
         , DOC = document
-        , identify = Identify(url)
         , map = options.map||W.esri.map||W.map
-        , rastersShowing = options.rastersShowing||{}
+        , rastersShowing = options.rastersShowing||null
         , eventFeatures = options.eventFeatures||[]
         , names = options.names
         , tooltip = options.tooltip||null
+        , identify = Identify(url, map, layerArray, rastersShowing)
         , solidLine = SimpleLine.STYLE_SOLID
         , lineSymbol = new SimpleLine(solidLine, new Color([0, 0, 0]), 2)
         , dataPointSymbol = new SimpleMarker({"size":6,"color":new Color([0, 0, 0])})
@@ -80,17 +80,18 @@ function( addSymbol
         self.labels[self.labels.length-1].setSymbol(textLabel);
       } 
       function renderIdent(idArr, idCount){
+        console.log(idArr)
         if(idArr){
           resCon.appendChild(DOC.createElement('p')); //separate items with empty p
           var frag=DOC.createDocumentFragment();
 
-          if(idArr[0][0]!==undefined){
-            idArr[0].forEach(function(v, i){
-              if(idArr[1][i].value === "NoData")
+          if(idArr[0]!==undefined){
+            idArr.forEach(function(v, i){
+              if(v.value === "NoData")
                 setNoData(frag);
               else{
                 var sp = DOC.createElement('span');
-                sp.innerHTML=idCount+".&nbsp;"+names.graphics[v].attributes.Project+": "+Math.round(idArr[1][i].value*10)/10+ " ft<br/>";
+                sp.innerHTML=idCount+".&nbsp;"+names.graphics[v.layerId].attributes.Project+": "+Math.round(v.value*10)/10+ " ft<br/>";
                 frag.appendChild(sp);
               }
             });
@@ -105,7 +106,7 @@ function( addSymbol
       function clickCallback(point){
         addIdentGraphic(point);
         var identCount = idCount;
-        identify(point, layerArray, rastersShowing, map).then(function(idArr){
+        identify(point).then(function(idArr){
           renderIdent(idArr, identCount);
         });
       }

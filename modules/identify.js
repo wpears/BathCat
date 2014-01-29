@@ -6,60 +6,44 @@ function( ident
         , IdentifyTask
         , IdentifyParameters
          ){
-  return function(url){
+  return function(url, map, layerArray, rastersShowing){
     var idT = new IdentifyTask(url)
       , idP = new IdentifyParameters()
-      , currentRasters
+      , noRasters = rastersShowing?0:1
       ;
 
     idP.layerOption = IdentifyParameters.LAYER_OPTION_VISIBLE;
     idP.tolerance = 1;
+    idP.layerIds = layerArray;
     idP.returnGeometry = false;
     
     function parsePromise(v){
-      var output = processId.output
-        , lids = processId.lids
-        , rastersShowing = currentRasters
-        ;
-      output[0].length = 0;
-      output[1].length = 0;
-      lids.length = 0;
+      var output = processId.output;
+      output.length = 0;
       if(v.length>0){
-        for (var i = 0, j = v.length;i<j;i++){ //logic for multiple layers
-          console.log('v[i]',v[i])
-          processId.lids[i]=v[i];//array of objects with OBJECTID and it's ident data
-        }
-        for(var oi = 0, oj = rastersShowing.length;oi<oj;oi++){
-          console.log(oi)
-          if(rastersShowing[oi]){
-            for(var i = 0, j = lids.length;i<j;i++){
-              if(oi === lids[i].layerId){
-                processId.output[0].push(lids[i].layerId);
-                processId.output[1].push(lids[i]);
-              }
-            }     
-          } 
-        }
+        for(var i = 0, j = v.length;i<j;i++){
+          if(rastersShowing[v[i].layerId+1]||noRasters){
+            console.log(v[i].value)
+            output.push(v[i]);
+          }
+        }      
       }
       return output;
     }
 
-    function processId(tA, pA, rastersShowing){
+    function processId(tA, pA){
       var def = tA.execute(pA);
-      currentRasters=rastersShowing;
       return def.then(parsePromise);
     }
 
-    processId.output =[[],[]];
-    processId.lids =[];
+    processId.output =[];
 
-    return function(geom, layerArray, rastersShowing, map){
+    return function(geom){
       idP.geometry = geom;
       idP.mapExtent=map.extent;
       idP.height=map.height;
       idP.width=map.width;
-      idP.layerIds = layerArray;
-      return processId(idT, idP, rastersShowing);
+      return processId(idT, idP);
     };
   };
 });

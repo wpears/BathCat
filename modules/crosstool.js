@@ -66,12 +66,12 @@ function( addSymbol
         , self
         , W = window
         , DOC = document
-        , identify = Identify(url)
         , map = options.map||W.esri.map||W.map
-        , rastersShowing = options.rastersShowing||layerArray //Use rastersShowing if you turn off rasters
+        , rastersShowing = options.rastersShowing||null //Use rastersShowing if you turn off rasters
         , eventFeatures = options.eventFeatures||[]
         , chartNames = options.chartNames||null
         , tooltip = options.tooltip||null
+        , identify = Identify(url, map, layerArray, rastersShowing)
         , canId = CanvasId(rasterLayer, map)
         , spatialRef = map.spatialReference
         , mapGfx = map.graphics
@@ -152,11 +152,11 @@ function( addSymbol
             ;
           profiles.push(profile);
 
-          findLayerIds(mapPoint).then(function(v){
-            console.log(v)
-            profile.task.prepare(v[0][0]);
-            profile.chartName = chartNames[v[0][0][0]].attributes.Project;
-            profile.prepared = v[0][0];
+          findLayerIds(mapPoint,profile).then(function(idArr){
+            console.log(idArr)
+            profile.task.prepare(idArr[0]);
+            profile.chartName = chartNames[idArr[0][0].layerId].attributes.Project;
+            profile.prepared = idArr[0];
           });
 
           addSymbol(map, mapPoint, dataPointSymbol, profile.graphics);
@@ -191,7 +191,7 @@ function( addSymbol
       }
 
 
-      , findLayerIds = function(mapPoint){
+      , findLayerIds = function(mapPoint,profile){
           var def = new Deferred()
             , mapX = mapPoint.x
             , mapY = mapPoint.y
@@ -201,7 +201,9 @@ function( addSymbol
             ;
 
           function parseId(v){
-            ids.push(v);
+            console.log(v[0].value);
+            if (ids.length) console.log(v===ids[ids.length-1])
+            ids.push(v[0].value);
             if(++count === 9){
               def.resolve(ids)
             }
@@ -209,8 +211,12 @@ function( addSymbol
 
           for(var x=-100;x<200;x+=100){
             for(var y=-100;y<200;y+=100){
-              identify(new Point({x:mapX+x, y:mapY+y, spatialReference:sr})
-                , layerArray, rastersShowing, map).then(parseId);
+              var pnt = new Point({x:mapX+x, y:mapY+y, spatialReference:sr});
+              addSymbol(map, pnt, dataPointSymbol, profile.graphics);
+              console.log(pnt);
+              (function(pnt){
+              identify(pnt).then(parseId);
+            })(pnt);
             }
           }
 

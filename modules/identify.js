@@ -23,7 +23,6 @@ function( ident
       if(v.length>0){
         for(var i = 0, j = v.length;i<j;i++){
           if(rastersShowing[v[i].layerId+1]||noRasters){
-            console.log(v[i].value)
             output.push(v[i]);
           }
         }      

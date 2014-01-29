@@ -138,10 +138,11 @@ function( addSymbol
           this.swellOver = null;
           this.swellOut = null;
           this.chart = null;
+          this.charted = 0;
           this.chartContainer = null;
           this.chartNumber = currentNumber++;
           this.chartName = '';
-          this.prepared = null;
+          this.prepared = [];
       
       }
 
@@ -153,10 +154,9 @@ function( addSymbol
           profiles.push(profile);
 
           findLayerIds(mapPoint,profile).then(function(idArr){
-            console.log(idArr)
-            profile.task.prepare(idArr[0]);
-            profile.chartName = chartNames[idArr[0][0].layerId].attributes.Project;
-            profile.prepared = idArr[0];
+            profile.task.prepare(idArr);
+            profile.chartName = chartNames[idArr[0]].attributes.Project;
+            profile.prepared = idArr;
           });
 
           addSymbol(map, mapPoint, dataPointSymbol, profile.graphics);
@@ -183,10 +183,14 @@ function( addSymbol
           self.handlers[1] = map.on("mouse-up", startNewLine);
         }
 
-      , cancelProfile = function(){
+      , removeProfile = function (){
         var profile = profiles.pop();
         removeChart(profile);
         currentNumber--;
+      }
+
+      , cancelProfile = function(){
+        removeProfile();
         resetHandlers();
       }
 
@@ -197,26 +201,25 @@ function( addSymbol
             , mapY = mapPoint.y
             , sr = mapPoint.spatialReference
             , ids = []
+            , idObj = {}
             , count=0
             ;
 
           function parseId(v){
-            console.log(v[0].value);
-            if (ids.length) console.log(v===ids[ids.length-1])
-            ids.push(v[0].value);
+            for(var i=0; i < v.length; i++){
+              if(!idObj[v[i].layerId]) idObj[v[i].layerId]=1;
+            }
             if(++count === 9){
+              for(var item in idObj)
+                ids[ids.length]=+item;
               def.resolve(ids)
             }
-          } 
+          }
 
-          for(var x=-100;x<200;x+=100){
-            for(var y=-100;y<200;y+=100){
+          for(var x=-40;x<80;x+=40){
+            for(var y=-40;y<80;y+=40){
               var pnt = new Point({x:mapX+x, y:mapY+y, spatialReference:sr});
-              addSymbol(map, pnt, dataPointSymbol, profile.graphics);
-              console.log(pnt);
-              (function(pnt){
               identify(pnt).then(parseId);
-            })(pnt);
             }
           }
 
@@ -246,7 +249,8 @@ function( addSymbol
                        ,self.handlers
                        );
           setTimeout(function(){
-            profile.task.execute(profile.prepared,profile.pointObj,buildGraph(profile));
+           // if(profile.prepared)
+              profile.task.execute(profile.prepared,profile.pointObj,buildGraph(profile));
           },10);
         }
 
@@ -320,6 +324,7 @@ function( addSymbol
 
 
           return function(results){
+            if(!results){removeProfile(); return}
             setTimeout(function(){ //If cached, there is no release of the event loop
             profile.results = results;
             for (var layer in results){
@@ -337,6 +342,7 @@ function( addSymbol
             chart.render();
             addLegend(profile);
             addSwellHandlers(profile);
+            profile.charted = 1;
           },0)                          //Build dlstring on click, utilizing args from closure.
           };                       //Create chart goes here. With some other stuff from late in
                                   // renderG.. since we know it is finished
@@ -458,8 +464,10 @@ function( addSymbol
         }
           var chartCon = profile.chartContainer;
           if(chartCon){
-            clearSwellHandlers(profile);
-            profile.legend.destroy();
+            if(profile.charted){
+              clearSwellHandlers(profile);
+              profile.legend.destroy();
+            }
             profile.chart.destroy();
             clearNode(chartCon);
             containerNode.removeChild(chartCon);

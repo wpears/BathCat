@@ -203,7 +203,6 @@ window.map = map
   		});
 
 	on.once(tiout, "load", function(){
-		console.log("OI")
     tiout.setRenderer(new SimpleRenderer(blank));
     map.addLayer(tiout);
     redrawAllGraphics(tiout);
@@ -259,10 +258,6 @@ window.map = map
 		outlines.setRenderer(new SimpleRenderer(blank));
     map.addLayer(outlines);
 
-		on.once(outlines,"load",function(){
-			console.log("OI outlines")	
-		});
-
 
 		eventFeatures[eventFeatures.length]=outlines;
 
@@ -313,7 +308,7 @@ window.map = map
 console.log('grid')
 		gridObject =(function(){
 			var i = 0, j = featureCount, gdata =[], gridCon, expandReady=1,
-				sedToggle,
+				sedToggle, sedShowing=true, sedOIDs = {},
 				intData, featureAttr, lastNodePos =[],nameSorted = 0, dateSorted = 1,
 				adGr = declare([Grid, ColumnResizer]), gridHeader, headerNodes;
 
@@ -353,17 +348,13 @@ console.log('grid')
 			for(var i = 0, j = gdata.length;i<j;i++){
 				lastNodePos[i] = i;
 			}
-
 			sedToggle = dom.byId("ilP-row-"+(gdata.length-1));
 			toggleSoilSed(sedToggle);
-			
 		
 
 			function toggleSoilSed (node){
 				var row = node.firstChild.firstChild;
 				var data = row.firstChild
-				var sedShowing=false;
-				var sedOIDs = {};
 
 				row.removeChild(row.childNodes[3]);
 				row.removeChild(row.childNodes[1]);
@@ -377,22 +368,36 @@ console.log('grid')
 						if(curr.Project.slice(0,9)==="Soil Sed.") sedOIDs[curr.OBJECTID]=1;
 				}
 
+				grid.on(".sedToggleData:mousedown",function(e){
+					if(sedShowing){
+						domClass.remove(e.target,"sedToggleX");
+						hideSoilSed();
+					}else{
+						domClass.add(e.target,"sedToggleX");
+						showSoilSed();
+					}
+				});
+				hideSoilSed();
+			}
+
 				function hideSoilSed(){
 					for(var i = 0, j = gdata.length;i<j;i++){
 						var currOID = gdata[i].OBJECTID;
-					  var currRow = oidToRow(currOID);
-					  if(sedOIDs[currOID]) domClass.add(currRow,"hiddenSoilSed") 
+						var currRow = oidToRow(currOID);
+						if(sedOIDs[currOID]) domClass.add(currRow,"hiddenSoilSed") 
 					}
-				sedShowing = false;
+					sedShowing = false;
 				}
 
 				function showSoilSed(){
+					if(!sedShowing){
 					for(var i = 0, j = gdata.length;i<j;i++){
 						var currOID = gdata[i].OBJECTID;
 					  var currRow = oidToRow(currOID);
 					  if(sedOIDs[currOID]) domClass.remove(currRow,"hiddenSoilSed")					  	
 					}
 						sedShowing = true;
+					}
 				}
 
 		/*		function showSoilSed(){
@@ -416,18 +421,7 @@ console.log('grid')
 						sedShowing = true;
 				}
     */
-				grid.on(".sedToggleData:mousedown",function(e){
-					if(sedShowing){
-						domClass.remove(e.target,"sedToggleX");
-						hideSoilSed();
-					}else{
-						domClass.add(e.target,"sedToggleX");
-						showSoilSed();
-					}
-				})
 
-				hideSoilSed();
-			}
 
 
 			function getDate(date){
@@ -657,7 +651,7 @@ console.log('grid')
 					if(e.target.localName!== "div"){
 						clearAndSetOID(oid, graphic.attributes)
 						inputBox = getInputBox(oid);
-						map.setExtent(graphic._extent.expand(1.3));
+						setExtent(graphic._extent.expand(1.3));
 						if(!inputBox.checked){
 							inputBox.checked = true;
 							rastersShowing[oid] = 1;
@@ -677,7 +671,7 @@ console.log('grid')
 				
 				var ex=ex1.expand(1.3);
 				if(ex.xmax-ex.xmin > makeViewable.xcutoff || ex.ymax-ex.ymin > makeViewable.ycutoff){
-					map.setExtent(ex);
+					setExtent(ex);
 				}else{
 				  map.setLevel(15);
 				  map.centerAt(ex1.getCenter());
@@ -811,8 +805,15 @@ console.log('grid')
 				}
 			});
 
-			return {timeUpdate:timeUpdate, oidToRow:oidToRow, scrollToRow:scrollToRow, setVisibleRasters:
-					setVisibleRasters, checkImageInputs:checkImageInputs,clickSort:clickSort,expand:triggerExpand};
+			return { timeUpdate:timeUpdate
+				     , oidToRow:oidToRow
+				     , scrollToRow:scrollToRow
+				     , setVisibleRasters:setVisibleRasters
+				     , checkImageInputs:checkImageInputs
+				     , clickSort:clickSort
+				     , expand:triggerExpand
+				     , showSoilSed:showSoilSed
+				     };
 
 		})();
 console.log('post grid');
@@ -921,6 +922,13 @@ console.log('post grid');
    		console.log("update-end");
    		redrawAllGraphics(tiout.graphics);							
     });
+
+    function setExtent(extent){
+    	//var bmap=map.getLayersVisibleAtScale()[0];
+    	//bmap.hide();
+    	map.setExtent(extent);
+    //	bmap.show();
+    }
 
 		showSat = function(){										//turn on imagery
 			map.setBasemap('satellite'); //convenient... yet slower on cached tiles. Used to use visibility
@@ -1051,6 +1059,7 @@ console.log('post grid');
 					downloadNode.style.display = "none";
 					dataNode.style.marginTop = rpCon.clientHeight/2-15+"px";
 					dataNode.innerHTML = "<h2>"+selectedGraphicsCount+" projects selected</h2>"
+					gridObject.showSoilSed();
 				}
 			}else{
 				if(attr&&attr.Project)
@@ -1396,7 +1405,7 @@ console.log('post grid');
 					W.clearTimeout(mouseDownTimeout);
 					previousRecentTarget = oid;
 					mouseDownTimeout = W.setTimeout(nullPrevious, 400);
-					geoSearch(e, 1);				
+					geoSearch(e, 1);
 					if(!gridObject.clickSort()) gridObject.scrollToRow(oid);
 				}
 			}
@@ -1413,7 +1422,7 @@ console.log('post grid');
 			selected = geoSearch.prevArr;
 			if(selected.length){
 				if(map.getScale()>73000)                          
-					map.setExtent(oidToGraphic(selected[0])._extent.expand(1.3));
+					setExtent(oidToGraphic(selected[0])._extent.expand(1.3));
 				gridObject.setVisibleRasters(selected, 0);
 				gridObject.checkImageInputs(selected);
 			}

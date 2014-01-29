@@ -101,7 +101,7 @@ function testCache(){
 function prepare(layers){
   testCache();
   for(var i=0, len=layers.length; i < len; i++){
-    var id=layers[i].layerId
+    var id=layers[i];
     this.prepared[id] = 1;
     var cachedContext = getCanvas(id, createPrepare, this)
     if(cachedContext){
@@ -120,7 +120,7 @@ function execute(layers,pointObj,cb){ //points is a flattened array [x0,y0,x1,y1
   var prep = this.prepared;
  // console.log("prepped for executing",prep)
   for(var i=0, len=layers.length; i < len; i++){
-    var id = layers[i].layerId;
+    var id = layers[i];
     if(prep[id]) continue;
     getCanvas(id, createExecute, this);
   }
@@ -132,7 +132,9 @@ function execute(layers,pointObj,cb){ //points is a flattened array [x0,y0,x1,y1
       decLayerCount(this);
     }
   }
-
+  if(!this.called){
+    cb(null);
+  }
   /*loop through layers, if in prepared continue, else build or pull from cache. execute from prepared.
   execute others.
   */
@@ -185,6 +187,7 @@ function decLayerCount(that){
  // console.log("decrementing",that,that.layerCount,that.results)
   that.layerCount--;
   if(that.layerCount === 0){
+    that.called=1;
     that.cb(that.results);
   }
 }
@@ -254,6 +257,7 @@ function task(){
   this.executing = 0;
   this.layerCount = 0;
   this.prepared = {};
+  this.called = 0;
   this.results ={};
 }
 

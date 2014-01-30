@@ -308,7 +308,7 @@ window.map = map
 console.log('grid')
 		gridObject =(function(){
 			var i = 0, j = featureCount, gdata =[], gridCon, expandReady=1,
-				sedToggle, sedShowing=true, sedOIDs = {},
+				sedToggle, sedShowing=true, sedOIDs = {}, showSoilSed,
 				intData, featureAttr, lastNodePos =[],nameSorted = 0, dateSorted = 1,
 				adGr = declare([Grid, ColumnResizer]), gridHeader, headerNodes;
 
@@ -360,7 +360,6 @@ console.log('grid')
 				row.removeChild(row.childNodes[1]);
 				domClass.add(node,"sedToggle")
 				domClass.add(data,"sedToggleData");
-				domClass.add(data,"sedTogglePlus");
 				domClass.remove(data,'dgrid-cell');
 
 				for(var i = 0, j = gdata.length;i<j;i++){
@@ -370,16 +369,15 @@ console.log('grid')
 
 				grid.on(".sedToggleData:mousedown",function(e){
 					if(sedShowing){
-						hideSoilSed();
+						hide();
 					}else{
-						showSoilSed();
+						show();
 					}
 				});
-				hideSoilSed();
-			}
+				hide(data);
 
-				function hideSoilSed(){
-					domClass.remove(e.target,"sedToggleX");
+				function hide(){
+					domClass.remove(dquery('.sedToggleData',dScroll)[0],"sedToggleX");
 					for(var i = 0, j = gdata.length;i<j;i++){
 						var currOID = gdata[i].OBJECTID;
 						var currRow = oidToRow(currOID);
@@ -388,17 +386,19 @@ console.log('grid')
 					sedShowing = false;
 				}
 
-				function showSoilSed(){
+				function show(node){
 					if(!sedShowing){
-					domClass.add(e.target,"sedToggleX");
+					domClass.add(dquery('.sedToggleData',dScroll)[0],"sedToggleX");
 					for(var i = 0, j = gdata.length;i<j;i++){
 						var currOID = gdata[i].OBJECTID;
 					  var currRow = oidToRow(currOID);
-					  if(sedOIDs[currOID]) domClass.remove(currRow,"hiddenSoilSed")					  	
+					  if(sedOIDs[currOID]) domClass.remove(currRow,"hiddenSoilSed")
 					}
 						sedShowing = true;
 					}
 				}
+				showSoilSed=show;
+			}
 
 		/*		function showSoilSed(){
 					var newCon, currentNodes = gridCon.childNodes,

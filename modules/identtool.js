@@ -80,7 +80,6 @@ function( addSymbol
         self.labels[self.labels.length-1].setSymbol(textLabel);
       } 
       function renderIdent(idArr, idCount){
-        console.log(idArr)
         if(idArr){
           resCon.appendChild(DOC.createElement('p')); //separate items with empty p
           var frag=DOC.createDocumentFragment();

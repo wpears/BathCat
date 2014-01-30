@@ -674,6 +674,7 @@ user-select: none;
 .sedToggleData::after{
 content:'';
 display:block;
+background-image:url(images/add.png);
 width:16px;
 height:16px;
 position:absolute;
@@ -683,10 +684,6 @@ right:21px;
  -moz-transition:    transform 0.2s ease-out;
   transition:        transform 0.2s ease-out;
  -o-transition:      transform 0.2s ease-out;
-}
-
-.sedTogglePlus::after{
-  background-image:url(images/add.png);
 }
 
 .sedToggleX{

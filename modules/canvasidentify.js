@@ -99,6 +99,8 @@ function testCache(){
 
 
 function prepare(layers){
+  if(this.executing&&!layers.length) this.cb(null);
+  this.prepping = 1;
   testCache();
   for(var i=0, len=layers.length; i < len; i++){
     var id=layers[i];
@@ -118,6 +120,7 @@ function execute(layers,pointObj,cb){ //points is a flattened array [x0,y0,x1,y1
   this.executing = 1;
   testCache();
   var prep = this.prepared;
+  var that = this;
  // console.log("prepped for executing",prep)
   for(var i=0, len=layers.length; i < len; i++){
     var id = layers[i];
@@ -132,9 +135,8 @@ function execute(layers,pointObj,cb){ //points is a flattened array [x0,y0,x1,y1
       decLayerCount(this);
     }
   }
-  if(!this.called){
-    cb(null);
-  }
+  if(!this.called && this.prepping) cb(null);
+
   /*loop through layers, if in prepared continue, else build or pull from cache. execute from prepared.
   execute others.
   */
@@ -254,6 +256,7 @@ function release(){
 
 function task(){
   this.points=null;
+  this.prepping = 0;
   this.executing = 0;
   this.layerCount = 0;
   this.prepared = {};

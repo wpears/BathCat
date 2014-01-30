@@ -370,10 +370,8 @@ console.log('grid')
 
 				grid.on(".sedToggleData:mousedown",function(e){
 					if(sedShowing){
-						domClass.remove(e.target,"sedToggleX");
 						hideSoilSed();
 					}else{
-						domClass.add(e.target,"sedToggleX");
 						showSoilSed();
 					}
 				});
@@ -381,6 +379,7 @@ console.log('grid')
 			}
 
 				function hideSoilSed(){
+					domClass.remove(e.target,"sedToggleX");
 					for(var i = 0, j = gdata.length;i<j;i++){
 						var currOID = gdata[i].OBJECTID;
 						var currRow = oidToRow(currOID);
@@ -391,6 +390,7 @@ console.log('grid')
 
 				function showSoilSed(){
 					if(!sedShowing){
+					domClass.add(e.target,"sedToggleX");
 					for(var i = 0, j = gdata.length;i<j;i++){
 						var currOID = gdata[i].OBJECTID;
 					  var currRow = oidToRow(currOID);

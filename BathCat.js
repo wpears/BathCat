@@ -219,7 +219,7 @@ window.map = map
 	 	identifyUp, identOff = 1, measure, tooltip,
 	 	crossTool, identTool, meaTool;
 		var geoArr, splitGeoArr, geoBins, selectedGraphics =[], selectedGraphicsCount = 0,
-		infoPaneOpen = 0, legend, toggleRightPane, eventFeatures= [],
+		legend, toggleRightPane, eventFeatures= [],
 		zoomEnd, adjustOnZoom, showSat, showTopo, previousLevel = 8,
 		processTimeUpdate,
 		mouseDownX = 0, mouseDownY = 0;
@@ -1099,8 +1099,10 @@ console.log('post grid');
 	var helpText = "<strong id = 'infoPaneTitle'>Help</strong><p>Zoom in and out with the <b>Zoom buttons</b> or the mousewheel. Shift and drag on the map to zoom to a selected area.</p><p>Go to the full extent of the data with the <b>Globe</b>.</p><p>Select map or satellite view with the <b>Basemap buttons</b>.</p><p>Browse through projects in the table. Sort the table with the column headers and collapse it with the <b>Slider</b>.</p><p>Turn on a raster by double-clicking it in the table or map, or checking its checkbox in the table.</p><ul>When a raster is displayed:<br/><li>With the <b>Identify</b> tool, click to display NAVD88 elevation at any point.</li><li>Draw a cross-section graph with the <b>Profile tool</b>. Click the start and end points of the line to generate a graph in a draggable window. Hover over points to display elevation.</li></ul><p>Use the <b>Measure tool</b> to calculate distance, area, or geographic location.</p><p>Project information and Identify results are displayed in the right pane. Toggle this pane with the <b>Arrow button</b>.</p><p>Use the <b>Time slider</b> to filter the display of features by date. Drag the start and end thumbs or click a year to only display data from that year.</p>",
 		termText = "<strong id = 'infoPaneTitle'>Terms of Use</strong><p>The data displayed in this application is for qualitative purposes only. Do not use the data as displayed in rigorous analyses. If downloading the data, familiarize yourself with the metadata before use. Not for use as a navigation aid. The data reflects measurements taken at specific time periods and the Department of Water Resources makes no claim as to the current state of these channels, nor to the accuracy of the data as displayed. Do not share or publish this data without including proper attribution.</p>",
 		conText = "<strong id = 'infoPaneTitle'>Contact</strong><p>For information on scheduling new bathymetric surveys, contact  <a href = 'mailto:shawn.mayr@water.ca.gov?subject = Bathymetric Survey'>Shawn Mayr</a>, (916) 376-9664.</p><p>For information on this application or the data contained herein, contact  <a href = 'mailto:wyatt.pearsall@water.ca.gov?subject = Bathymetry Catalog'>Wyatt Pearsall</a>, (916) 376-9643.</p>",
-		infoPane = dom.byId("infopane"), foot = dom.byId("foot"), lastButt;
+		infoPane = dom.byId("infopane"), foot = dom.byId("foot"), infoPaneOpen = 0, timeout, lastButt;
+
 		function clearHelp(){
+						timeout = 0;
    					clearNode(infoPane);
    					infoPaneOpen = 0;
    					rpCon.style.borderBottom = "none";
@@ -1166,8 +1168,36 @@ console.log('post grid');
 
    		on(foot, "mousedown", setHelp);
 
+   		on(W, "resize", function(e){			//resize map on browser resize
+			var winHeight = W.innerHeight
+				, oHeightAndMarginTop
+				, idCon=identTool?identTool.getNode():null;
+			setHelp.rPConHeight = winHeight - 257;
+			map.resize();
+			gridObject.expand();
+			if(+dataNode.style.marginTop.slice(0, 1)) dataNode.style.marginTop =(winHeight-257)/2-15+"px";
+			oHeightAndMarginTop =+dataNode.style.marginTop.slice(0,-2)+dataNode.offsetHeight+15;
+			if(ie9){
+				fx.animateProperty({node:rP, duration:300, properties:{height:winHeight-225}}).play();
+				if(idCon)
+				fx.animateProperty({node:idCon, duration:150, properties:{top:oHeightAndMarginTop+70}}).play();
+				if(infoPaneOpen)
+					fx.animateProperty({node:rpCon, duration:300, properties:{height:winHeight-507}}).play();
+				else fx.animateProperty({node:rpCon, duration:300, properties:{height:winHeight-257}}).play();
+			}else{
+				rP.style.height = winHeight-225+"px";
+				if(infoPaneOpen)
+					rpCon.style.height = winHeight-507+"px";
+				else rpCon.style.height = winHeight-257+"px";
+				if(idCon){
+					idCon.style["transform"] = "translate3d(0px,"+oHeightAndMarginTop+"px, 0)";
+					idCon.style["-webkit-transform"] = "translate3d(0px,"+oHeightAndMarginTop+"px, 0)";
+				}
+			}
+		});
 
    		function setHelp(e){
+   			if(timeout)clearTimeout(timeout);
    			if(lastButt)
    					domClass.remove(lastButt,"activeFoot");
    			else{
@@ -1176,21 +1206,21 @@ console.log('post grid');
    				rpCon.style.boxShadow="0 2px 3px -2px #bbf0ff";
    				if(ie9){
    					fx.animateProperty({node:infoPane, duration:200, properties:{height:242}}).play();
-   					fx.animateProperty({node:rpCon, duration:200, properties:{height:rpCon.clientHeight-250}}).play();
+   					fx.animateProperty({node:rpCon, duration:200, properties:{height:setHelp.rPConHeight-250}}).play();
    				}else{
    					infoPane.style.height = "242px";
-   					rpCon.style.height = rpCon.clientHeight-250+"px";
+   					rpCon.style.height = setHelp.rPConHeight-250+"px";
    				}
    			}
 
    			if(lastButt === e.target){
-   				W.setTimeout(clearHelp, 205);
+   				timeout = W.setTimeout(clearHelp, 205);
    				if(ie9){
    					fx.animateProperty({node:infoPane, duration:200, properties:{height:0}}).play();
-   					fx.animateProperty({node:rpCon, duration:200, properties:{height:rpCon.clientHeight+250}}).play();
+   					fx.animateProperty({node:rpCon, duration:200, properties:{height:setHelp.rPConHeight}}).play();
    				}else{
    					infoPane.style.height = 0;
-   					rpCon.style.height = rpCon.clientHeight+250+"px";
+   					rpCon.style.height = setHelp.rPConHeight+"px";
    				}
    				lastButt = null;
    				return;
@@ -1200,6 +1230,7 @@ console.log('post grid');
    			whichButt === "H"?infoPane.innerHTML = helpText:whichButt === "T"?infoPane.innerHTML = termText:infoPane.innerHTML = conText;
    			domClass.add(lastButt,"activeFoot");
    		}
+   		setHelp.rPConHeight = rpCon.clientHeight;
 		})();
 
 		legend = function(){
@@ -1228,34 +1259,6 @@ console.log('post grid');
 			map.setExtent(intExt);
 		});
 
-
-
-		on(W, "resize", function(e){			//resize map on browser resize
-			var winHeight = W.innerHeight
-				, oHeightAndMarginTop
-				, idCon=identTool?identTool.getNode():null;
-			map.resize();
-			gridObject.expand();
-			if(+dataNode.style.marginTop.slice(0, 1)) dataNode.style.marginTop =(winHeight-257)/2-15+"px";
-			oHeightAndMarginTop =+dataNode.style.marginTop.slice(0,-2)+dataNode.offsetHeight+15;
-			if(ie9){
-				fx.animateProperty({node:rP, duration:300, properties:{height:winHeight-225}}).play();
-				if(idCon)
-				fx.animateProperty({node:idCon, duration:150, properties:{top:oHeightAndMarginTop+70}}).play();
-				if(infoPaneOpen)
-					fx.animateProperty({node:rpCon, duration:300, properties:{height:winHeight-506}}).play();
-				else fx.animateProperty({node:rpCon, duration:300, properties:{height:winHeight-257}}).play();
-			}else{
-				rP.style.height = winHeight-225+"px";
-				if(infoPaneOpen)
-					rpCon.style.height = winHeight-507+"px";
-				else rpCon.style.height = winHeight-257+"px";
-				if(idCon){
-					idCon.style["transform"] = "translate3d(0px,"+oHeightAndMarginTop+"px, 0)";
-					idCon.style["-webkit-transform"] = "translate3d(0px,"+oHeightAndMarginTop+"px, 0)";
-				}
-			}
-		});
 
   	rP.isShowing = function(){
     	return rP.showing;

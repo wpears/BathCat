@@ -99,7 +99,7 @@ function testCache(){
 
 
 function prepare(layers){
-  if(this.executing&&!layers.length) this.cb(null);
+  if(this.executing&&!layers.length){this.cb(null);}
   this.prepping = 1;
   testCache();
   for(var i=0, len=layers.length; i < len; i++){
@@ -135,7 +135,7 @@ function execute(layers,pointObj,cb){ //points is a flattened array [x0,y0,x1,y1
       decLayerCount(this);
     }
   }
-  if(!this.called && this.prepping) cb(null);
+  if(this.prepping &&!Object.keys(prep).length){cb(null);}
 
   /*loop through layers, if in prepared continue, else build or pull from cache. execute from prepared.
   execute others.

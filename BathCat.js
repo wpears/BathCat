@@ -42,6 +42,7 @@ require(["dijit/layout/BorderContainer"
 				,"modules/measuretool.js"
 				,"modules/clearnode.js"
 				,"modules/tooltip.js"
+				,"modules/getdate.js"
 
 				,"require"
 				],
@@ -87,6 +88,7 @@ function( BorderContainer
 				, MeasureTool
 				, clearNode
 				, Tooltip
+				, getDate
 
 				, require
 				){
@@ -221,9 +223,11 @@ window.map = map
 		zoomEnd, adjustOnZoom, showSat, showTopo, previousLevel = 8,
 		processTimeUpdate,
 		mouseDownX = 0, mouseDownY = 0;
-	var	layerArray = new Array(featureCount);
-		var oidArray = new Array(featureCount),
+	var	layerArray = new Array(featureCount),
+		oidArray = new Array(featureCount),
 		oidStore = new Array(featureCount),
+		gdata = new Array(featureCount),
+		formattedDates = new Array(featureCount),
 		insideTimeBoundary = new Array(featureCount),
 		rastersShowing = {},
 		crossAnchor = dom.byId("cros"),
@@ -270,6 +274,19 @@ window.map = map
 				oidStore[i] = 0;
 				insideTimeBoundary[i] = 1;
 				rastersShowing[i+1] = 0;
+				formattedDates[i]= getDate(features[i].attributes.Date);				
+			}
+		})();
+
+		(function(){
+			for(var i = 0; i<featureCount; i++){
+				var intData ={};
+				featureAttr = features[i].attributes;
+				intData.__Date = featureAttr.Date;
+				intData.Date = formattedDates[i];
+				intData.Project =(featureAttr.Project.length<6?"Soil Sed. "+featureAttr.Project:featureAttr.Project);
+				intData.OBJECTID = featureAttr.OBJECTID;
+				gdata[i]=intData;
 			}
 		})();
 
@@ -304,10 +321,12 @@ window.map = map
   			}
   	})();
 
+
+
 		//*****initialize grid and attach all handlers*******\\
 console.log('grid')
 		gridObject =(function(){
-			var i = 0, j = featureCount, gdata =[], gridCon, expandReady=1,
+			var j = featureCount, gridCon, expandReady=1,
 				sedToggle, sedShowing=true, sedOIDs = {}, showSoilSed,
 				intData, featureAttr, lastNodePos =[],nameSorted = 0, dateSorted = 1,
 				adGr = declare([Grid, ColumnResizer]), gridHeader, headerNodes;
@@ -322,15 +341,8 @@ console.log('grid')
 							cellNavigation:0
 							},
 							ilP);
-			for(;i<j;i++){
-				intData ={};
-				featureAttr = features[i].attributes;
-				intData.__Date = featureAttr.Date;
-				intData.Date = getDate(featureAttr.Date);
-				intData.Project =(featureAttr.Project.length<6?"Soil Sed. "+featureAttr.Project:featureAttr.Project);
-				intData.OBJECTID = featureAttr.OBJECTID;
-				gdata.push(intData);
-			}
+
+
 			gdata.push({"__Date":Date.now(),Date:"Various",Project:"Soil Sedimentation",OBJECTID:gdata.length+1});
 			gridLoaded = 1;
 			grid.renderArray(gdata);
@@ -423,13 +435,6 @@ console.log('grid')
     */
 
 
-
-			function getDate(date){
-				var dte = new Date(date);
-				var dst = dte.toUTCString();
-				dst = dst.charAt(6)=== " "?dst.substring(0, 5)+"0"+dst.substring(5):dst; //ieFix
-				return dst.slice(12, 16)+"-"+((1+dte.getUTCMonth())<10?"0"+(1+dte.getUTCMonth()):(1+dte.getUTCMonth()))+"-"+dst.slice(5, 7);
-			}
 
 			function dateSortSeq(a, b){
 				return a.__Date-b.__Date
@@ -1018,9 +1023,9 @@ console.log('post grid');
 					if(rP.isShowing()){
 						fx.animateProperty(fxArgs).play();
 					}else{
-					infoFunc.setHTML(attributes);
-					rP.showPane();
-				}
+					  infoFunc.setHTML(attributes);
+					  rP.showPane();
+				  }
 				}else{
 					if(rP.isShowing()){
 						dataNode.style.opacity = 0;
@@ -1056,10 +1061,22 @@ console.log('post grid');
 					var oid = selectedGraphics[0];
 					infoFunc.parseAttributes(outlines.graphics[oid-1].attributes);
 				}else{
+					var str ="<h2>"+selectedGraphicsCount+" projects selected:</h2>";
+					var count = 0;
+					var i = 0;
+					while (count < selectedGraphicsCount){
+						if (oidStore[i] === 1){
+							console.log(gdata[i], features[i].attributes)
+							str+=("<span class='multiSelect'><strong>"+features[i-1].attributes.Project+
+								": </strong>"+formattedDates[i-1]+"</span><br/>")
+							count++;
+						}
+						i++;
+					}
 					downloadNode.style.display = "none";
-					dataNode.style.marginTop = rpCon.clientHeight/2-15+"px";
-					dataNode.innerHTML = "<h2>"+selectedGraphicsCount+" projects selected</h2>"
-					gridObject.showSoilSed();
+					dataNode.style.marginTop = rpCon.clientHeight/2-65+"px";
+					dataNode.innerHTML = str;
+			//		gridObject.showSoilSed();
 				}
 			}else{
 				if(attr&&attr.Project)

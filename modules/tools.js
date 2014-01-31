@@ -1,7 +1,7 @@
 define(['dojo/dom-class'
        ,'dojo/query'
        ,'modules/featureevents.js'],
-function(domClass, dquery, eventFeatures){
+function(domClass, dquery, FeatureEvents){
   var lastActive;
   return {
     toggle:function(e, tool){
@@ -30,7 +30,7 @@ function(domClass, dquery, eventFeatures){
       if(domClass.contains(node,"idle")){
         domClass.remove(node,"idle");
         if(dquery(".activeTool")[0])
-          eventFeatures.disable(eventFeatures); //because another tool is still alive
+          FeatureEvents.disable(eventFeatures); //because another tool is still alive
       }else if(domClass.contains(node,"activeTool"))
         domClass.remove(node,"activeTool");
     }

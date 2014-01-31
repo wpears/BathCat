@@ -399,6 +399,7 @@ console.log('grid')
 				}
 
 				function show(node){
+					alert('Sort on selected if in oidstore');
 					if(!sedShowing){
 					domClass.add(dquery('.sedToggleData',dScroll)[0],"sedToggleX");
 					for(var i = 0, j = gdata.length;i<j;i++){
@@ -996,7 +997,7 @@ console.log('post grid');
 		if(rP.isShowing()){//close button logic
 			rP.hidePane();
 			if(typeof identTool === 'object'&&identTool.isShowing())
-				tools.wipe(identTool, identAnchor);
+				tools.wipe(identTool, identAnchor, eventFeatures);
 			clearAllStoredOIDs();
 			geoSearch.prevArr.length = 0;
 		}else{
@@ -1061,7 +1062,7 @@ console.log('post grid');
 					var oid = selectedGraphics[0];
 					infoFunc.parseAttributes(outlines.graphics[oid-1].attributes);
 				}else{
-					var str ="<h2>"+selectedGraphicsCount+" projects selected:</h2>";
+					var str ="<h2>"+selectedGraphicsCount+" selections:</h2>";
 					var count = 0;
 					var i = 0;
 					while (count < selectedGraphicsCount){

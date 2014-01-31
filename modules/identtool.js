@@ -153,7 +153,7 @@ function( addSymbol
           identOff = 0;
         },
         stop:function(){
-          this.idle();
+          if(DOC.getElementsByClassName("idle")[0] !== ident) this.idle();
           idCon.style.display = "none";
           clearNode(resCon);
           clearGraphics(map,this.graphics);

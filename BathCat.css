@@ -821,10 +821,12 @@ th:active{
   font-size:1.75em;
  }
 
+#multiSelectWrapper{
+    width:80%;
+    margin:0 auto;
+}
  .multiSelect{
-  margin-left:15px;
   display:inline-block;
-  width:80%;
   padding-left:10px;
   text-indent:-10px;
  }

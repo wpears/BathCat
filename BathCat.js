@@ -1062,7 +1062,7 @@ console.log('post grid');
 					var oid = selectedGraphics[0];
 					infoFunc.parseAttributes(outlines.graphics[oid-1].attributes);
 				}else{
-					var str ="<h2>"+selectedGraphicsCount+" selections:</h2>";
+					var str ="<h2>"+selectedGraphicsCount+ " projects selected</h2><div id='multiSelectWrapper'>";
 					var count = 0;
 					var i = 0;
 					while (count < selectedGraphicsCount){
@@ -1074,6 +1074,7 @@ console.log('post grid');
 						}
 						i++;
 					}
+					str+="</div>"
 					downloadNode.style.display = "none";
 					dataNode.style.marginTop = rpCon.clientHeight/2-65+"px";
 					dataNode.innerHTML = str;

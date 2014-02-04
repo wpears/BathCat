@@ -652,26 +652,28 @@ user-select: none;
  -o-transition:      height 0.2s ease-out;
 }
 
-.sedToggle{
+.gridToggle{
   position:relative;
   border-bottom:1px solid #eeeeff;
   background-color:rgba(240,240,255,0.4);
 }
 
-.sedToggle:hover{
+.gridToggle:hover{
   background-color:#f3f3f3;
   background-image:-webkit-linear-gradient(top, #E1EBFB,#f3f3f3);
   background-image:-moz-linear-gradient(top, #E1EBFB,#f3f3f3);
 }
-
-.sedToggle:active{
+.gridHighlight{
+  background-color:black;
+}
+.gridToggle:active{
   background-color:#E1EBFB;
   background-image:-webkit-linear-gradient(top, #f3f3f3,#E1EBFB);
   background-image:-moz-linear-gradient(top, #f3f3f3,#E1EBFB);
 }
 
 
-.sedToggleData::after{
+.gridToggle::after{
 content:'';
 display:block;
 background-image:url(images/add.png);
@@ -686,18 +688,18 @@ right:21px;
  -o-transition:      transform 0.2s ease-out;
 }
 
-.sedToggleX{
+.gridToggleX{
   background-color:#f3f3f3;
   background-image:-webkit-linear-gradient(top, #E1EBFB,#f3f3f3);
   background-image:-moz-linear-gradient(top, #E1EBFB,#f3f3f3);
 }
-.sedToggleX::after{
+.gridToggleX::after{
   transform:rotate(45deg);
  -webkit-transform:rotate(45deg);
 }
 
 
-.hiddenRow, .hiddenSoilSed{
+.hiddenRow, .hiddenGridToggle{
   height:0;
   visibility:hidden;
   color:white;

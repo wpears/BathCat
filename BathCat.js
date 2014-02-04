@@ -43,6 +43,7 @@ require(["dijit/layout/BorderContainer"
 				,"modules/clearnode.js"
 				,"modules/tooltip.js"
 				,"modules/getdate.js"
+				,"modules/gridcategory.js"
 
 				,"require"
 				],
@@ -89,6 +90,7 @@ function( BorderContainer
 				, clearNode
 				, Tooltip
 				, getDate
+        , GridCategory
 
 				, require
 				){
@@ -216,7 +218,7 @@ window.map = map
 	  features = featureSet.features, featureCount=features.length, IE =!!document.all, ie9, fx,
 		outlines, grid, gridObject, dScroll, outlineMouseMove, outlineTimeout,
 		mouseDownTimeout, previousRecentTarget, justMousedUp = false,  outMoveTime = 0,
-	 	identifyUp, identOff = 1, measure, tooltip, rPConHeight,
+	 	identifyUp, identOff = 1, measure, tooltip, rPConHeight, sedToggle,
 	 	crossTool, identTool, meaTool;
 		var geoArr, splitGeoArr, geoBins, selectedGraphics =[], selectedGraphicsCount = 0,
 		legend, toggleRightPane, eventFeatures= [],
@@ -320,18 +322,17 @@ window.map = map
   				}
   			}
   	})();
-var mTIME=0;
-on(window,"mousedown",function(){console.log('md',Date.now()-mTIME)})
-on(window,"touchstart",function(){mTIME=Date.now();console.log('touchstart')})
-on(window,"touchend",function(){console.log('touchend',Date.now()-mTIME)})
-on(window,"click",function(){console.log("click",Date.now()-mTIME)})
+//var mTIME=0;
+//on(window,"mousedown",function(){console.log('md',Date.now()-mTIME)})
+//on(window,"touchstart",function(){mTIME=Date.now();console.log('touchstart')})
+//on(window,"touchend",function(){console.log('touchend',Date.now()-mTIME)})
+//on(window,"click",function(){console.log("click",Date.now()-mTIME)})
 
 
 		//*****initialize grid and attach all handlers*******\\
 console.log('grid')
 		gridObject =(function(){
 			var j = featureCount, gridCon, expandReady=1, scroTop, scroHeight,
-				sedToggle, sedShowing=true, sedOIDs = {}, showSoilSed,
 				intData, featureAttr, lastNodePos =[],nameSorted = 0, dateSorted = 1,
 				adGr = declare([Grid, ColumnResizer]), gridHeader, headerNodes;
 
@@ -351,6 +352,7 @@ console.log('grid')
 			gridLoaded = 1;
 			grid.renderArray(gdata);
 			
+
 			gridHeader = dom.byId("ilP-header").firstChild;
 			headerNodes = gridHeader.childNodes;
 
@@ -366,87 +368,8 @@ console.log('grid')
 			for(var i = 0, j = gdata.length;i<j;i++){
 				lastNodePos[i] = i;
 			}
-			sedToggle = dom.byId("ilP-row-"+(gdata.length-1));
-			toggleSoilSed(sedToggle);
-		
 
-			function toggleSoilSed (node){
-				var row = node.firstChild.firstChild;
-				var data = row.firstChild
-
-				row.removeChild(row.childNodes[3]);
-				row.removeChild(row.childNodes[1]);
-				domClass.add(node,"sedToggle")
-				domClass.add(data,"sedToggleData")
-				domClass.remove(data,'dgrid-cell');
-
-				for(var i = 0, j = gdata.length;i<j;i++){
-						var curr = gdata[i];
-						if(curr.Project.slice(0,9)==="Soil Sed.") sedOIDs[curr.OBJECTID]=1;
-				}
-
-				grid.on(".sedToggleData:mousedown",function(e){
-					if(sedShowing){
-						hide();
-					}else{
-						show();
-					}
-				});
-				hide(data);
-
-				function checkSed(){
-					return;
-				}
-
-				function hide(){
-					domClass.remove(dquery('.sedToggleData',dScroll)[0],"sedToggleX");
-					for(var i = 0, j = gdata.length;i<j;i++){
-						var currOID = gdata[i].OBJECTID;
-						var currRow = oidToRow(currOID);
-						if(sedOIDs[currOID]) domClass.add(currRow,"hiddenSoilSed") 
-					}
-					sedShowing = false;
-				}
-
-				function show(node){
-					alert('Sort on selected if in oidstore');
-					if(!sedShowing){
-					domClass.add(dquery('.sedToggleData',dScroll)[0],"sedToggleX");
-					for(var i = 0, j = gdata.length;i<j;i++){
-						var currOID = gdata[i].OBJECTID;
-					  var currRow = oidToRow(currOID);
-					  if(sedOIDs[currOID]) domClass.remove(currRow,"hiddenSoilSed")
-					}
-						sedShowing = true;
-					}
-				}
-				showSoilSed=show;
-				checkSed = checkSed;
-			}
-
-		/*		function showSoilSed(){
-					var newCon, currentNodes = gridCon.childNodes,
-					nodeIndex, frag = DOC.createDocumentFragment();
-
-					for(var i = 0, j = gdata.length;i<j;i++){
-
-						var currOID = gdata[i].OBJECTID;
-					  nodeIndex = currOID-1;
-					  var newNode = currentNodes[lastNodePos[nodeIndex]].cloneNode(true)
-					  if(sedOIDs[currOID]) domClass.remove(newNode,"hiddenSoilSed")					  	
-						frag.appendChild(newNode);
-						lastNodePos[nodeIndex] = i; 
-					}
-						newCon = gridCon.cloneNode(false);
-						newCon.appendChild(frag);
-						gridCon.parentNode.replaceChild(newCon, gridCon);
-						gridCon = newCon;
-						frag = null;
-						sedShowing = true;
-				}
-    */
-
-
+			sedToggle = GridCategory(grid, gdata, gdata.length-1,"Project","Soil Sed.", ilP, lastNodePos);
 
 			function dateSortSeq(a, b){
 				return a.__Date-b.__Date
@@ -476,6 +399,7 @@ console.log('grid')
 				gCon.parentNode.replaceChild(newCon, gridCon);
 				gridCon = newCon;
 				frag = null;
+				sedToggle.setNode();
 			}
 
 			function oidToRow(oid){
@@ -484,9 +408,10 @@ console.log('grid')
 
 			function scrollToRow(oid){
 				var offset = lastNodePos[oid-1]*30;
-					if(offset>scroHeight+scroTop||offset<scroTop)
+					if(offset>scroHeight+scroTop||offset<scroTop){
 						scroTop = offset-155;
 						dScroll.scrollTop = scroTop;
+					}
 			}
 
 			function timeUpdate(e){
@@ -502,21 +427,21 @@ console.log('grid')
 					currRow = oidToRow(currOID);
 					currTime =+gridData[i].__Date
 					if(currTime<startTime||currTime>endTime){
-						if(currRow.id !== sedToggle.id){
-						domClass.add(currRow, "hiddenRow");
-						if(map.layerIds[2]){
-							oidRasterIndex = currOID-1;
-							toBeHidden[toBeHidden.length] = currOID;
-							for(var k = 1;k<currentRasters.length;k++){
-								if(currentRasters[k] === oidRasterIndex){
-									splice(currentRasters, k);
-									k--;
+						if(!domClass.contains(currRow,"gridToggle")){
+							domClass.add(currRow, "hiddenRow");
+							if(map.layerIds[2]){
+								oidRasterIndex = currOID-1;
+								toBeHidden[toBeHidden.length] = currOID;
+								for(var k = 1;k<currentRasters.length;k++){
+									if(currentRasters[k] === oidRasterIndex){
+										splice(currentRasters, k);
+										k--;
+									}
 								}
 							}
+							insideTimeBoundary[currOID] = 0;
+							currGraphic.setSymbol(blank);
 						}
-						insideTimeBoundary[currOID] = 0;
-						currGraphic.setSymbol(blank);
-					}
 					}else{
 						if(domClass.contains(currRow, "hiddenRow")){
 							domClass.remove(currRow, "hiddenRow");
@@ -829,7 +754,6 @@ console.log('grid')
 				     , checkImageInputs:checkImageInputs
 				     , clickSort:clickSort
 				     , expand:triggerExpand
-				     , showSoilSed:showSoilSed
 				     };
 
 		})();
@@ -1088,7 +1012,6 @@ console.log('post grid');
 					downloadNode.style.display = "none";
 					dataNode.style.marginTop = rPConHeight/2-65+"px";
 					dataNode.innerHTML = str;
-			//		gridObject.showSoilSed();
 				}
 			}else{
 				if(attr&&attr.Project)
@@ -1465,6 +1388,7 @@ console.log('post grid');
 		geoSearch.currArr =[];
 		geoSearch.binLength = geoBins.length;
 		geoSearch.lastClickBin =[];
+		
 		function geoSearch(e, mouseDown){//think about using two sorted arrays, one mins one maxs
 			console.log("searching")
 			var timee=Date.now();
@@ -1576,10 +1500,11 @@ console.log('post grid');
 				graphic.setSymbol(symbo[color+hi]);
 			//	console.log(row);
 				if(!refresh){
-					if (hi!== "")
+					if (hi!== ""){
 						domClass.add(row,"highl"+color);
-					else
+					}else{
 						domClass.remove(row,"highl"+color);
+					}
 				}
 			}
 		}

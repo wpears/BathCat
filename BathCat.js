@@ -320,7 +320,11 @@ window.map = map
   				}
   			}
   	})();
-
+var mTIME=0;
+on(window,"mousedown",function(){console.log('md',Date.now()-mTIME)})
+on(window,"touchstart",function(){mTIME=Date.now();console.log('touchstart')})
+on(window,"touchend",function(){console.log('touchend',Date.now()-mTIME)})
+on(window,"click",function(){console.log("click",Date.now()-mTIME)})
 
 
 		//*****initialize grid and attach all handlers*******\\

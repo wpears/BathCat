@@ -216,7 +216,7 @@ window.map = map
 	  features = featureSet.features, featureCount=features.length, IE =!!document.all, ie9, fx,
 		outlines, grid, gridObject, dScroll, outlineMouseMove, outlineTimeout,
 		mouseDownTimeout, previousRecentTarget, justMousedUp = false,  outMoveTime = 0,
-	 	identifyUp, identOff = 1, measure, tooltip,
+	 	identifyUp, identOff = 1, measure, tooltip, rPConHeight,
 	 	crossTool, identTool, meaTool;
 		var geoArr, splitGeoArr, geoBins, selectedGraphics =[], selectedGraphicsCount = 0,
 		legend, toggleRightPane, eventFeatures= [],
@@ -326,7 +326,7 @@ window.map = map
 		//*****initialize grid and attach all handlers*******\\
 console.log('grid')
 		gridObject =(function(){
-			var j = featureCount, gridCon, expandReady=1,
+			var j = featureCount, gridCon, expandReady=1, scroTop, scroHeight,
 				sedToggle, sedShowing=true, sedOIDs = {}, showSoilSed,
 				intData, featureAttr, lastNodePos =[],nameSorted = 0, dateSorted = 1,
 				adGr = declare([Grid, ColumnResizer]), gridHeader, headerNodes;
@@ -356,6 +356,8 @@ console.log('grid')
 			
 			gridCon = dquery(".dgrid-content")[0];
 			dScroll = dquery(".dgrid-scroller")[0];
+			scroTop = dScroll.scrollTop;
+			scroHeight = dScroll.clientHeight;
 			
 			for(var i = 0, j = gdata.length;i<j;i++){
 				lastNodePos[i] = i;
@@ -371,7 +373,7 @@ console.log('grid')
 				row.removeChild(row.childNodes[3]);
 				row.removeChild(row.childNodes[1]);
 				domClass.add(node,"sedToggle")
-				domClass.add(data,"sedToggleData");
+				domClass.add(data,"sedToggleData")
 				domClass.remove(data,'dgrid-cell');
 
 				for(var i = 0, j = gdata.length;i<j;i++){
@@ -387,6 +389,10 @@ console.log('grid')
 					}
 				});
 				hide(data);
+
+				function checkSed(){
+					return;
+				}
 
 				function hide(){
 					domClass.remove(dquery('.sedToggleData',dScroll)[0],"sedToggleX");
@@ -411,6 +417,7 @@ console.log('grid')
 					}
 				}
 				showSoilSed=show;
+				checkSed = checkSed;
 			}
 
 		/*		function showSoilSed(){
@@ -472,10 +479,10 @@ console.log('grid')
 			}
 
 			function scrollToRow(oid){
-				var scroTop = dScroll.scrollTop, newTop,
-					row = oidToRow(oid);
-					if(row.offsetTop>dScroll.clientHeight+scroTop||row.offsetTop<scroTop)
-						dScroll.scrollTop = row.offsetTop-155;
+				var offset = lastNodePos[oid-1]*30;
+					if(offset>scroHeight+scroTop||offset<scroTop)
+						scroTop = offset-155;
+						dScroll.scrollTop = scroTop;
 			}
 
 			function timeUpdate(e){
@@ -1067,7 +1074,6 @@ console.log('post grid');
 					var i = 0;
 					while (count < selectedGraphicsCount){
 						if (oidStore[i] === 1){
-							console.log(gdata[i], features[i].attributes)
 							str+=("<span class='multiSelect'><strong>"+features[i-1].attributes.Project+
 								": </strong>"+formattedDates[i-1]+"</span><br/>")
 							count++;
@@ -1076,7 +1082,7 @@ console.log('post grid');
 					}
 					str+="</div>"
 					downloadNode.style.display = "none";
-					dataNode.style.marginTop = rpCon.clientHeight/2-65+"px";
+					dataNode.style.marginTop = rPConHeight/2-65+"px";
 					dataNode.innerHTML = str;
 			//		gridObject.showSoilSed();
 				}
@@ -1174,7 +1180,8 @@ console.log('post grid');
 			var winHeight = W.innerHeight
 				, oHeightAndMarginTop
 				, idCon=identTool?identTool.getNode():null;
-			setHelp.rPConHeight = winHeight - 257;
+			rPConHeight = winHeight - 257;
+			scroHeight = dScroll.clientHeight;
 			map.resize();
 			gridObject.expand();
 			if(+dataNode.style.marginTop.slice(0, 1)) dataNode.style.marginTop =(winHeight-257)/2-15+"px";
@@ -1208,10 +1215,10 @@ console.log('post grid');
    				rpCon.style.boxShadow="0 2px 3px -2px #bbf0ff";
    				if(ie9){
    					fx.animateProperty({node:infoPane, duration:200, properties:{height:242}}).play();
-   					fx.animateProperty({node:rpCon, duration:200, properties:{height:setHelp.rPConHeight-250}}).play();
+   					fx.animateProperty({node:rpCon, duration:200, properties:{height:rPConHeight-250}}).play();
    				}else{
    					infoPane.style.height = "242px";
-   					rpCon.style.height = setHelp.rPConHeight-250+"px";
+   					rpCon.style.height = rPConHeight-250+"px";
    				}
    			}
 
@@ -1219,10 +1226,10 @@ console.log('post grid');
    				timeout = W.setTimeout(clearHelp, 205);
    				if(ie9){
    					fx.animateProperty({node:infoPane, duration:200, properties:{height:0}}).play();
-   					fx.animateProperty({node:rpCon, duration:200, properties:{height:setHelp.rPConHeight}}).play();
+   					fx.animateProperty({node:rpCon, duration:200, properties:{height:rPConHeight}}).play();
    				}else{
    					infoPane.style.height = 0;
-   					rpCon.style.height = setHelp.rPConHeight+"px";
+   					rpCon.style.height = rPConHeight+"px";
    				}
    				lastButt = null;
    				return;
@@ -1232,7 +1239,7 @@ console.log('post grid');
    			whichButt === "H"?infoPane.innerHTML = helpText:whichButt === "T"?infoPane.innerHTML = termText:infoPane.innerHTML = conText;
    			domClass.add(lastButt,"activeFoot");
    		}
-   		setHelp.rPConHeight = rpCon.clientHeight;
+   		rPConHeight = rpCon.clientHeight;
 		})();
 
 		legend = function(){
@@ -1455,6 +1462,8 @@ console.log('post grid');
 		geoSearch.binLength = geoBins.length;
 		geoSearch.lastClickBin =[];
 		function geoSearch(e, mouseDown){//think about using two sorted arrays, one mins one maxs
+			console.log("searching")
+			var timee=Date.now();
 			var i = 0, j = geoSearch.binLength-1, curr, oid, temp, binTemp, prevArr = geoSearch.prevArr, currArr = geoSearch.currArr,
 			mapX = e.mapPoint.x, mapY = e.mapPoint.y, breakMax = mapX+1000, binArr, someTargeted = 0;
 				if(mapX!== 0){
@@ -1498,7 +1507,8 @@ console.log('post grid');
 							if(mouseDown) clearStoredOID(oid, 1, 0);
 							continue;
 						}else{
-							caCh(oid,"", 0);//clear mouseover highlight
+						//	console.log("clearing")
+							caCh(oid,"", 0);//clear mouseover highlight. Have to do whole bin since might be multiple highlighted
 						}
 					}
 				}
@@ -1527,6 +1537,8 @@ console.log('post grid');
 				}
 			}
 			binArr = null;
+			console.log("done",Date.now()-timee);
+
 		}
 		
 
@@ -1544,6 +1556,7 @@ console.log('post grid');
 		}
 																//main highlighting logic, separated by year with different basemap
 		function caCh(oid, hi, refresh){
+	//		console.log(oid,'calling caCh')
 			var symbo = topoOn?symbols:satSym
 				, date
 			  , graphic
@@ -1557,6 +1570,7 @@ console.log('post grid');
 				color = getColor(date);
 				row = gridObject.oidToRow(oid);
 				graphic.setSymbol(symbo[color+hi]);
+			//	console.log(row);
 				if(!refresh){
 					if (hi!== "")
 						domClass.add(row,"highl"+color);

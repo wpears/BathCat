@@ -221,7 +221,7 @@ window.map = map
 	  features = featureSet.features, featureCount=features.length, IE =!!document.all, ie9, fx,
 		outlines, grid, gridObject, dScroll, outlineMouseMove, outlineTimeout,
 		mouseDownTimeout, previousRecentTarget, justMousedUp = false,  outMoveTime = 0,
-	 	identifyUp, identOff = 1, measure, tooltip, rPConHeight, sedToggle, satMap,
+	 	identifyUp, measure, tooltip, rPConHeight, sedToggle, satMap, cursor = 1,
 	 	crossTool, identTool, meaTool;
 		var geoArr, splitGeoArr, geoBins, selectedGraphics =[], selectedGraphicsCount = 0,
 		legend, toggleRightPane, eventFeatures= [],
@@ -1369,7 +1369,7 @@ console.log('post grid');
 
 
 		outlines.on("mouse-out", function(e){		//map mouseout handler
-				if(identOff)map.setMapCursor("default");
+				if(!cursor){map.setMapCursor("default"); cursor=1;}
 				outlineMouseMove.remove();
 				outlineMouseMove = null;
 				geoSearch(null, 0);
@@ -1417,8 +1417,8 @@ console.log('post grid');
 		function geoSearch(e, mouseDown){//think about using two sorted arrays, one mins one maxs
 			console.log("searching")
 			var timee=Date.now();
-			var i = 0, j = geoSearch.binLength-1, curr, oid, temp, binTemp, prevArr = geoSearch.prevArr, currArr = geoSearch.currArr,
-			mapX, mapY, breakMax, binArr, someTargeted = 0;
+			var i = 0, j = geoSearch.binLength-1, curr, oid, temp, binTemp, prevArr = geoSearch.prevArr,
+			currArr = geoSearch.currArr,mapX, mapY, breakMax, binArr, someTargeted = 0;
 
 			if(e === null) binArr = geoSearch.lastMouseBin;
 			else{
@@ -1454,30 +1454,32 @@ console.log('post grid');
 					if(curr.xmax>= mapX&&curr.xmin<= mapX&&curr.ymin<= mapY&&curr.ymax>= mapY){
 						someTargeted = 1;
 						caCh(oid,"hi", 1);
-						if(identOff)map.setMapCursor("pointer");
+						if(cursor){
+							map.setMapCursor("pointer");
+							cursor = 0;
+						}
 						if(mouseDown){
-							if(currArr.indexOf(oid)==-1){
+						//	if(currArr.indexOf(oid)==-1){
 								currArr.push(oid);
 								if(!oidStore[oid])
 									storeOID(oid);
-							}
+						//	}
 						}
 					}else{
 						if(oidStore[oid]){
 							if(mouseDown) clearStoredOID(oid, 1, 0);
 							continue;
 						}else{
-						//	console.log("clearing")
 							caCh(oid,"", 1);//clear mouseover highlight. Have to do whole bin since might be multiple highlighted
 						}
 					}
 				}
 			}
+			
 			if(mouseDown&&someTargeted){
-				if(selectedGraphicsCount>currArr.length){ //clear a previous click in grid
-					clearStoredOID(selectedGraphics[0], 1, 0);
-				}
-				if(W.JSON.stringify(prevArr)=== W.JSON.stringify(currArr)){
+				//if(selectedGraphicsCount>currArr.length)//clear a previous click in grid
+				//clearStoredOID(selectedGraphics[0], 1, 0);
+				if(prevArr.length===currArr.length&&W.JSON.stringify(prevArr)=== W.JSON.stringify(currArr)){
 					clearAllStoredOIDs();
 					geoSearch.prevArr.length = 0;
 					geoSearch.currArr.length = 0;
@@ -1489,6 +1491,7 @@ console.log('post grid');
 				}
 				infoFunc(null);
 			}
+
 			if(!someTargeted&&mouseDown&&prevArr){ //rehighlight true selections when clicking on
 				for(var i = 0;i<prevArr.length;i++){ // TS hidden stuff
 					caCh(prevArr[i],"hi", 1);

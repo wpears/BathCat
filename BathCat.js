@@ -333,7 +333,7 @@ window.map = map
 console.log('grid')
 		gridObject =(function(){
 			var j = featureCount, gridCon, expandReady=1, scroTop, scroHeight,
-				intData, featureAttr, lastNodePos =[],nameSorted = 0, dateSorted = 1,
+				intData, featureAttr, lastNodePos =new Array(gdata.length+1),nameSorted = 0, dateSorted = 1,
 				adGr = declare([Grid, ColumnResizer]), gridHeader, headerNodes;
 
 				grid = new adGr({columns:{
@@ -348,7 +348,7 @@ console.log('grid')
 							ilP);
 
 
-			gdata.push({"__Date":Date.now(),Date:"Various",Project:"Soil Sedimentation",OBJECTID:gdata.length+1});
+			gdata.unshift({"__Date":1315008000000,Date:"Various",Project:"Soil Sedimentation",OBJECTID:gdata.length+1});
 			gridLoaded = 1;
 			grid.renderArray(gdata);
 			
@@ -366,10 +366,11 @@ console.log('grid')
 			scroHeight = dScroll.clientHeight;
 			
 			for(var i = 0, j = gdata.length;i<j;i++){
-				lastNodePos[i] = i;
+				lastNodePos[i] = i+1;
 			}
+      lastNodePos[gdata.length-1]=0;
 
-			sedToggle = GridCategory(grid, gdata, gdata.length-1,"Project","Soil Sed.", ilP, lastNodePos);
+			sedToggle = GridCategory(grid, gdata, "Project","Soil Sed.", ilP, lastNodePos);
 
 			function dateSortSeq(a, b){
 				return a.__Date-b.__Date
@@ -387,11 +388,14 @@ console.log('grid')
 			}
 			function renderSort(sorter, gdata, gCon){
 				var i = 0, j = gdata.length, newCon, currentNodes = gCon.childNodes,
-					nodeIndex, frag = DOC.createDocumentFragment();
+					nodeIndex, node, frag = DOC.createDocumentFragment(), togId = sedToggle.getRow().id,
+				tog = gdata.shift();	
 				gdata.sort(sorter);
+				gdata.unshift(tog);
 				for(var i = 0, j = gdata.length;i<j;i++){
 					nodeIndex = gdata[i].OBJECTID-1;
-					frag.appendChild(currentNodes[lastNodePos[nodeIndex]].cloneNode(true));
+					node = currentNodes[lastNodePos[nodeIndex]].cloneNode(true);
+					frag.appendChild(node);
 					lastNodePos[nodeIndex] = i;
 				}
 				newCon = gCon.cloneNode(false);
@@ -1388,7 +1392,7 @@ console.log('post grid');
 		geoSearch.currArr =[];
 		geoSearch.binLength = geoBins.length;
 		geoSearch.lastClickBin =[];
-		
+
 		function geoSearch(e, mouseDown){//think about using two sorted arrays, one mins one maxs
 			console.log("searching")
 			var timee=Date.now();

@@ -1,12 +1,12 @@
 define(["dojo/dom-class"],function(domClass){
   var count = 0;
-  return function (grid, gdata, position, keyField, testVal, containerNode, shuffleTracker){
+  return function (grid, gdata, keyField, testVal, containerNode, shuffleTracker){
     var gridToggle
       , scroller = containerNode.childNodes[1]
       , toggleCount = count++
       , showing=true
       , OIDs = {}
-      , node = document.getElementById(containerNode.id+"-row-"+position)
+      , node = document.getElementById(containerNode.id+"-row-"+toggleCount)
       , row = node.firstChild.firstChild
       , data = row.firstChild
       ;
@@ -37,7 +37,7 @@ define(["dojo/dom-class"],function(domClass){
         domClass.remove(gridToggle,"gridToggleX");
         for(var i = 0, j = gdata.length;i<j;i++){
           var currOID = gdata[i].OBJECTID;
-          var currRow = getRow(currOID);
+          var currRow = oidToRow(currOID);
           if(OIDs[currOID]) domClass.add(currRow,"hiddenGridToggle") 
         }
         showing = false;
@@ -48,14 +48,14 @@ define(["dojo/dom-class"],function(domClass){
         domClass.add(gridToggle,"gridToggleX");
       for(var i = 0, j = gdata.length;i<j;i++){
         var currOID = gdata[i].OBJECTID;
-        var currRow = getRow(currOID);
+        var currRow = oidToRow(currOID);
         if(OIDs[currOID]) domClass.remove(currRow,"hiddenGridToggle")
       }
         showing = true;
       }
     }
 
-    function getRow(oid){
+    function oidToRow(oid){
         return scroller.firstChild.childNodes[shuffleTracker[oid-1]];
     }
 
@@ -71,9 +71,14 @@ define(["dojo/dom-class"],function(domClass){
       gridToggle = scroller.getElementsByClassName('gridToggle')[toggleCount];
     }
 
+    function getRow(){
+      return gridToggle.parentNode.parentNode.parentNode;
+    }
+
     return { addHighlight:addHighlight
            , removeHighlight:removeHighlight
            , setNode:setNode
+           , getRow:getRow
            };
   };
 })

@@ -121,6 +121,7 @@ function( BorderContainer
 
    		var rasterUrl = "http://mrsbmapp00642/ArcGIS/rest/services/BATH/Web_Rr/MapServer" 
    		var dataUrl = "http://mrsbmapp00642/ArcGIS/rest/services/BATH/data_out/MapServer/0?f=json"
+   		var topoUrl = "http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer";
 
    		var qt = new QueryTask(dataUrl)
    		var qry = new Query()
@@ -131,15 +132,17 @@ function( BorderContainer
    		var timeSlider;
    		var spatialRef = new SpatialReference(102100);
    		var intExt = new Extent(-13612000, 4519000,-13405000, 4662600,spatialRef)
-      var map = new Map("mapDiv", {extent:intExt,basemap:"topo"})
+      var map = new Map("mapDiv", {extent:intExt/*,basemap:"topo"*/})
       var tiout
       var solidLine = SimpleLine.STYLE_SOLID;
 			var solidFill = SimpleFill.STYLE_SOLID
       var blank = new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([255, 255, 255, 0.001]), 1), new Color([0, 0, 0, 0.001]))
+     	var topoMap = new TiledLayer(topoUrl);
      	var rasterLayer = new DynamicLayer(rasterUrl, {id:"raster"})
 			var topoOn = 1;
 			var satOn = 0;
 window.map = map
+			map.addLayer(topoMap);
 	
 		rasterLayer.setVisibleLayers([-1]);
 
@@ -218,7 +221,7 @@ window.map = map
 	  features = featureSet.features, featureCount=features.length, IE =!!document.all, ie9, fx,
 		outlines, grid, gridObject, dScroll, outlineMouseMove, outlineTimeout,
 		mouseDownTimeout, previousRecentTarget, justMousedUp = false,  outMoveTime = 0,
-	 	identifyUp, identOff = 1, measure, tooltip, rPConHeight, sedToggle,
+	 	identifyUp, identOff = 1, measure, tooltip, rPConHeight, sedToggle, satMap,
 	 	crossTool, identTool, meaTool;
 		var geoArr, splitGeoArr, geoBins, selectedGraphics =[], selectedGraphicsCount = 0,
 		legend, toggleRightPane, eventFeatures= [],
@@ -234,7 +237,7 @@ window.map = map
 		rastersShowing = {},
 		crossAnchor = dom.byId("cros"),
 		arro = dom.byId("arro"),
-		zSlid = dom.byId("mapDiv_zoom_slider"),
+		zSlid =dom.byId("mapDiv_zoom_slider"),
 		scaleBarLabels = dquery('.esriScalebarLabel'),
 		lP = dom.byId("lP"),
 		noClick = dom.byId("noClick"),
@@ -263,9 +266,11 @@ window.map = map
 
 		outlines.setRenderer(new SimpleRenderer(blank));
     map.addLayer(outlines);
-
-
 		eventFeatures[eventFeatures.length]=outlines;
+
+		satMap = new TiledLayer("http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer");
+	  map.addLayer(satMap);
+	  satMap.hide();
 
 
 
@@ -425,13 +430,13 @@ console.log('grid')
 				rastersAsOIDs = timeUpdate.rastersAsOIDs;
 				for(var i = 0, j = gridData.length;i<j;i++){
 					currOID = gridData[i].OBJECTID;
+					if(currOID === j) continue;
 					if(oidStore[currOID])
 						clearStoredOID(currOID, 1, 1);
 					currGraphic = oidToGraphic(currOID);
 					currRow = oidToRow(currOID);
 					currTime =+gridData[i].__Date
 					if(currTime<startTime||currTime>endTime){
-						if(!domClass.contains(currRow,"gridToggle")){
 							domClass.add(currRow, "hiddenRow");
 							if(map.layerIds[2]){
 								oidRasterIndex = currOID-1;
@@ -440,12 +445,11 @@ console.log('grid')
 									if(currentRasters[k] === oidRasterIndex){
 										splice(currentRasters, k);
 										k--;
-									}
-								}
+								  }
+							  }
 							}
 							insideTimeBoundary[currOID] = 0;
 							currGraphic.setSymbol(blank);
-						}
 					}else{
 						if(domClass.contains(currRow, "hiddenRow")){
 							domClass.remove(currRow, "hiddenRow");
@@ -799,24 +803,32 @@ console.log('post grid');
 
 		var DJblack = new Color([0, 0, 0, 0])
 			, symbols = {
+						grethin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([18, 160, 0]), 0.5), DJblack),
+						magthin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([221, 4, 178]), 0.5), DJblack),
+						bluthin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([50, 84, 255]), 0.5), DJblack),
+						redthin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([255, 0, 0]), 0.5), DJblack),
 						gre: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([18, 160, 0]), 1.5), DJblack),
 						mag: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([221, 4, 178]), 1.5), DJblack),
 						blu: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([50, 84, 255]), 1.5), DJblack),
 						red: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([255, 0, 0]), 1.5), DJblack),
-						grehi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([18, 160, 0]), 6), DJblack),
-						maghi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([221, 4, 178]), 6), DJblack),
-						bluhi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([50, 84, 255]), 6), DJblack),
-						redhi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([255, 0, 0]), 6), DJblack)
+						grehi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([18, 160, 0]), 4), DJblack),
+						maghi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([221, 4, 178]), 4), DJblack),
+						bluhi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([50, 84, 255]), 4), DJblack),
+						redhi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([255, 0, 0]), 4), DJblack)
 					}
 			, satSym ={
+					magthin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([252, 109, 224]), 0.5), DJblack),
+					bluthin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([119, 173, 255]), 0.5), DJblack),
+					redthin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([243, 63, 51]), 0.5), DJblack),
+					grethin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([24, 211, 48]), 0.5), DJblack),
 					mag: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([252, 109, 224]), 1.5), DJblack),
 					blu: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([119, 173, 255]), 1.5), DJblack),
 					red: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([243, 63, 51]), 1.5), DJblack),
 					gre: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([24, 211, 48]), 1.5), DJblack),
-					maghi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([252, 109, 224]), 6), DJblack),
-					bluhi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([119, 173, 255]), 6), DJblack),
-					redhi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([243, 63, 51]), 6), DJblack),
-					grehi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([24, 211, 48]), 6), DJblack),
+					maghi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([252, 109, 224]), 4), DJblack),
+					bluhi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([119, 173, 255]), 4), DJblack),
+					redhi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([243, 63, 51]), 4), DJblack),
+					grehi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([24, 211, 48]), 4), DJblack),
 			};
    		ie9 =(DOC.all&&DOC.addEventListener&&!window.atob)?true:false;
    		if(ie9) fx = require("dojo/_base/fx", function(fx){return fx});
@@ -869,14 +881,15 @@ console.log('post grid');
     });
 
     function setExtent(extent){
-    	//var bmap=map.getLayersVisibleAtScale()[0];
-    	//bmap.hide();
+   // 	var bmap=map.getLayersVisibleAtScale()[0];
+  //  	bmap.hide();
     	map.setExtent(extent);
-    //	bmap.show();
+  //  	bmap.show();
     }
 
 		showSat = function(){										//turn on imagery
-			map.setBasemap('satellite'); //convenient... yet slower on cached tiles. Used to use visibility
+		  satMap.show();
+		  topoMap.hide();
 			satOn=1;
 			topoOn=0;
 			domClass.remove(topo,"currentbmap");
@@ -885,7 +898,8 @@ console.log('post grid');
 			redrawAllGraphics(tiout.graphics);
 		};
 		showTopo = function(){
-			map.setBasemap('topo');
+		  topoMap.show();
+		  satMap.hide();
 			satOn=0;
 			topoOn=1;
 			domClass.remove(sat,"currentbmap");
@@ -894,7 +908,8 @@ console.log('post grid');
 			redrawAllGraphics(tiout.graphics);
 		};
 		basemapOff = function(){
-			map.getLayersVisibleAtScale()[0].hide();
+			satMap.hide();
+			topoMap.hide();
 			satOn=0;
 			topoOn=0;
 			domClass.remove(sat,"currentbmap");
@@ -908,11 +923,13 @@ console.log('post grid');
 				, lev = zoomObj.level
 				;
 
-			if(lev > 17&&previousLevel<18&&topoOn) //extend topo to 18, 19 with satellite
-				map.setBasemap('satellite');
-			else if(lev<18&&previousLevel > 17&&topoOn)
-				map.setBasemap('topo');
-
+			if(lev > 17&&previousLevel<18&&topoOn){ //extend topo to 18, 19 with satellite
+				satMap.show();
+		  	topoMap.hide();
+			}else if(lev<18&&previousLevel > 17&&topoOn){
+				topoMap.show();
+		  	satMap.hide();
+		  }
 			previousLevel = lev;
 			offs = offs>10?offs:10;
 			tiout.setMaxAllowableOffset(offs);
@@ -1052,6 +1069,7 @@ console.log('post grid');
    				var key = e.target.textContent.slice(0, 3);
    				switch (key){
 		   			case "Zoo":
+		   			  if (!zSlid)zSlid = dom.byId("mapDiv_zoom_slider")
 		   				domClass.toggle(zSlid,"helpglow");
 		   				break;
 		   			case "Glo":
@@ -1381,7 +1399,7 @@ console.log('post grid');
 			}
 			selected = geoSearch.prevArr;
 			if(selected.length){
-				if(map.getScale()>73000)                          
+				if(map.getScale()>73000)
 					setExtent(oidToGraphic(selected[0])._extent.expand(1.3));
 				gridObject.setVisibleRasters(selected, 0);
 				gridObject.checkImageInputs(selected);
@@ -1477,14 +1495,15 @@ console.log('post grid');
 																					//apply highlighting logic to an array
 		function redrawAllGraphics(graphics){    
 			console.log("redrawing")
-				darr.forEach(graphics, function(v){
-					var oid = v.attributes.OBJECTID;
-					if(oidStore[oid])
-						caCh(oid,"hi", 1);
+				for(var i =0, j = graphics.length;i<j;i++){
+					var oid = graphics[i].attributes.OBJECTID;
+					if(insideTimeBoundary[oid]){
+						if(oidStore[oid])
+							caCh(oid,"hi", 1);
 					else
-						if(insideTimeBoundary[oid])
 							caCh(oid,"", 1);
-				});
+					}
+				}
 		}
 																//main highlighting logic, separated by year with different basemap
 		function caCh(oid, hi, refresh){
@@ -1501,8 +1520,7 @@ console.log('post grid');
 				date = features[oid-1].attributes.Date;
 				color = getColor(date);
 				row = gridObject.oidToRow(oid);
-				graphic.setSymbol(symbo[color+hi]);
-			//	console.log(row);
+
 				if(!refresh){
 					if (hi!== ""){
 						domClass.add(row,"highl"+color);
@@ -1510,6 +1528,12 @@ console.log('post grid');
 						domClass.remove(row,"highl"+color);
 					}
 				}
+
+				if(previousLevel > 12){
+					if (hi) hi="";
+					else color+="thin";
+				}
+				graphic.setSymbol(symbo[color+hi]);
 			}
 		}
 

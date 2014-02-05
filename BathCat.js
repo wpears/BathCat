@@ -231,6 +231,7 @@ window.map = map
 	var	layerArray = new Array(featureCount),
 		oidArray = new Array(featureCount),
 		oidStore = new Array(featureCount),
+		highlighted = new Array(featureCount),
 		gdata = new Array(featureCount),
 		formattedDates = new Array(featureCount),
 		insideTimeBoundary = new Array(featureCount),
@@ -279,11 +280,13 @@ window.map = map
 				layerArray[i] = i;
 				oidArray[i] = i+1;
 				oidStore[i] = 0;
+				highlighted[i] = 0;
 				insideTimeBoundary[i] = 1;
 				rastersShowing[i+1] = 0;
 				formattedDates[i]= getDate(features[i].attributes.Date);				
 			}
 		})();
+		highlighted[featureCount] = 0;
 
 		(function(){
 			for(var i = 0; i<featureCount; i++){
@@ -454,7 +457,7 @@ console.log('grid')
 						if(domClass.contains(currRow, "hiddenRow")){
 							domClass.remove(currRow, "hiddenRow");
 							insideTimeBoundary[currOID] = 1;
-							caCh(currOID, "", 0);
+							caCh(currOID, "", 1);
 						}
 					}
 				}
@@ -546,7 +549,7 @@ console.log('grid')
 
 			grid.on(".dgrid-cell:mouseover", function(e){
 				var oid = getOIDFromGrid(e);
-				if(oid)caCh(oid,"hi", 0);	
+				if(oid)caCh(oid,"hi", 1);	
 			});
 
 
@@ -555,7 +558,7 @@ console.log('grid')
 				if(oidStore[oid])
 					return;
 				else
-					caCh(oid,"", 0);
+					caCh(oid,"", 1);
 			});
 
 			function clearAndSetOID(oid, attributes){
@@ -563,7 +566,7 @@ console.log('grid')
 				storeOID(oid);
 				geoSearch.prevArr.length = 1;
 				geoSearch.prevArr[0] = oid;
-				caCh(oid,"hi", 0);
+				caCh(oid,"hi", 1);
 				infoFunc(attributes);
 			}
 			grid.on(".dgrid-cell:mousedown", function(e){	//grid click handler
@@ -769,7 +772,7 @@ console.log('post grid');
 
 		function clearStoredOID(oid, doSplice, fromGrid){
 			var oidIndex = geoSearch.prevArr.indexOf(oid);
-			caCh(oid,"", 0);
+			caCh(oid,"", 1);
 			if(oidStore[oid]){
 				oidStore[oid] = 0;
 				if(fromGrid&&oidIndex>-1)splice(geoSearch.prevArr, oidIndex);
@@ -817,10 +820,10 @@ console.log('post grid');
 						redhi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([255, 0, 0]), 4), DJblack)
 					}
 			, satSym ={
-					magthin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([252, 109, 224]), 0.5), DJblack),
-					bluthin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([119, 173, 255]), 0.5), DJblack),
-					redthin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([243, 63, 51]), 0.5), DJblack),
-					grethin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([24, 211, 48]), 0.5), DJblack),
+					magthin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([252, 109, 224]), 1), DJblack),
+					bluthin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([119, 173, 255]), 1), DJblack),
+					redthin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([243, 63, 51]), 1), DJblack),
+					grethin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([24, 211, 48]), 1), DJblack),
 					mag: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([252, 109, 224]), 1.5), DJblack),
 					blu: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([119, 173, 255]), 1.5), DJblack),
 					red: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([243, 63, 51]), 1.5), DJblack),
@@ -1369,7 +1372,7 @@ console.log('post grid');
 				if(identOff)map.setMapCursor("default");
 				outlineMouseMove.remove();
 				outlineMouseMove = null;
-				geoSearch({mapPoint:{x:0, y:0}}, 0);
+				geoSearch(null, 0);
 
 		});
 
@@ -1415,35 +1418,42 @@ console.log('post grid');
 			console.log("searching")
 			var timee=Date.now();
 			var i = 0, j = geoSearch.binLength-1, curr, oid, temp, binTemp, prevArr = geoSearch.prevArr, currArr = geoSearch.currArr,
-			mapX = e.mapPoint.x, mapY = e.mapPoint.y, breakMax = mapX+1000, binArr, someTargeted = 0;
-				if(mapX!== 0){
-					for(;i<j;i++){
-						if(mapX<geoBins[i+1])
-							break;
-					}
-					binArr = splitGeoArr[i]||splitGeoArr[i-1];
-					geoSearch.lastMouseBin = binArr;
-					i = 0;
-				}else{
-					binArr = geoSearch.lastMouseBin;
+			mapX, mapY, breakMax, binArr, someTargeted = 0;
+
+			if(e === null) binArr = geoSearch.lastMouseBin;
+			else{
+				mapX = e.mapPoint.x;
+				mapY = e.mapPoint.y;
+				breakMax = mapX+1000;
+
+				for(;i<j;i++){ //find the right bin
+					if(mapX<geoBins[i+1])
+						break;
 				}
-				if(mouseDown&&binArr!== geoSearch.lastClickBin){
-					binTemp = binArr;
+				binArr = splitGeoArr[i]||splitGeoArr[i-1];
+				geoSearch.lastMouseBin = binArr;
+				i = 0;
+			}
+			if(mouseDown&&binArr!== geoSearch.lastClickBin){
+				/*	binTemp = binArr;
 					binArr = binArr.concat(geoSearch.lastClickBin);
 					geoSearch.lastClickBin = binTemp;
-					binTemp = null;
-				}
+					binTemp = null;*/
+				clearAllStoredOIDs();
+				geoSearch.lastClickBin = binArr;
+			}
 
 			j = binArr.length;
 			for(;i<j;i++){
 				curr = binArr[i];
 				oid = curr.oid;
-				if(curr.xmin>breakMax&&!mouseDown)
+				if(curr.xmin>breakMax&&!mouseDown){
 					break;
+				}
 				if(insideTimeBoundary[oid]){
 					if(curr.xmax>= mapX&&curr.xmin<= mapX&&curr.ymin<= mapY&&curr.ymax>= mapY){
 						someTargeted = 1;
-						caCh(oid,"hi", 0);
+						caCh(oid,"hi", 1);
 						if(identOff)map.setMapCursor("pointer");
 						if(mouseDown){
 							if(currArr.indexOf(oid)==-1){
@@ -1451,14 +1461,14 @@ console.log('post grid');
 								if(!oidStore[oid])
 									storeOID(oid);
 							}
-						}	    	
-					}else{										
+						}
+					}else{
 						if(oidStore[oid]){
 							if(mouseDown) clearStoredOID(oid, 1, 0);
 							continue;
 						}else{
 						//	console.log("clearing")
-							caCh(oid,"", 0);//clear mouseover highlight. Have to do whole bin since might be multiple highlighted
+							caCh(oid,"", 1);//clear mouseover highlight. Have to do whole bin since might be multiple highlighted
 						}
 					}
 				}
@@ -1481,7 +1491,7 @@ console.log('post grid');
 			}
 			if(!someTargeted&&mouseDown&&prevArr){ //rehighlight true selections when clicking on
 				for(var i = 0;i<prevArr.length;i++){ // TS hidden stuff
-					caCh(prevArr[i],"hi", 0);
+					caCh(prevArr[i],"hi", 1);
 					if(!oidStore[prevArr[i]])
 						storeOID(prevArr[i]);
 				}
@@ -1499,15 +1509,15 @@ console.log('post grid');
 					var oid = graphics[i].attributes.OBJECTID;
 					if(insideTimeBoundary[oid]){
 						if(oidStore[oid])
-							caCh(oid,"hi", 1);
+							caCh(oid,"hi", 0);
 					else
-							caCh(oid,"", 1);
+							caCh(oid,"", 0);
 					}
 				}
 		}
 																//main highlighting logic, separated by year with different basemap
-		function caCh(oid, hi, refresh){
-	//		console.log(oid,'calling caCh')
+		function caCh(oid, hi, noRefresh){
+			if(noRefresh&&(hi&&highlighted[oid]||!hi&&!highlighted[oid])) return;
 			var symbo = topoOn?symbols:satSym
 				, date
 			  , graphic
@@ -1521,11 +1531,13 @@ console.log('post grid');
 				color = getColor(date);
 				row = gridObject.oidToRow(oid);
 
-				if(!refresh){
+				if(noRefresh){
 					if (hi!== ""){
 						domClass.add(row,"highl"+color);
+						highlighted[oid]=1;
 					}else{
 						domClass.remove(row,"highl"+color);
+						highlighted[oid]=0;
 					}
 				}
 

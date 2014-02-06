@@ -656,6 +656,8 @@ user-select: none;
   position:relative;
   border-bottom:1px solid #eeeeff;
   background-color:rgba(240,240,255,0.4);
+  text-overflow:ellipsis;
+  white-space:nowrap;
 }
 
 .gridToggle:hover{

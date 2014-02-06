@@ -231,7 +231,7 @@ window.map = map
 	var	layerArray = new Array(featureCount),
 		oidArray = new Array(featureCount),
 		oidStore = new Array(featureCount),
-		highlighted = new Array(featureCount),
+		hl = new Array(featureCount),
 		gdata = new Array(featureCount),
 		formattedDates = new Array(featureCount),
 		insideTimeBoundary = new Array(featureCount),
@@ -280,13 +280,13 @@ window.map = map
 				layerArray[i] = i;
 				oidArray[i] = i+1;
 				oidStore[i] = 0;
-				highlighted[i] = 0;
+				hl[i] = 0;
 				insideTimeBoundary[i] = 1;
 				rastersShowing[i+1] = 0;
 				formattedDates[i]= getDate(features[i].attributes.Date);				
 			}
 		})();
-		highlighted[featureCount] = 0;
+		hl[featureCount] = 0;
 
 		(function(){
 			for(var i = 0; i<featureCount; i++){
@@ -1470,7 +1470,7 @@ console.log('post grid');
 							if(mouseDown) clearStoredOID(oid, 1, 0);
 							continue;
 						}else{
-							caCh(oid,"", 1);//clear mouseover highlight. Have to do whole bin since might be multiple highlighted
+							caCh(oid,"", 1);//clear mouseover highlight. Have to do whole bin since might be multiple hl
 						}
 					}
 				}
@@ -1519,39 +1519,37 @@ console.log('post grid');
 				}
 		}
 																//main highlighting logic, separated by year with different basemap
-		function caCh(oid, hi, noRefresh){
-			if(noRefresh&&(hi&&highlighted[oid]||!hi&&!highlighted[oid])) return;
+function caCh(oid,hi,evt){if(evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var symbo=topoOn?symbols:satSym,date,graphic=oidToGraphic(oid),row;if(!graphic)return;date=features[oid-1].attributes.Date;color=getColor(date);if(evt){row=gridObject.oidToRow(oid);if(hi!==""){domClass.add(row,"highl"+color);hl[oid]=1;}else{domClass.remove(row,"highl"+color);hl[oid]=0;}}if(previousLevel>12){if(hi)hi="";elsecolor+="thin";}graphic.setSymbol(symbo[color+hi]);}
+
+/*		function caCh(oid, hi, evt){
+			if(evt&&(hi&&hl[oid]||!hi&&!hl[oid])) return;
 			var symbo = topoOn?symbols:satSym
 				, date
-			  , graphic
+			  , graphic = oidToGraphic(oid)
 				,	row
 				;
-			if(features[oid-1]){
-				graphic = oidToGraphic(oid);
-				if(!graphic) return;
-				
-				date = features[oid-1].attributes.Date;
-				color = getColor(date);
+
+			if(!graphic) return;
+
+			date = features[oid-1].attributes.Date;
+			color = getColor(date);
+			if(evt){
 				row = gridObject.oidToRow(oid);
-
-				if(noRefresh){
-					if (hi!== ""){
-						domClass.add(row,"highl"+color);
-						highlighted[oid]=1;
-					}else{
-						domClass.remove(row,"highl"+color);
-						highlighted[oid]=0;
-					}
+				if (hi!== ""){
+					domClass.add(row,"highl"+color);
+					hl[oid]=1;
+				}else{
+					domClass.remove(row,"highl"+color);
+					hl[oid]=0;
 				}
-
-				if(previousLevel > 12){
-					if (hi) hi="";
-					else color+="thin";
-				}
-				graphic.setSymbol(symbo[color+hi]);
 			}
+			if(previousLevel > 12){
+				if (hi) hi="";
+				else color+="thin";
+			}
+			graphic.setSymbol(symbo[color+hi]);
 		}
-
+*/
 		function getColor(date){
 			if (date < 1293840000000) return "gre";
 			if (date < 1325376000000) return "mag";

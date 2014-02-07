@@ -489,81 +489,96 @@ li{
 	margin:7px 0;
 }
 
+.esriSimpleSliderIncrementButton:hover,.esriSimpleSliderDecrementButton:hover{
+  color:#050505;
+}
+.esriSimpleSliderIncrementButton:active,.esriSimpleSliderDecrementButton:active{
+  padding-top:1px;
+  height:29px;
+}
+
+.esriSimpleSliderDecrementButton{
+  margin-top:30px;
+  border-top:1px solid #666;
+}
 
 #fex{
-  background: rgb(0,0,255) url(images/fex.png) no-repeat;
-  width:20px;
-  height:20px;
-  top:73px;
-  left:11px;
+  background: url(images/globe.png) no-repeat;
+  width:24px;
+  height:24px;
+  top:40px;
+  left:12px;
+  opacity:0.8;
   border-radius:15px;
 }
 #fex:hover{
   cursor:pointer;
-  box-shadow: 0 0 1px 0 #003793,
-             inset 0 0 1px 0 #94bcfe;
+  opacity:1;
+
 }
 #fex:active{
-  top:74px;
+  top:41px;
 }
 #bmaps{
-  top:5px;
-  left:45px;
-  width:121px;
+  bottom:45px;
+  left:15px;
+  width:150px;
 }
 /*.dijitTooltipConnector{
   visibility:hidden;
 }*/
+.bmapspan{
+  position:absolute;
+  bottom:0;
+  margin-bottom:-4px;
+  margin-left:21px;
+}
 .bmap{
-  line-height:1.3em;
-  color:#666;
-  border: 1px #888 solid;
-  text-align:center;
-  font-size:0.875em;
-  padding:4px;
-  background-color:rgb(210,225,249);
-  background-image:-webkit-linear-gradient(top, rgba(243,243,243,0.8), rgba(210,225,249,0.8));
-  background-image:-moz-linear-gradient(top, rgba(243,243,243,0.8), rgba(210,225,249,0.8));
+  position:relative;
+  font-size:12px;
+  font-weight:500;
+  color:#fdfdfd;
+  text-shadow:0 0 2px #333,
+              0 0 2px #333;
   border-radius:2px;
-   box-shadow: 0px 1px 1px 0 #333,
-             inset 0px 1px 1px 1px #eee;
+  border:1px solid #888;
+  box-shadow: 0px 1px 1px 0 #333,
+             inset 0px 1px 1px 0px #eee;
 }
 
 .bmap:hover{
-  color:#111;
   cursor:pointer;
-  background-color:rgba(210,225,249,0.9);
-background-image:-webkit-linear-gradient(top, rgba(243,243,243,1), rgba(210,225,249,1));
-background-image:-moz-linear-gradient(top, rgba(243,243,243,1), rgba(210,225,249,1));
    box-shadow: 0px 1px 1px 0 #222,
-             inset 0px 1px 1px 0 #eff;
+             inset 0 1px 2px 0 #eff,
+             inset 0 -1px 2px 0 #444;
 }
 .bmap:active{
-  color:#111;
-  padding:5px 4px 3px 4px;
-  box-shadow: inset 0 1px 2px 0 #857ca5;
-  background-color:#a0bce5;
-  background-image:-webkit-linear-gradient(top,#a0bce5,#f0f5fd);
-  background-image:-moz-linear-gradient(top,#a0bce5,#f0f5fd);
+  box-shadow: inset 0 1px 2px 0 #888,
+              inset 0 -1px 1px 0 #ddd;
   border-top:none;
 }
 .currentbmap,.currentbmap:hover{
-  padding:5px 4px 3px 4px;
-  color:#111;
-  box-shadow: inset 0 1px 2px 0 #857ca5;
-  background-image:-webkit-linear-gradient(top,#a0bce5,#f0f5fd);
-  background-image:-moz-linear-gradient(top,#a0bce5,#f0f5fd);
+  box-shadow: inset 0 1px 2px 0 #888,
+              inset 0 -1px 1px 0 #ddd;
 }
 #topo{
+  background-image:url(images/topo60.png);
   float:left;
-  width:50px;
+  width:60px;
+  height:58px;
 }
 #sat{
-float:left;
-margin-left:2px;
+  background-image:url(images/sat60.png);
+  width:60px;
+  height:58px;
+  float:left;
+  margin-left:4px;
+}
+#topo >.bmapspan{
+  margin-left:17px;
 }
 #mapDiv_zoom_slider{
-  left:5px;
+  left:8px;
   top:5px;
 }
 .legend{
@@ -869,7 +884,7 @@ th:active{
   border-radius: 9px;
 }
 
-.esriSimpleSlider div {
+.esriSimpleSlider > div {
   width: 30px;
   height: 30px;
   font-size: 25px;
@@ -880,18 +895,4 @@ th:active{
 
 .esriSimpleSliderVertical .esriSimpleSliderIncrementButton {
   border-bottom: 1px solid #666666;
-}
-
-.esriSimpleSliderHorizontal .esriSimpleSliderIncrementButton {
-  border-right: 1px solid #666666;
-  float: left;
-}
-
-.esriSimpleSliderHorizontal .esriSimpleSliderDecrementButton {
-  float: right;
-}
-
-.esriSimpleSliderHorizontal .esriSimpleSliderDecrementButton.dj_ie67Fix {
-  float: none;
-  text-align: center;
 }

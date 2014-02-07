@@ -1519,7 +1519,7 @@ console.log('post grid');
 				}
 		}
 																//main highlighting logic, separated by year with different basemap
-function caCh(oid,hi,evt){if(evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var symbo=topoOn?symbols:satSym,date,graphic=oidToGraphic(oid),row;if(!graphic)return;date=features[oid-1].attributes.Date;color=getColor(date);if(evt){row=gridObject.oidToRow(oid);if(hi!==""){domClass.add(row,"highl"+color);hl[oid]=1;}else{domClass.remove(row,"highl"+color);hl[oid]=0;}}if(previousLevel>12){if(hi)hi="";elsecolor+="thin";}graphic.setSymbol(symbo[color+hi]);}
+function caCh(oid,hi,evt){if(evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var symbo=topoOn?symbols:satSym,date,graphic=oidToGraphic(oid),row;if(!graphic)return;date=features[oid-1].attributes.Date;color=getColor(date);if(evt){row=gridObject.oidToRow(oid);if(hi!==""){domClass.add(row,"highl"+color);hl[oid]=1;}else{domClass.remove(row,"highl"+color);hl[oid]=0;}}if(previousLevel>12){if(hi)hi="";else color+="thin";}graphic.setSymbol(symbo[color+hi]);}
 
 /*		function caCh(oid, hi, evt){
 			if(evt&&(hi&&hl[oid]||!hi&&!hl[oid])) return;

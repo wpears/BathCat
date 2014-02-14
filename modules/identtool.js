@@ -28,7 +28,7 @@ function( addSymbol
         , domClass
         , Color
         ){    
-  return function( container, anchor, url, layerArray, options ){
+  return function( anchor, url, layerArray, options ){
       var W = window
         , DOC = document
         , map = options.map||W.esri.map||W.map
@@ -42,35 +42,24 @@ function( addSymbol
         , dataPointSymbol = new SimpleMarker({"size":6,"color":new Color([0, 0, 0])})
         , noDataPointSymbol = new SimpleMarker(SimpleMarker.STYLE_CIRCLE, 6, new SimpleLine(solidLine, new Color([180, 180, 180]), 1), new Color([140, 140, 140]))
         , textLabel
-        , idCount = 0
         , self
         , mouseDownX
         , mouseDownY
-        , idCon
-        , resCon
+        , listeners = []
         ;
 
-      function buildPane(){
-        idCon = DOC.createElement('div');
-        resCon = DOC.createElement('div');
-        var idRes = DOC.createElement('strong');
-        idCon.id='idCon';
-        domClass.add(idCon, "atop selectable");
-        idRes.id='idRes';
-        idRes.title='NAVD 88 Elevation';
-        idRes.textContent='Identify Results:';
-        resCon.id='resCon';
-        idCon.appendChild(idRes);
-        idCon.appendChild(DOC.createElement('br'));
-        idCon.appendChild(resCon);
-        container.appendChild(idCon);
+   
+//console.log(pass symbol to renderIdent)
+// get point, add to graphic.
+// on ident callback
+//create a custom tooltip (just div with project name etc)
+//attach handlers
+// add textLabel with name
+
+      function createTooltip(screenPoint){
+        //NAVD88 Elevation
       }
 
-      function addIdentGraphic(point){
-        idCount++;
-        addSymbol(map, point, dataPointSymbol, self.graphics);
-        textLabel = addTextSymbol(map, idCount, point, 0, self.labels, self.handlers);
-      }
       function setNoData(frag){
         var sp=DOC.createElement('span');
         sp.innerHTML=idCount+".&nbsp;"+"No Data";
@@ -79,34 +68,29 @@ function( addSymbol
         self.graphics[self.graphics.length-1].setSymbol(noDataPointSymbol);
         self.labels[self.labels.length-1].setSymbol(textLabel);
       } 
-      function renderIdent(idArr, idCount){
+      function renderIdent(idArr, sym, screenPoint){
+          var noData = 1;
         if(idArr){
-          resCon.appendChild(DOC.createElement('p')); //separate items with empty p
-          var frag=DOC.createDocumentFragment();
-
-          if(idArr[0]!==undefined){
-            idArr.forEach(function(v, i){
-              if(v.value === "NoData")
-                setNoData(frag);
-              else{
-                var sp = DOC.createElement('span');
-                sp.innerHTML=idCount+".&nbsp;"+names.graphics[v.layerId].attributes.Project+": "+Math.round(v.value*10)/10+ " ft<br/>";
-                frag.appendChild(sp);
-              }
+           var tooltip = createTooltip(screenPoint);
+          idArr.forEach(function(v, i){
+            if(noData && v.value !== "NoData")
+              noData = 0;
+            sp.innerHTML=idCount+".&nbsp;"+names.graphics[v.layerId].attributes.Project+": "+Math.round(v.value*10)/10+ " ft<br/>";
+            frag.appendChild(sp);
             });
-          }else{
-            setNoData(frag);
-          }
-          resCon.appendChild(frag);
-          frag=null;   
-          rpCon.scrollTop = rpCon.scrollHeight;
+        }else{
+          setNoData(frag);
         }
+        textLabel = addTextSymbol(map, Math.round(idArr[0].value*10)/10, sym.geometry, 0, self.labels, self.handlers);
       }
-      function clickCallback(point){
-        addIdentGraphic(point);
-        var identCount = idCount;
-        identify(point).then(function(idArr){
-          renderIdent(idArr, identCount);
+        
+
+      function clickCallback(e){
+        var mapPoint = e.mapPoint;
+        var screenPoint = e.screenPoint;
+        var sym = addSymbol(map, mapPoint, dataPointSymbol, self.graphics);
+        identify(mapPoint).then(function(idArr){
+          renderIdent(idArr, sym, screenPoint);
         });
       }
 
@@ -128,11 +112,6 @@ function( addSymbol
         },              
         start:function(){
           this.revive();
-          if(container.isDefault&&container.isDefault()){//container has start text
-            container.replaceDefault();
-          }else{
-            container.show();
-          }
         },
         idle:function(){
           FeatureEvents.enable(eventFeatures)
@@ -149,24 +128,19 @@ function( addSymbol
           this.handlers[0] = map.on("mouse-down", function(evt){mouseDownX = evt.pageX;mouseDownY = evt.pageY;});
           this.handlers[1] = map.on("mouse-up", function(e){
           if(e.pageX<mouseDownX+10&&e.pageX>mouseDownX-10&&e.pageY<mouseDownY+10&&e.pageY>mouseDownY-10)
-            clickCallback(e.mapPoint)});
+            clickCallback(e)});
           identOff = 0;
         },
         stop:function(){
           if(DOC.getElementsByClassName("idle")[0] !== ident) this.idle();
-          idCon.style.display = "none";
           clearNode(resCon);
           clearGraphics(map,this.graphics);
           clearGraphics(map,this.labels);
           this.graphics.length = 0;
           this.labels.length = 0;
-          idCount = 0;
-          if(container.isClear&&container.isClear()){
-            container.setDefault();
-          }
+          
         },
         isShowing:function(){return DOC.getElementsByClassName("activeTool")[0] === ident||DOC.getElementsByClassName("idle")[0] === ident},
-        getNode:function(){return idCon}
       };  
     }
 });

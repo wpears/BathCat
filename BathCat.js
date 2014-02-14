@@ -133,7 +133,7 @@ function( BorderContainer
    		var spatialRef = new SpatialReference(102100);
    		var intExt = new Extent(-13612000, 4519000,-13405000, 4662600,spatialRef)
       var map = new Map("mapDiv", {extent:intExt/*,basemap:"topo"*/})
-      var tiout
+      var tiout;
       var solidLine = SimpleLine.STYLE_SOLID;
 			var solidFill = SimpleFill.STYLE_SOLID
       var blank = new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([255, 255, 255, 0.001]), 1), new Color([0, 0, 0, 0.001]))
@@ -210,9 +210,9 @@ window.map = map
   		});
 
 	on.once(tiout, "load", function(){
+		console.log("tiout",tiout);
     tiout.setRenderer(new SimpleRenderer(blank));
     map.addLayer(tiout);
-    redrawAllGraphics(tiout);
   });
 
 
@@ -689,10 +689,6 @@ console.log('grid')
 				if(visibleRasterOIDs.length>1){//working identify logic below
 					domClass.replace(identAnchor,"clickable","unclick");
 					domClass.replace(crossAnchor,"clickable","unclick");
-				}else if(visibleRasterOIDs.length == 1&&identTool&&identTool.getNode().style.display == "block"){
-					on.emit(identAnchor,"mousedown",{bubbles:true});
-					domClass.replace(identAnchor,"unclick","clickable");
-					domClass.replace(crossAnchor,"unclick","clickable");
 				}else{
 					domClass.replace(identAnchor,"unclick","clickable");
 					domClass.replace(crossAnchor,"unclick","clickable");
@@ -1131,7 +1127,7 @@ console.log('post grid');
    		on(W, "resize", function(e){			//resize map on browser resize
 			var winHeight = W.innerHeight
 				, oHeightAndMarginTop
-				, idCon=identTool?identTool.getNode():null;
+				, idCon=null;
 			rPConHeight = winHeight - 257;
 			scroHeight = dScroll.clientHeight;
 			map.resize();
@@ -1258,7 +1254,7 @@ console.log('post grid');
 			}
 		}
 
-    function makeIdentContainer(node,previous){
+    /*function makeIdentContainer(node,previous){
    		node.show = function(){
    			if(!rP.isShowing()){
    				clearNode(previous);
@@ -1310,7 +1306,9 @@ console.log('post grid');
 				}
 			};
    	return node;
-   }       
+   }       */
+
+
 /************TOOLS***************/
 		tooltip = Tooltip(noClick);
 
@@ -1333,7 +1331,7 @@ console.log('post grid');
 										 , names:outlines
 										 , tooltip:tooltip
 									   };
-				identTool = IdentTool(makeIdentContainer(rpCon,dataNode), identAnchor, rasterUrl, layerArray, options); 
+				identTool = IdentTool(identAnchor, rasterUrl, layerArray, options); 
 				identTool.init(e);
 		}); 
 
@@ -1415,7 +1413,7 @@ console.log('post grid');
 		geoSearch.lastClickBin =[];
 
 		function geoSearch(e, mouseDown){//think about using two sorted arrays, one mins one maxs
-			console.log("searching")
+		//	console.log("searching")
 			var timee=Date.now();
 			var i = 0, j = geoSearch.binLength-1, curr, oid, temp, binTemp, prevArr = geoSearch.prevArr,
 			currArr = geoSearch.currArr,mapX, mapY, breakMax, binArr, someTargeted = 0;
@@ -1500,7 +1498,7 @@ console.log('post grid');
 				}
 			}
 			binArr = null;
-			console.log("done",Date.now()-timee);
+		//	console.log("done",Date.now()-timee);
 
 		}
 		
@@ -1586,6 +1584,7 @@ function caCh(oid,hi,evt){if(evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var symbo=
 		})(W)
 		
 	W.setTimeout(toggleRightPane, 300);
+	tiout.refresh() //ensure initial draw;
 	});
 
 	});

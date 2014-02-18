@@ -34,54 +34,101 @@ function( addSymbol
         , map = options.map||W.esri.map||W.map
         , rastersShowing = options.rastersShowing||null
         , eventFeatures = options.eventFeatures||[]
-        , names = options.names
-        , tooltip = options.tooltip||null
+        , names = options.names||[]
+        , dates = options.dates||[]
+        , toolTooltip = options.tooltip||null
         , identify = Identify(url, map, layerArray, rastersShowing)
+        , mapDiv = DOC.getElementById("mapDiv")
         , solidLine = SimpleLine.STYLE_SOLID
         , lineSymbol = new SimpleLine(solidLine, new Color([0, 0, 0]), 2)
         , dataPointSymbol = new SimpleMarker({"size":6,"color":new Color([0, 0, 0])})
         , noDataPointSymbol = new SimpleMarker(SimpleMarker.STYLE_CIRCLE, 6, new SimpleLine(solidLine, new Color([180, 180, 180]), 1), new Color([140, 140, 140]))
-        , textLabel
+        , noDataColor = new Color([180, 180, 180])
         , self
         , mouseDownX
         , mouseDownY
         , listeners = []
+        , nodes = []
         ;
 
    
-//console.log(pass symbol to renderIdent)
-// get point, add to graphic.
-// on ident callback
-//create a custom tooltip (just div with project name etc)
-//attach handlers
-// add textLabel with name
 
       function createTooltip(screenPoint){
-        //NAVD88 Elevation
+      //nav88elev
+        var d = DOC.createElement('div');
+        d.className = "identDiv";
+        d.style.top=(screenPoint.y-10)+'px';
+        d.style.left=(screenPoint.x+10)+'px';
+        return d;
       }
 
-      function setNoData(frag){
-        var sp=DOC.createElement('span');
-        sp.innerHTML=idCount+".&nbsp;"+"No Data";
-        textLabel.setColor(new Color([180, 180, 180]));
-        frag.appendChild(sp);
-        self.graphics[self.graphics.length-1].setSymbol(noDataPointSymbol);
-        self.labels[self.labels.length-1].setSymbol(textLabel);
-      } 
+      function show(e){
+        var sty = this.style;
+        var top = (e.offsetY-10)+"px";
+        var left = (e.offsetX+10)+"px";
+        sty.top = top;
+        sty.left = left;
+        sty.display = "block";
+      }
+
+      function hide(e){
+        this.style.display = "none";
+      }
+
+      function setNoData(sym){
+        sym.setSymbol(noDataPointSymbol);
+      }
+
       function renderIdent(idArr, sym, screenPoint){
           var noData = 1;
+          var tooltip;
+          var lastName = '';
+          var label= "No Data";
         if(idArr){
-           var tooltip = createTooltip(screenPoint);
           idArr.forEach(function(v, i){
-            if(noData && v.value !== "NoData")
+            var val = v.value;
+            var id = v.layerId;
+            var name = names[id];
+            var rnd;
+
+            if (val!== "NoData"){
+              rnd = Math.round(val*10)/10;
+              label = rnd;
               noData = 0;
-            sp.innerHTML=idCount+".&nbsp;"+names.graphics[v.layerId].attributes.Project+": "+Math.round(v.value*10)/10+ " ft<br/>";
-            frag.appendChild(sp);
+            }else
+              rnd = "No Data";
+            if (!tooltip)
+              tooltip = new createTooltip(screenPoint);
+
+            if(name !== lastName){
+              lastName = name;
+              var str = DOC.createElement('strong');
+              str.innerHTML = name;
+              tooltip.appendChild(str);
+            }
+
+            var sp = DOC.createElement('span');
+            sp.className="identEntry";
+            sp.innerHTML=dates[id]+": <span class='identValue'>"+rnd+ "</span> ft";
+            tooltip.appendChild(sp);
             });
-        }else{
-          setNoData(frag);
         }
-        textLabel = addTextSymbol(map, Math.round(idArr[0].value*10)/10, sym.geometry, 0, self.labels, self.handlers);
+
+
+        if(noData){
+          addTextSymbol(map, label, sym.geometry, 0, noDataColor, self.labels, self.handlers);
+          setNoData(sym);
+          clearNode(tooltip);
+          tooltip.parentNode.removeChild(tooltip);
+        }else{
+          addTextSymbol(map, label, sym.geometry, 0, 0, self.labels, self.handlers);
+          nodes.push(tooltip);
+          listeners.push(on(sym.getNode(),"mouseover", show.bind(tooltip)));
+          listeners.push(on(sym.getNode(),"mouseout", hide.bind(tooltip)));
+          mapDiv.appendChild(tooltip);
+        }
+
+
       }
         
 
@@ -94,18 +141,26 @@ function( addSymbol
         });
       }
 
+      function addCSS(name){
+        var firstScript = DOC.getElementsByTagName('script')[0]
+          , css = DOC.createElement('link');
+        css.rel ='stylesheet';
+        css.href =name||'modules/identtool.css';
+        firstScript.parentNode.insertBefore(css,firstScript);
+      }
+
       return {
         handlers:[],
         graphics:[],
         labels:[],
         init:function(e){
           self = this;
-          buildPane();
+          addCSS();
           function handleClick(e){
             if(domClass.contains(ident,"clickable"))
               return tools.toggle(e, self);
             else 
-              if (tooltip) tooltip(e);
+              if (toolTooltip) toolTooltip(e);
           }
           handleClick(e);
           on(ident,"mousedown", handleClick);   
@@ -133,11 +188,20 @@ function( addSymbol
         },
         stop:function(){
           if(DOC.getElementsByClassName("idle")[0] !== ident) this.idle();
-          clearNode(resCon);
           clearGraphics(map,this.graphics);
           clearGraphics(map,this.labels);
+          listeners.forEach(function(v){
+            v.remove();
+          });
+          nodes.forEach(function(v){
+            clearNode(v);
+            v.parentNode.removeChild(v);
+          })
           this.graphics.length = 0;
           this.labels.length = 0;
+          listeners.length = 0;
+          nodes.length = 0;
+
           
         },
         isShowing:function(){return DOC.getElementsByClassName("activeTool")[0] === ident||DOC.getElementsByClassName("idle")[0] === ident},

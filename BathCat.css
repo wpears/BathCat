@@ -357,6 +357,8 @@ li{
 #mapDiv {
   margin-bottom:1px;
 }
+
+
 #ident{
   background-image:url(images/ident.png);
   height:32px;
@@ -647,9 +649,6 @@ user-select: none;
   text-overflow:ellipsis;
   white-space:nowrap;
   border-color:#eee;/*#cbd5ed*/
-}
-
-.dgrid-cell{
   border-bottom:1px solid #ddddff;
 }
 

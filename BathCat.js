@@ -210,7 +210,6 @@ window.map = map
   		});
 
 	on.once(tiout, "load", function(){
-		console.log("tiout",tiout);
     tiout.setRenderer(new SimpleRenderer(blank));
     map.addLayer(tiout);
   });
@@ -234,6 +233,7 @@ window.map = map
 		hl = new Array(featureCount),
 		gdata = new Array(featureCount),
 		formattedDates = new Array(featureCount),
+		names = new Array(featureCount),
 		insideTimeBoundary = new Array(featureCount),
 		rastersShowing = {},
 		crossAnchor = dom.byId("cros"),
@@ -274,16 +274,18 @@ window.map = map
 	  satMap.hide();
 
 
-
 		(function(){
+			var att, pl, mi, ss="Soil Sed. ";
 			for(var i = 0; i<featureCount; i++){
+				att=features[i].attributes;
 				layerArray[i] = i;
-				oidArray[i] = i+1;
+				oidArray[i] = pl=i+1;
 				oidStore[i] = 0;
 				hl[i] = 0;
 				insideTimeBoundary[i] = 1;
-				rastersShowing[i+1] = 0;
-				formattedDates[i]= getDate(features[i].attributes.Date);				
+				rastersShowing[pl] = 0;
+				formattedDates[i]= getDate(att.Date);
+				names[i] = (att.Project.length<6?ss + att.Project:att.Project);
 			}
 		})();
 		hl[featureCount] = 0;
@@ -294,7 +296,7 @@ window.map = map
 				featureAttr = features[i].attributes;
 				intData.__Date = featureAttr.Date;
 				intData.Date = formattedDates[i];
-				intData.Project =(featureAttr.Project.length<6?"Soil Sed. "+featureAttr.Project:featureAttr.Project);
+				intData.Project = names[i];
 				intData.OBJECTID = featureAttr.OBJECTID;
 				gdata[i]=intData;
 			}
@@ -1015,14 +1017,14 @@ console.log('post grid');
 			if(!attr){
 				if(selectedGraphicsCount === 1){
 					var oid = selectedGraphics[0];
-					infoFunc.parseAttributes(outlines.graphics[oid-1].attributes);
+					infoFunc.parseAttributes(outlines.graphics[oid-1].attributes,oid-1);
 				}else{
 					var str ="<h2>"+selectedGraphicsCount+ " projects selected</h2><div id='multiSelectWrapper'>";
 					var count = 0;
 					var i = 0;
 					while (count < selectedGraphicsCount){
 						if (oidStore[i] === 1){
-							str+=("<span class='multiSelect'><strong>"+features[i-1].attributes.Project+
+							str+=("<span class='multiSelect'><strong>"+names[i-1]+
 								": </strong>"+formattedDates[i-1]+"</span><br/>")
 							count++;
 						}
@@ -1035,21 +1037,21 @@ console.log('post grid');
 				}
 			}else{
 				if(attr&&attr.Project)
-					infoFunc.parseAttributes(attr);	
+					infoFunc.parseAttributes(attr,attr.OBJECTID-1);	
 			}
 		};
 
-		infoFunc.parseAttributes = function(attr){
+		infoFunc.parseAttributes = function(attr,ind){
 			dataNode.style.marginTop = "0";	
-			dataNode.innerHTML = "<h2>"+(attr.Project.length<6?"Soil Sed. "+attr.Project:attr.Project)+"</h2>"+
-			"<span class = 'spirp'><strong>Collection Date: </strong>"+(new Date(attr.Date)).toUTCString().slice(4, 16)+"</span>"+
+			dataNode.innerHTML = "<h2>"+names[ind]+"</h2>"+
+			"<span class = 'spirp'><strong>Collection Date: </strong>"+formattedDates[ind]+"</span>"+
 			"<span class = 'spirp'><strong>Client: </strong>"+(attr.Client||"Groundwater Supply Assessment Section, DWR")+"</span>"+
 			"<span class = 'spirp'><strong>Waterways Covered: </strong>"+(attr.Waterways||this.WWays(attr))+"</span>"+
-			"<span class = 'spirp'><strong>Purpose: </strong>"+(attr.Purpose||"Data was collected to determine the sediment impacts of the agricultural barriers at Middle River, Grant Line Canal, and Old River near the Delta Mendota Canal. Measurements have been made since 1998 at nineteen stations. Multibeam/RTK bathymetry has been gathered since 2011. Four stations have monthly data, the rest are visited in the Fall and Spring.")+"</span>";
+			"<span class = 'spirp'><strong>Purpose: </strong>"+(attr.Purpose||infoFunc.ssMessage)+"</span>";
 			downloadNode.style.display = "block";
 		};
 
-
+		infoFunc.ssMessage = "Data was collected to determine the sediment impacts of the agricultural barriers at Middle River, Grant Line Canal, and Old River near the Delta Mendota Canal. Measurements have been made since 1998 at nineteen stations. Multibeam/RTK bathymetry has been gathered since 2011. Four stations have monthly data, the rest are visited in the Fall and Spring.";
 (function(){
 	var helpText = "<strong id = 'infoPaneTitle'>Help</strong><p>Zoom in and out with the <b>Zoom buttons</b> or the mousewheel. Shift and drag on the map to zoom to a selected area.</p><p>Go to the full extent of the data with the <b>Globe</b>.</p><p>Select map or satellite view with the <b>Basemap buttons</b>.</p><p>Browse through projects in the table. Sort the table with the column headers and collapse it with the <b>Slider</b>.</p><p>Turn on a raster by double-clicking it in the table or map, or checking its checkbox in the table.</p><ul>When a raster is displayed:<br/><li>With the <b>Identify</b> tool, click to display NAVD88 elevation at any point.</li><li>Draw a cross-section graph with the <b>Profile tool</b>. Click the start and end points of the line to generate a graph in a draggable window. Hover over points to display elevation.</li></ul><p>Use the <b>Measure tool</b> to calculate distance, area, or geographic location.</p><p>Project information and Identify results are displayed in the right pane. Toggle this pane with the <b>Arrow button</b>.</p><p>Use the <b>Time slider</b> to filter the display of features by date. Drag the start and end thumbs or click a year to only display data from that year.</p>",
 		termText = "<strong id = 'infoPaneTitle'>Terms of Use</strong><p>The data displayed in this application is for qualitative purposes only. Do not use the data as displayed in rigorous analyses. If downloading the data, familiarize yourself with the metadata before use. Not for use as a navigation aid. The data reflects measurements taken at specific time periods and the Department of Water Resources makes no claim as to the current state of these channels, nor to the accuracy of the data as displayed. Do not share or publish this data without including proper attribution.</p>",
@@ -1316,7 +1318,8 @@ console.log('post grid');
 				var options = { map:map
 											, rastersShowing:rastersShowing
 											, eventFeatures:eventFeatures
-											, chartNames:outlines.graphics
+											, chartNames:names
+											, chartDates:formattedDates
 											, tooltip:tooltip
 										  };
 				allowMM = 1;						  
@@ -1328,7 +1331,8 @@ console.log('post grid');
 				var options= { map: map
 										 , rastersShowing: rastersShowing
 										 , eventFeatures:eventFeatures
-										 , names:outlines
+										 , names:names
+										 , dates:formattedDates
 										 , tooltip:tooltip
 									   };
 				identTool = IdentTool(identAnchor, rasterUrl, layerArray, options); 

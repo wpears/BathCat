@@ -70,6 +70,7 @@ function( addSymbol
         , rastersShowing = options.rastersShowing||null //Use rastersShowing if you turn off rasters
         , eventFeatures = options.eventFeatures||[]
         , chartNames = options.chartNames||null
+        , chartDates = options.chartDates||null
         , tooltip = options.tooltip||null
         , identify = Identify(url, map, layerArray, rastersShowing)
         , canId = CanvasId(rasterLayer, map)
@@ -155,7 +156,7 @@ function( addSymbol
 
           findLayerIds(mapPoint,profile).then(function(idArr){
             profile.task.prepare(idArr);
-            profile.chartName = chartNames[idArr[0]].attributes.Project;
+            profile.chartName = chartNames[idArr[0]];
             profile.prepared = idArr;
           });
 
@@ -245,6 +246,7 @@ function( addSymbol
                        ,profile.chartNumber
                        ,profile.e1.mapPoint
                        ,profile.pointObj.ang
+                       ,0
                        ,profile.graphics
                        ,self.handlers
                        );
@@ -332,7 +334,7 @@ function( addSymbol
               for(var i=0, len=series.length; i<len; i++){
                 if (series[i].y < min) min = series[i].y;
               }
-              chart.addSeries(getDate(chartNames[layer].attributes.Date), series);
+              chart.addSeries(chartDates[layer], series);
               profile.seriesCount++;
             }
 
@@ -552,12 +554,6 @@ function( addSymbol
             return new Point({x:x+xDist,y:y+yDist,spatialReference:spatialRef})
 
 
-        }
-      , getDate = function(date){
-          var dte = new Date(date);
-          var dst = dte.toUTCString();
-          dst = dst.charAt(6)=== " "?dst.substring(0, 5)+"0"+dst.substring(5):dst; //ieFix
-          return dst.slice(12, 16)+"-"+((1+dte.getUTCMonth())<10?"0"+(1+dte.getUTCMonth()):(1+dte.getUTCMonth()))+"-"+dst.slice(5, 7);
         }
       ;
 

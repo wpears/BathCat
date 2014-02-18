@@ -1,11 +1,13 @@
 define(["esri/symbols/TextSymbol","esri/symbols/Font"],function(TextSymbol,Font){
-  function addTextSymbol(map, text, geom, ang, trackingArr, handlers){
+  function addTextSymbol(map, text, geom, ang, color, trackingArr, handlers){
     var txtsym=new TextSymbol(text)
       , gra
       , offsetFactor = Math.pow(map.extent.getWidth(),0.1)+8
       , x = Math.sin(0.87+ang)
       , y = Math.cos(0.87+ang)
       ;
+    if(color)
+      txtsym.setColor(color);
     txtsym.setOffset(x*offsetFactor, y*offsetFactor);
     txtsym.setFont=addTextSymbol.font;
     gra=new esri.Graphic(geom, txtsym);

@@ -924,13 +924,8 @@ console.log('post grid');
 				, lev = zoomObj.level
 				;
 
-			if(lev > 17&&previousLevel<18&&topoOn){ //extend topo to 18, 19 with satellite
-				satMap.show();
-		  	topoMap.hide();
-			}else if(lev<18&&previousLevel > 17&&topoOn){
-				topoMap.show();
-		  	satMap.hide();
-		  }
+			if(lev > 17&&previousLevel<18&&topoOn) //extend topo to 18, 19 with satellite
+				showSat();
 			previousLevel = lev;
 			offs = offs>10?offs:10;
 			tiout.setMaxAllowableOffset(offs);

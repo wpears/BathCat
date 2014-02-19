@@ -1439,8 +1439,10 @@ console.log('post grid');
 				clearAllStoredOIDs();
 				geoSearch.lastClickBin = binArr;
 			}
-
-			j = binArr.length;
+			if (binArr)
+				j = binArr.length;
+			else
+				j = 0;
 			for(;i<j;i++){
 				curr = binArr[i];
 				oid = curr.oid;

@@ -16,6 +16,7 @@ require(["dijit/layout/BorderContainer"
 				,"dojo/ready"
 				,"dojo/aspect"
 				,"dojo/_base/Color"
+				,"dojo/has"
 
 				,"esri/map"
 				,"esri/SpatialReference"
@@ -33,6 +34,7 @@ require(["dijit/layout/BorderContainer"
 				,"esri/symbols/SimpleLineSymbol"
 				,"esri/symbols/SimpleFillSymbol"
   			,"esri/symbols/SimpleMarkerSymbol"
+  			,'esri/geometry/Point'
 
 
 				,'modules/tools.js'
@@ -63,6 +65,7 @@ function( BorderContainer
 				, ready
 				, aspect
 				, Color
+				, has
 
 				, Map
 				, SpatialReference
@@ -80,6 +83,7 @@ function( BorderContainer
 			  , SimpleLine
 				, SimpleFill
 				, SimpleMarker
+				, Point
 
 
 				, tools
@@ -131,8 +135,9 @@ function( BorderContainer
    		var timeDiv = dom.byId('timeDiv')
    		var timeSlider;
    		var spatialRef = new SpatialReference(102100);
-   		var intExt = new Extent(-13612000, 4519000,-13405000, 4662600,spatialRef)
-      var map = new Map("mapDiv", {extent:intExt/*,basemap:"topo"*/})
+   		var intExt = new Extent(-13612000, 4519000,-13405000, 4662600,spatialRef);
+   		var centerPoint = new Point({x: -13528681.36062705, y: 4583780.268055417,spatialReference:spatialRef});
+      var map = new Map("mapDiv", {extent:intExt,center:centerPoint,zoom:10/*,basemap:"topo"*/})
       var tiout;
       var solidLine = SimpleLine.STYLE_SOLID;
 			var solidFill = SimpleFill.STYLE_SOLID
@@ -143,7 +148,7 @@ function( BorderContainer
 			var satOn = 0;
 window.map = map
 			map.addLayer(topoMap);
-	
+
 		rasterLayer.setVisibleLayers([-1]);
 
 		(function loadDots(){
@@ -206,7 +211,7 @@ window.map = map
 		  	id:"tiout",
        	mode: 0,
        	outFields: ["OBJECTID"],
-       	maxAllowableOffset:map.extent.getWidth()/map.width
+       	maxAllowableOffset:75
   		});
 
 	on.once(tiout, "load", function(){
@@ -214,7 +219,8 @@ window.map = map
     map.addLayer(tiout);
   });
 
-
+if(has("touch"))console.log("HAS TOUCH")
+	else console.log("NO TOUCH");
 	on.once(qt, "complete", function(fs){ //declare most variables upfront for fewer vars/hoisting trouble
 	var W = window, DOC = document, featureSet = fs.featureSet,
 	  features = featureSet.features, featureCount=features.length, IE =!!document.all, ie9, fx,
@@ -273,7 +279,7 @@ window.map = map
 	  map.addLayer(satMap);
 	  satMap.hide();
 
-
+	  map.on('click',function(e){console.log(e.screenPoint)});
 		(function(){
 			var att, pl, mi, ss="Soil Sed. ";
 			for(var i = 0; i<featureCount; i++){
@@ -923,6 +929,7 @@ console.log('post grid');
 				, offs = ext.getWidth()/map.width
 				, lev = zoomObj.level
 				;
+				console.log(lev)
 
 			if(lev > 17&&previousLevel<18&&topoOn) //extend topo to 18, 19 with satellite
 				showSat();
@@ -944,8 +951,8 @@ console.log('post grid');
    		if(satOn) basemapOff();
    		else showSat();
    	});
-
-	toggleRightPane = function(e){
+toggleRightPane= function(){};
+/*	toggleRightPane = function(e){
 		if(rP.isShowing()){//close button logic
 			rP.hidePane();
 			if(typeof identTool === 'object'&&identTool.isShowing())
@@ -958,7 +965,7 @@ console.log('post grid');
 			dataNode.innerHTML = toggleRightPane.introText;
 			W.setTimeout(rP.showPane, 0);
 		}
-	};
+	};*/
 
 		toggleRightPane.introText = "<p>The <strong>Delta Bathymetry Catalog</strong> houses the complete set of multibeam bathymetric data collected by the Bathymetry and Technical Support section of the California Department of Water Resources.</p> <p id = 'beta'><b>Note: </b>The Catalog is still in active development. Please report any bugs or usability issues to <a href = 'mailto:wyatt.pearsall@water.ca.gov?subject = Bathymetry Catalog Issue'>Wyatt Pearsall</a>.</p><p>Click on a feature in the map or table to bring up its <strong>description</strong>. Double-click to view the <strong>raster image</strong>.</p> <p><strong>Download</strong> data as text files from the descrption pane.</p> <p><strong>Measure</strong> distances, <strong>identify</strong> raster elevations, and draw <strong>profile graphs</strong> with the tools at the top-right.</p> <p>Change what displays by <strong>collection date</strong> with the slider at bottom-right. <strong>Sort</strong> by date and name with the table's column headers.</p> <p>See the <strong>help</strong> below for further information.</p>";
 
@@ -1218,7 +1225,7 @@ console.log('post grid');
     	return rP.showing;
     }
 
-    rP.showPane = function(){
+    rP.showPane = function(){};/*
 			var i = 0, j = movers.length;
 			rP.showing = 1;
 			arro.style.backgroundPosition = "-32px -16px";
@@ -1232,9 +1239,9 @@ console.log('post grid');
 				for(;i<j;i++)
 					domClass.add(movers[i],"movd");
 			}
-		}
+		}*/
 
-    rP.hidePane = function(){
+    rP.hidePane = function(){};/*
 			var i = 0, j = movers.length;
 			rP.showing = 0;
 			downloadNode.style.display="none";
@@ -1249,7 +1256,7 @@ console.log('post grid');
 				for(;i<j;i++)
 					domClass.remove(movers[i],"movd");
 			}
-		}
+		}*/
 
     /*function makeIdentContainer(node,previous){
    		node.show = function(){
@@ -1439,8 +1446,10 @@ console.log('post grid');
 				clearAllStoredOIDs();
 				geoSearch.lastClickBin = binArr;
 			}
-
-			j = binArr.length;
+			if (binArr)
+				j = binArr.length;
+			else
+				j= 0;
 			for(;i<j;i++){
 				curr = binArr[i];
 				oid = curr.oid;

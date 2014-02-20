@@ -262,6 +262,7 @@ if(has("touch"))console.log("HAS TOUCH")
 		fex = dom.byId("fex"),
 		topo = dom.byId("topo"),
 		sat = dom.byId("sat"),
+		headLink = dom.byId("heaR"),
 		movers = dquery(".mov"),
 		rpCon = dom.byId("rpCon");
 
@@ -1128,20 +1129,21 @@ toggleRightPane= function(){};
 
    		on(foot, "mousedown", setHelp);
 
-   		on(W, "resize", function(e){			//resize map on browser resize
-			var winHeight = W.innerHeight
-				, oHeightAndMarginTop
-				, idCon=null;
+   	on(W, "resize", function(e){			//resize map on browser resize
+
+			var winHeight = W.innerHeight;
+
 			rPConHeight = winHeight - 257;
 			scroHeight = dScroll.clientHeight;
 			map.resize();
 			gridObject.expand();
+
+			setHeaderText();
+
 			if(+dataNode.style.marginTop.slice(0, 1)) dataNode.style.marginTop =(winHeight-257)/2-15+"px";
-			oHeightAndMarginTop =+dataNode.style.marginTop.slice(0,-2)+dataNode.offsetHeight+15;
+
 			if(ie9){
 				fx.animateProperty({node:rP, duration:300, properties:{height:winHeight-225}}).play();
-				if(idCon)
-				fx.animateProperty({node:idCon, duration:150, properties:{top:oHeightAndMarginTop+70}}).play();
 				if(infoPaneOpen)
 					fx.animateProperty({node:rpCon, duration:300, properties:{height:winHeight-507}}).play();
 				else fx.animateProperty({node:rpCon, duration:300, properties:{height:winHeight-257}}).play();
@@ -1150,12 +1152,22 @@ toggleRightPane= function(){};
 				if(infoPaneOpen)
 					rpCon.style.height = winHeight-507+"px";
 				else rpCon.style.height = winHeight-257+"px";
-				if(idCon){
-					idCon.style["transform"] = "translate3d(0px,"+oHeightAndMarginTop+"px, 0)";
-					idCon.style["-webkit-transform"] = "translate3d(0px,"+oHeightAndMarginTop+"px, 0)";
-				}
 			}
 		});
+
+		function setHeaderText(){
+			var wid = W.innerWidth
+			if (wid < 600 && setHeaderText.fullText){
+				heaR.innerHTML = "Bathymetry";
+				heaR.style.width = "175px";
+				setHeaderText.fullText = 0;
+			}else if(wid > 599 && !setHeaderText.fullText){
+				heaR.style.width = "380px";
+				heaR.innerHTML = "Delta Bathymetry Catalog"
+				setHeaderText.fullText = 1;
+			}
+		}
+		setHeaderText.fullText = W.innerWidth > 599;
 
    		function setHelp(e){
    			if(timeout)clearTimeout(timeout);

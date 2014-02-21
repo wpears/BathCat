@@ -114,9 +114,8 @@ function( BorderContainer
       		}
 		};
 		})();
-var time = Date.now();
+		
    ready(function(){ //wait for the dom
-   	console.log(Date.now()-time);
    	var placeMap = function(){
    		var lP = dom.byId("lP");
    		var mapDiv = dom.byId("mapDiv");
@@ -153,11 +152,11 @@ var time = Date.now();
    		
    		
    		var rasterUrl = "http://mrsbmapp00642/ArcGIS/rest/services/BATH/Web_Rr/MapServer" 
-   		var dataUrl = "http://mrsbmapp00642/ArcGIS/rest/services/BATH/data_out/MapServer/0?f=json"
+   		//var dataUrl = "http://mrsbmapp00642/ArcGIS/rest/services/BATH/data_out/MapServer/0?f=json"
    		var topoUrl = "http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer";
 
-   		var qt = new QueryTask(dataUrl)
-   		var qry = new Query()
+   	//	var qt = new QueryTask(dataUrl)
+   		//var qry = new Query()
    		var loadIt = dom.byId("loadingg")
    		var dots = "."
    		var gridLoaded
@@ -193,11 +192,11 @@ window.map = map
 			loadIt.textContent = "";
 		})();
 
-		qry.returnGeometry = true;
-		qry.outFields =["*"];
-		qry.outSpatialReference = spatialRef;
-		qry.where = "1 = 1";
-		qt.execute(qry);
+		//qry.returnGeometry = true;
+		//qry.outFields =["*"];
+		//qry.outSpatialReference = spatialRef;
+		//qry.where = "1 = 1";
+		//qt.execute(qry);
 		var layDef ={"geometryType":"esriGeometryPolygon"
 		            ,"spatialReference":spatialRef
 		            ,"displayFieldName": "OBJECTID"
@@ -246,7 +245,7 @@ var testld = {"geometryType":"esriGeometryPolygon"
 				    {"name" : "OBJECTID",
 				      "type" : "esriFieldTypeOID"}
 				      ]};
-	tiout = new FeatureLayer({featureSet:window.testFS,layerDefinition:testld},
+	tiout = new FeatureLayer({featureSet:window.TIGHT_OUTLINES,layerDefinition:testld},
 		{
 		  	id:"tiout",
        	mode: 0
@@ -268,8 +267,8 @@ var testld = {"geometryType":"esriGeometryPolygon"
     map.addLayer(tiout);
   });*/
 
-	on.once(qt, "complete", function(fs){ //declare most variables upfront for fewer vars/hoisting trouble
-	var W = window, DOC = document, featureSet = fs.featureSet,
+	//on.once(qt, "complete", function(fs){ //declare most variables upfront for fewer vars/hoisting trouble
+	var W = window, DOC = document, featureSet = window.DATA_OUTLINES,
 	  features = featureSet.features, featureCount=features.length, IE =!!document.all, fx,
 		outlines, grid, gridObject, dScroll, outlineMouseMove, outlineTimeout,
 		mouseDownTimeout, previousRecentTarget, justMousedUp = false,  outMoveTime = 0,
@@ -1657,7 +1656,7 @@ window.getInputBox= getInputBox
 	tiout.refresh() //ensure initial draw;
 	});
 
-	});
+//	});
 
 //return from the require
 });

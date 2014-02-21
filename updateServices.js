@@ -5,10 +5,14 @@ var fs= require('fs');
 var reg = /\.(\d)\d*/g;
 
 
-function run(url,file){
+function run(url,file, varName){
   var t = new trans();
   t._transform = regStream;
-  request(url).pipe(t).pipe(fs.createWriteStream(file));
+
+  var out = fs.createWriteStream(file);
+
+  out.write("window."+varName + "=");
+  request(url).pipe(t).pipe(out);
 }
 
 function regStream(chunk, enc, cb){
@@ -20,11 +24,13 @@ function regStream(chunk, enc, cb){
 run(
     "http://mrsbmapp00642/ArcGIS/rest/services/BATH/data_out/MapServer/0/query?f=json&where=1%20%3D%201&returnGeometry=true&spatialRel=esriSpatialRelIntersects&outFields=*&outSR=102100"
    ,"data_out.js"
+   ,"DATA_OUTLINES"
    );
 
 
 run(
     "http://mrsbmapp00642/ArcGIS/rest/services/BATH/s_ti/MapServer/0/query?f=json&where=1%3D1&returnGeometry=true&spatialRel=esriSpatialRelIntersects&maxAllowableOffset=15&outFields=OBJECTID&outSR=102100"
    ,"s_ti.js"
+   ,"TIGHT_OUTLINES"
    );
    

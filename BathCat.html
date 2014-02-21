@@ -15,13 +15,13 @@
     <!--[if IE]> <style type="text/css"> #heaR,h2,strong{color:#66b5ff;}#heaR{background-color:rgba(222,222,255,0.3);}</style> <![endif]-->
   </head>
   <body class="soria" id="body">
-    <div id="mainWindow" class="unselectable" data-dojo-type="dijit.layout.BorderContainer"
-          gutters="false" style="width:100%; height:100%;">
-      <div data-dojo-type="dijit.layout.ContentPane" id="lP" region="left"splitter="true">
+    <div id="mainWindow" class="unselectable">
+      <div id="lP">
         <strong id="loadingg">Loading</strong>
         <div id='ilP'></div>
+        <div id="lPSplitter"><div class="splitterThumb"></div></div>
       </div>
-      <div id="mapDiv" class="unselectable" data-dojo-type="dijit.layout.ContentPane" region="center">
+      <div id="mapDiv" class="unselectable">
         <a id="heaR"class="atop" href="http://portal-dev.water.ca.gov/ncro/3-ResourceAssessment/RAB_BATH.cfm" target="_blank">Delta Bathymetry Catalog</a>
         <div id="fex" class="atop" title="Full Extent"></div>
         <div id="bmaps" class="atop">
@@ -58,7 +58,7 @@
     </div>
     <!--[if gt IE 8]><!-->
     <script data-dojo-config="async:1,tlmSiblingOfDojo:0" src="api_cdn38.js"></script>
-    <script async src="BathCat.js"></script>
+    <script src="fork.js"></script>
     <!--<![endif]-->
      <!--[if lte IE]><script async src="ieselect.js"></script><![endif]-->
   </body>

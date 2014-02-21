@@ -66,7 +66,6 @@ function( BorderContainer
 				, aspect
 				, Color
 				, has
-
 				, Map
 				, SpatialReference
 				, Extent
@@ -101,11 +100,19 @@ function( BorderContainer
 
 		dijit = null;
 		dojox = null; //clear references
-	//esri.map,	esri.utils, alternate infowindow included compact build.. check AMD FIXME
-  	parser.parse(); //parse widgets
+   //	var mainWindow = new BorderContainer({gutters:false},'mainWindow');
+   	//mainWindow.addChild(new ContentPane({splitter:true,region:'left'},'lP'));
+   	//mainWindow.addChild(new ContentPane({region:'center'}),'mapDiv');
+   	//mainWindow.startup();
+   	//region left splitter true lP
+   	//data-dojo-type="dijit.layout.ContentPane" region="center" mapDiv
+
+  //	parser.parse(); //parse widgets
+
+   	var touch = has("touch");
 
   	var allowMM = 0;  // An absolutely obscene amount of event handlers. And TONS of triggered body/map mm events
-  	
+
   	(function(){
 		var eael = HTMLElement.prototype.addEventListener;
 		HTMLElement.prototype.addEventListener = function(){
@@ -116,13 +123,32 @@ function( BorderContainer
 		})();
 
    ready(function(){ //wait for the dom
-   	dom.byId("rP").style.height = window.innerHeight-225+"px";
+   	var resizeComponents = function(){
+   		make the rP stuff separate.
+   		function for just mapDiv width setting.
+   		var rP = dom.byId("rP");
+   		var lP = dom.byId("lP");
+   		var mapDiv = dom.byId("mapDiv");
+   		return function(){
+   			var innerHeight = window.innerHeight;
+   		  var innerWidth = window.innerWidth;
+   	    var lPWidth = lP.clientWidth+6;
+
+   	    rP.style.height = innerHeight-225+"px";
+   			mapDiv.style.width = (innerWidth-lPWidth)+"px";
+   			mapDiv.style.left = lPWidth +"px";
+   		}
+   	}();
+
+   	if(!touch) resizeComponents();
    	document.body.style.visibility = "visible"; //show the page on load.. no unstyled content
+
 
    	esri.config.defaults.io.corsDetection = false;
    	esri.config.defaults.io.corsEnabledServers.push("mrsbmapp00642");//enable cors for quicker queries
    	esri.config.defaults.geometryService = new esri.tasks.GeometryService("http://sampleserver3.arcgisonline.com/arcgis/rest/services/Geometry/GeometryServer"); 	
-
+   		
+   		
    		var rasterUrl = "http://mrsbmapp00642/ArcGIS/rest/services/BATH/Web_Rr/MapServer" 
    		var dataUrl = "http://mrsbmapp00642/ArcGIS/rest/services/BATH/data_out/MapServer/0?f=json"
    		var topoUrl = "http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer";
@@ -136,8 +162,12 @@ function( BorderContainer
    		var timeSlider;
    		var spatialRef = new SpatialReference(102100);
    		var intExt = new Extent(-13612000, 4519000,-13405000, 4662600,spatialRef);
-   		var centerPoint = new Point({x: -13528681.36062705, y: 4583780.268055417,spatialReference:spatialRef});
-      var map = new Map("mapDiv", {extent:intExt,center:centerPoint,zoom:10/*,basemap:"topo"*/})
+   		var centerPoint;
+   		var zoomLevel = innerHeight > 940?11:innerHeight > 475?10:9;
+   	  if (touch)centerPoint = new Point({x: -13528681.36062705, y: 4583780.268055417,spatialReference:spatialRef});
+     	else centerPoint = new Point({x: -13523942.264873397, y: 4586455.564045421,spatialReference:spatialRef});
+
+      var map = new Map("mapDiv", {extent:intExt,center:centerPoint,zoom:zoomLevel/*,basemap:"topo"*/})
       var tiout;
       var solidLine = SimpleLine.STYLE_SOLID;
 			var solidFill = SimpleFill.STYLE_SOLID
@@ -219,8 +249,7 @@ window.map = map
     map.addLayer(tiout);
   });
 
-if(has("touch"))console.log("HAS TOUCH")
-	else console.log("NO TOUCH");
+
 	on.once(qt, "complete", function(fs){ //declare most variables upfront for fewer vars/hoisting trouble
 	var W = window, DOC = document, featureSet = fs.featureSet,
 	  features = featureSet.features, featureCount=features.length, IE =!!document.all, ie9, fx,
@@ -240,13 +269,12 @@ if(has("touch"))console.log("HAS TOUCH")
 		gdata = new Array(featureCount),
 		formattedDates = new Array(featureCount),
 		names = new Array(featureCount),
-		insideTimeBoundary = new Array(featureCount),
+		insideTimeBoundary = new Array(featureCount+1),
 		rastersShowing = {},
 		crossAnchor = dom.byId("cros"),
 		arro = dom.byId("arro"),
 		zSlid =dom.byId("mapDiv_zoom_slider"),
 		scaleBarLabels = dquery('.esriScalebarLabel'),
-		lP = dom.byId("lP"),
 		noClick = dom.byId("noClick"),
 		dlLink = dom.byId("dlLink"),
 		rP = dom.byId("rP"),
@@ -258,7 +286,7 @@ if(has("touch"))console.log("HAS TOUCH")
 		tsNode = dom.byId("timeSlider"),
 		linArr = dquery(".dijitRuleLabelH", tsNode),
 		shoP = dom.byId("shoP"),
-		spl = dom.byId("lP_splitter"),
+		spl = dom.byId("lPSplitter"),
 		fex = dom.byId("fex"),
 		topo = dom.byId("topo"),
 		sat = dom.byId("sat"),
@@ -296,6 +324,7 @@ if(has("touch"))console.log("HAS TOUCH")
 			}
 		})();
 		hl[featureCount] = 0;
+		insideTimeBoundary[featureCount]=1;
 
 		(function(){
 			for(var i = 0; i<featureCount; i++){
@@ -345,7 +374,6 @@ if(has("touch"))console.log("HAS TOUCH")
 //on(window,"touchend",function(){console.log('touchend',Date.now()-mTIME)})
 //on(window,"click",function(){console.log("click",Date.now()-mTIME)})
 
-
 		//*****initialize grid and attach all handlers*******\\
 console.log('grid')
 		gridObject =(function(){
@@ -368,7 +396,7 @@ console.log('grid')
 			gdata.unshift({"__Date":1315008000000,Date:"Various",Project:"Soil Sedimentation",OBJECTID:gdata.length+1});
 			gridLoaded = 1;
 			grid.renderArray(gdata);
-			
+			console.log("OI")
 
 			gridHeader = dom.byId("ilP-header").firstChild;
 			headerNodes = gridHeader.childNodes;
@@ -542,14 +570,15 @@ console.log('grid')
 			}
 
 			function expand(e){
-				gridCon.style.width = gridHeader.style.width;
+				var wid = e.x+"px";
+				lP.style.width = wid;
+				//resizeComponents();
 				expandReady = 1;
 			}
 
 			on(spl, "mousedown", function(e){								//expand left pane
-
-			  var mM = on(W, "mousemove", triggerExpand);
-
+				lP.style.minWidth = 0;
+		    var mM = on(W, "mousemove", triggerExpand);
 			  on.once(W,"mouseup", function(evt){
 				  map.resize();
 				  mM.remove();
@@ -643,6 +672,8 @@ console.log('grid')
 			makeViewable.ycutoff=4500;
 
 			grid.on(".dgrid-cell:dblclick", gridDbl);
+
+
 			setVisibleRasters.reusableArray =[];
 			function setVisibleRasters(newOIDs, fromCheck){
 				if(!map.layerIds[2]){ //if the raster has not been added, add it.
@@ -952,8 +983,7 @@ console.log('post grid');
    		if(satOn) basemapOff();
    		else showSat();
    	});
-toggleRightPane= function(){};
-/*	toggleRightPane = function(e){
+	toggleRightPane = function(e){
 		if(rP.isShowing()){//close button logic
 			rP.hidePane();
 			if(typeof identTool === 'object'&&identTool.isShowing())
@@ -966,7 +996,7 @@ toggleRightPane= function(){};
 			dataNode.innerHTML = toggleRightPane.introText;
 			W.setTimeout(rP.showPane, 0);
 		}
-	};*/
+	};
 
 		toggleRightPane.introText = "<p>The <strong>Delta Bathymetry Catalog</strong> houses the complete set of multibeam bathymetric data collected by the Bathymetry and Technical Support section of the California Department of Water Resources.</p> <p id = 'beta'><b>Note: </b>The Catalog is still in active development. Please report any bugs or usability issues to <a href = 'mailto:wyatt.pearsall@water.ca.gov?subject = Bathymetry Catalog Issue'>Wyatt Pearsall</a>.</p><p>Click on a feature in the map or table to bring up its <strong>description</strong>. Double-click to view the <strong>raster image</strong>.</p> <p><strong>Download</strong> data as text files from the descrption pane.</p> <p><strong>Measure</strong> distances, <strong>identify</strong> raster elevations, and draw <strong>profile graphs</strong> with the tools at the top-right.</p> <p>Change what displays by <strong>collection date</strong> with the slider at bottom-right. <strong>Sort</strong> by date and name with the table's column headers.</p> <p>See the <strong>help</strong> below for further information.</p>";
 
@@ -1085,7 +1115,7 @@ toggleRightPane= function(){};
 		   				break;
 		   			case "Sli":
 		   				//domClass.toggle(lP,"helpglow");
-		   				domClass.toggle(spl,"helpglow");
+		   		//		domClass.toggle(spl,"helpglow");
 		   				break;
 		   			case "Ide":
 		   				domClass.toggle(identAnchor,"helpglow");
@@ -1135,10 +1165,12 @@ toggleRightPane= function(){};
 
 			rPConHeight = winHeight - 257;
 			scroHeight = dScroll.clientHeight;
-			map.resize();
-			gridObject.expand();
+			//map.resize();
+		//	gridObject.expand();
 
+			resizeComponents();
 			setHeaderText();
+			zoomLevel = winHeight > 940?11:winHeight > 475?10:9;
 
 			if(+dataNode.style.marginTop.slice(0, 1)) dataNode.style.marginTop =(winHeight-257)/2-15+"px";
 
@@ -1229,7 +1261,7 @@ toggleRightPane= function(){};
 	}();
 
 		on(fex,"mousedown", function(e){                  //go to initial extent
-			map.setExtent(intExt);
+			map.centerAndZoom(centerPoint,zoomLevel)
 		});
 
 
@@ -1237,7 +1269,7 @@ toggleRightPane= function(){};
     	return rP.showing;
     }
 
-    rP.showPane = function(){};/*
+    rP.showPane = function(){
 			var i = 0, j = movers.length;
 			rP.showing = 1;
 			arro.style.backgroundPosition = "-32px -16px";
@@ -1251,9 +1283,9 @@ toggleRightPane= function(){};
 				for(;i<j;i++)
 					domClass.add(movers[i],"movd");
 			}
-		}*/
+		}
 
-    rP.hidePane = function(){};/*
+    rP.hidePane = function(){
 			var i = 0, j = movers.length;
 			rP.showing = 0;
 			downloadNode.style.display="none";
@@ -1268,7 +1300,7 @@ toggleRightPane= function(){};
 				for(;i<j;i++)
 					domClass.remove(movers[i],"movd");
 			}
-		}*/
+		}
 
     /*function makeIdentContainer(node,previous){
    		node.show = function(){
@@ -1590,7 +1622,7 @@ function caCh(oid,hi,evt){if(evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var symbo=
 		function getInputBox(oid){
 			return gridObject.oidToRow(oid).firstChild.firstChild.childNodes[3].firstChild;
 		}
-
+window.getInputBox= getInputBox
 		function isNumber(n) {
   			return !isNaN(parseFloat(n)) && isFinite(n);
 		}

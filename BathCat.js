@@ -1082,7 +1082,7 @@ console.log('post grid');
 					}
 					str+="</div>"
 					downloadNode.style.display = "none";
-					dataNode.style.marginTop = rPConHeight/2-65+"px";
+					dataNode.style.marginTop = (rPConHeight/2-65)+"px";
 					dataNode.innerHTML = str;
 				}
 			}else{
@@ -1252,7 +1252,7 @@ console.log('post grid');
    			whichButt === "H"?infoPane.innerHTML = helpText:whichButt === "T"?infoPane.innerHTML = termText:infoPane.innerHTML = conText;
    			domClass.add(lastButt,"activeFoot");
    		}
-   		rPConHeight = rpCon.clientHeight;
+   		rPConHeight = W.innerHeight - 257;
 		})();
 
 		legend = function(){

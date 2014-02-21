@@ -110,7 +110,7 @@ function( BorderContainer
   //	parser.parse(); //parse widgets
 
    	var touch = has("touch");
-
+   	var ie9 =(document.all&&document.addEventListener&&!window.atob)?true:false;
   	var allowMM = 0;  // An absolutely obscene amount of event handlers. And TONS of triggered body/map mm events
 
   	(function(){
@@ -123,24 +123,33 @@ function( BorderContainer
 		})();
 
    ready(function(){ //wait for the dom
-   	var resizeComponents = function(){
-   		make the rP stuff separate.
-   		function for just mapDiv width setting.
-   		var rP = dom.byId("rP");
+   	var placeMap = function(){
    		var lP = dom.byId("lP");
    		var mapDiv = dom.byId("mapDiv");
    		return function(){
-   			var innerHeight = window.innerHeight;
    		  var innerWidth = window.innerWidth;
    	    var lPWidth = lP.clientWidth+6;
-
-   	    rP.style.height = innerHeight-225+"px";
+   	    if(ie9){
+						mapDiv.style.left = lPWidth+"px";
+					}else{
+						mapDiv.style["transform"] = "translate3d("+lPWidth+"px,0, 0)";
+						mapDiv.style["-webkit-transform"] = "translate3d("+lPWidth+"px,0, 0)";
+					}
    			mapDiv.style.width = (innerWidth-lPWidth)+"px";
-   			mapDiv.style.left = lPWidth +"px";
    		}
    	}();
 
-   	if(!touch) resizeComponents();
+   	var resizeRp = function(){
+   		  var rP = dom.byId("rP");
+   		  return function(){
+   		  	rP.style.height = window.innerHeight-225+"px";
+   		}
+   	}();
+
+   	if(!touch){
+   		placeMap();
+   		resizeRp();
+   	}
    	document.body.style.visibility = "visible"; //show the page on load.. no unstyled content
 
 
@@ -252,7 +261,7 @@ window.map = map
 
 	on.once(qt, "complete", function(fs){ //declare most variables upfront for fewer vars/hoisting trouble
 	var W = window, DOC = document, featureSet = fs.featureSet,
-	  features = featureSet.features, featureCount=features.length, IE =!!document.all, ie9, fx,
+	  features = featureSet.features, featureCount=features.length, IE =!!document.all, fx,
 		outlines, grid, gridObject, dScroll, outlineMouseMove, outlineTimeout,
 		mouseDownTimeout, previousRecentTarget, justMousedUp = false,  outMoveTime = 0,
 	 	identifyUp, measure, tooltip, rPConHeight, sedToggle, satMap, cursor = 1,
@@ -278,6 +287,7 @@ window.map = map
 		noClick = dom.byId("noClick"),
 		dlLink = dom.byId("dlLink"),
 		rP = dom.byId("rP"),
+		lP = dom.byId('lP'),
 		dataNode = dom.byId("dataNode"),
 		downloadNode = dom.byId('downloadNode'),
 		ilP = dom.byId("ilP"),
@@ -572,7 +582,7 @@ console.log('grid')
 			function expand(e){
 				var wid = e.x+"px";
 				lP.style.width = wid;
-				//resizeComponents();
+				placeMap();
 				expandReady = 1;
 			}
 
@@ -869,9 +879,9 @@ console.log('post grid');
 					redhi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([243, 63, 51]), 4), DJblack),
 					grehi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([24, 211, 48]), 4), DJblack),
 			};
-   		ie9 =(DOC.all&&DOC.addEventListener&&!window.atob)?true:false;
+
    		if(ie9) fx = require("dojo/_base/fx", function(fx){return fx});
-		rpCon.style.height = rP.scrollHeight-32+"px";
+			rpCon.style.height = rP.scrollHeight-32+"px";
     	
 		function setLinkColor(){
 			if(satOn){
@@ -1168,7 +1178,7 @@ console.log('post grid');
 			//map.resize();
 		//	gridObject.expand();
 
-			resizeComponents();
+			placeMap();
 			setHeaderText();
 			zoomLevel = winHeight > 940?11:winHeight > 475?10:9;
 

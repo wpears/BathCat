@@ -100,14 +100,7 @@ function( BorderContainer
 
 		dijit = null;
 		dojox = null; //clear references
-   //	var mainWindow = new BorderContainer({gutters:false},'mainWindow');
-   	//mainWindow.addChild(new ContentPane({splitter:true,region:'left'},'lP'));
-   	//mainWindow.addChild(new ContentPane({region:'center'}),'mapDiv');
-   	//mainWindow.startup();
-   	//region left splitter true lP
-   	//data-dojo-type="dijit.layout.ContentPane" region="center" mapDiv
 
-  //	parser.parse(); //parse widgets
 
    	var touch = has("touch");
    	var ie9 =(document.all&&document.addEventListener&&!window.atob)?true:false;
@@ -121,8 +114,9 @@ function( BorderContainer
       		}
 		};
 		})();
-
+var time = Date.now();
    ready(function(){ //wait for the dom
+   	console.log(Date.now()-time);
    	var placeMap = function(){
    		var lP = dom.byId("lP");
    		var mapDiv = dom.byId("mapDiv");
@@ -245,19 +239,34 @@ window.map = map
 		map.setTimeSlider(timeSlider);	  
 	})();
 
-	tiout = new FeatureLayer("http://mrsbmapp00642/ArcGIS/rest/services/BATH/s_ti/MapServer/0",
+var testld = {"geometryType":"esriGeometryPolygon"
+		            ,"spatialReference":spatialRef
+		            ,"displayFieldName": "Shape_Length"
+		            , "fields" : [
+				    {"name" : "OBJECTID",
+				      "type" : "esriFieldTypeOID"}
+				      ]};
+	tiout = new FeatureLayer({featureSet:window.testFS,layerDefinition:testld},
+		{
+		  	id:"tiout",
+       	mode: 0
+  		})
+  	tiout.setRenderer(new SimpleRenderer(blank));
+    map.addLayer(tiout);
+
+		/*
+		tiout= new FeatureLayer("http://mrsbmapp00642/ArcGIS/rest/services/BATH/s_ti/MapServer/0",
 			{
 		  	id:"tiout",
        	mode: 0,
        	outFields: ["OBJECTID"],
-       	maxAllowableOffset:75
+       	maxAllowableOffset:15
   		});
 
 	on.once(tiout, "load", function(){
     tiout.setRenderer(new SimpleRenderer(blank));
     map.addLayer(tiout);
-  });
-
+  });*/
 
 	on.once(qt, "complete", function(fs){ //declare most variables upfront for fewer vars/hoisting trouble
 	var W = window, DOC = document, featureSet = fs.featureSet,
@@ -501,11 +510,11 @@ console.log('grid')
 							insideTimeBoundary[currOID] = 0;
 							currGraphic.setSymbol(blank);
 					}else{
-						if(domClass.contains(currRow, "hiddenRow")){
-							domClass.remove(currRow, "hiddenRow");
-							insideTimeBoundary[currOID] = 1;
-							caCh(currOID, "", 1);
-						}
+							if(insideTimeBoundary[currOID] === 0){
+								domClass.remove(currRow, "hiddenRow");
+								insideTimeBoundary[currOID] = 1;
+								caCh(currOID, "", 1, 0);
+							}
 					}
 				}
 				if(map.layerIds[2]){
@@ -597,7 +606,7 @@ console.log('grid')
 
 			grid.on(".dgrid-cell:mouseover", function(e){
 				var oid = getOIDFromGrid(e);
-				if(oid)caCh(oid,"hi", 1);	
+				if(oid)caCh(oid,"hi", 1, 1);	
 			});
 
 
@@ -606,7 +615,7 @@ console.log('grid')
 				if(oidStore[oid])
 					return;
 				else
-					caCh(oid,"", 1);
+					caCh(oid,"", 1, 1);
 			});
 
 			function clearAndSetOID(oid, attributes){
@@ -614,7 +623,7 @@ console.log('grid')
 				storeOID(oid);
 				geoSearch.prevArr.length = 1;
 				geoSearch.prevArr[0] = oid;
-				caCh(oid,"hi", 1);
+				caCh(oid,"hi", 1, 1);
 				infoFunc(attributes);
 			}
 			grid.on(".dgrid-cell:mousedown", function(e){	//grid click handler
@@ -818,7 +827,7 @@ console.log('post grid');
 
 		function clearStoredOID(oid, doSplice, fromGrid){
 			var oidIndex = geoSearch.prevArr.indexOf(oid);
-			caCh(oid,"", 1);
+			caCh(oid,"", 1, 1);
 			if(oidStore[oid]){
 				oidStore[oid] = 0;
 				if(fromGrid&&oidIndex>-1)splice(geoSearch.prevArr, oidIndex);
@@ -924,7 +933,7 @@ console.log('post grid');
 
 		timeSlider.on("time-extent-change", gridObject.timeUpdate); //handle time extent change
 
-		tiout.on("update-end", function(e, f, g, h){ //called on every zoom (due to refresh). allows feature updating
+		tiout.on("update-end", function(e, f, g, h){ // allows feature updating
    		console.log("update-end");
    		redrawAllGraphics(tiout.graphics);							
     });
@@ -968,7 +977,6 @@ console.log('post grid');
 
 		adjustOnZoom = function(zoomObj){	//logic on ZoomEnd	
 			var ext = zoomObj.extent
-				, offs = ext.getWidth()/map.width
 				, lev = zoomObj.level
 				;
 				console.log(lev)
@@ -976,9 +984,9 @@ console.log('post grid');
 			if(lev > 17&&previousLevel<18&&topoOn) //extend topo to 18, 19 with satellite
 				showSat();
 			previousLevel = lev;
-			offs = offs>10?offs:10;
-			tiout.setMaxAllowableOffset(offs);
-			tiout.refresh();
+			redrawAllGraphics(tiout.graphics);
+			//tiout.setMaxAllowableOffset(offs);
+			//tiout.refresh();
 		};
 
    	zoomEnd = map.on("zoom-end", adjustOnZoom);
@@ -1513,7 +1521,7 @@ console.log('post grid');
 				if(insideTimeBoundary[oid]){
 					if(curr.xmax>= mapX&&curr.xmin<= mapX&&curr.ymin<= mapY&&curr.ymax>= mapY){
 						someTargeted = 1;
-						caCh(oid,"hi", 1);
+						caCh(oid,"hi", 1, 1);
 						if(cursor){
 							map.setMapCursor("pointer");
 							cursor = 0;
@@ -1530,7 +1538,7 @@ console.log('post grid');
 							if(mouseDown) clearStoredOID(oid, 1, 0);
 							continue;
 						}else{
-							caCh(oid,"", 1);//clear mouseover highlight. Have to do whole bin since might be multiple hl
+							caCh(oid,"", 1, 1);//clear mouseover highlight. Have to do whole bin since might be multiple hl
 						}
 					}
 				}
@@ -1554,7 +1562,7 @@ console.log('post grid');
 
 			if(!someTargeted&&mouseDown&&prevArr){ //rehighlight true selections when clicking on
 				for(var i = 0;i<prevArr.length;i++){ // TS hidden stuff
-					caCh(prevArr[i],"hi", 1);
+					caCh(prevArr[i],"hi", 1, 1);
 					if(!oidStore[prevArr[i]])
 						storeOID(prevArr[i]);
 				}
@@ -1572,17 +1580,17 @@ console.log('post grid');
 					var oid = graphics[i].attributes.OBJECTID;
 					if(insideTimeBoundary[oid]){
 						if(oidStore[oid])
-							caCh(oid,"hi", 0);
+							caCh(oid,"hi", 0, 1);
 					else
-							caCh(oid,"", 0);
+							caCh(oid,"", 0, 1);
 					}
 				}
 		}
 																//main highlighting logic, separated by year with different basemap
-function caCh(oid,hi,evt){if(evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var symbo=topoOn?symbols:satSym,date,graphic=oidToGraphic(oid),row;if(!graphic)return;date=features[oid-1].attributes.Date;color=getColor(date);if(evt){row=gridObject.oidToRow(oid);if(hi!==""){domClass.add(row,"highl"+color);hl[oid]=1;}else{domClass.remove(row,"highl"+color);hl[oid]=0;}}if(previousLevel>12){if(hi)hi="";else color+="thin";}graphic.setSymbol(symbo[color+hi]);}
+function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var symbo=topoOn?symbols:satSym,date,graphic=oidToGraphic(oid),row;if(!graphic)return;date=features[oid-1].attributes.Date;color=getColor(date);if(evt){row=gridObject.oidToRow(oid);if(hi!==""){domClass.add(row,"highl"+color);hl[oid]=1;}else{domClass.remove(row,"highl"+color);hl[oid]=0;}}if(previousLevel>12){if(hi)hi="";else color+="thin";}graphic.setSymbol(symbo[color+hi]);}
 
-/*		function caCh(oid, hi, evt){
-			if(evt&&(hi&&hl[oid]||!hi&&!hl[oid])) return;
+/*		function caCh(oid, hi, evt, nm){
+			if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid])) return;
 			var symbo = topoOn?symbols:satSym
 				, date
 			  , graphic = oidToGraphic(oid)

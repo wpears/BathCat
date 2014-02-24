@@ -116,28 +116,12 @@ function( BorderContainer
    		, mapDiv = dom.byId("mapDiv")
    		, gridPane
    		, dataPane
+   		, dataCon
    		;
 
 
-
-   	if(touch);
-   	else{
-   		gridPane = DOC.createElement('div');
-   		dataPane = DOC.createElement('div');
-
-   		gridPane.id = "lP";
-   		dataPane.id = "rP";
-   		dataPane.className = "mov atop";
-
-   		gridPane.innerHTML = '<div id="gridNode"></div><div id="lPSplitter"><div class="splitterThumb"></div></div>';
-   		dataPane.innerHTML='<div id="rpCon"><div id="dataNode"></div><div id="downloadNode"><strong id="dlTitle">Downloads:</strong><a class="lrp" href="zips/Metadata.zip" target="_self">Metadata</a><a class="lrp" id="dlLink" href="tryagain.zip" target="_self">Dataset</a></div></div><div id="infopane"></div><div id="foot" class="unselectable"><div class="footDiv" id="help">Help</div><div class="footDiv" id="tou">Terms of Use</div><div class="footDiv" id="contact">Contact</div></div>';
-
-   		mainWindow.appendChild(gridPane);
-   		mainWindow.appendChild(dataPane);
-
-   		placeMap();
-   		resizeRp();
-   	}
+   	makeViews();
+   	
    	
    	var  crossAnchor = dom.byId("cros")
 			, arro = dom.byId("arro")
@@ -157,14 +141,10 @@ function( BorderContainer
 			, sat = dom.byId("sat")
 			, headLink = dom.byId("heaR")
 			, movers = dquery(".mov")
-			, rpCon = dom.byId("rpCon")
 			, timeDiv = dom.byId('timeDiv');
 
-			console.log("qwe",rpCon);
 
 		if(ie9) fx = require("dojo/_base/fx", function(fx){return fx});
-
-		rpCon.style.height = dataPane.scrollHeight-32+"px";
 
    	DOC.body.style.visibility = "visible"; //show the page on load.. no unstyled content
 
@@ -175,7 +155,6 @@ function( BorderContainer
    		
    		
    		var rasterUrl = "http://mrsbmapp00642/ArcGIS/rest/services/BATH/Web_Rr/MapServer" 
-   		//var dataUrl = "http://mrsbmapp00642/ArcGIS/rest/services/BATH/data_out/MapServer/0?f=json"
    		var topoUrl = "http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer";
 
 
@@ -563,7 +542,7 @@ console.log('grid')
 
 			function expand(e){
 				var wid = e.x+"px";
-				dataPane.style.width = wid;
+				gridPane.style.width = wid;
 				placeMap();
 				expandReady = 1;
 			}
@@ -862,7 +841,7 @@ console.log('post grid');
 					redhi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([243, 63, 51]), 4), DJblack),
 					grehi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([24, 211, 48]), 4), DJblack),
 			};
-console.log("HM")
+
     	
 		function setLinkColor(){
 			if(satOn){
@@ -882,7 +861,7 @@ console.log("HM")
 		setLinkColor();
 		linArr[linArr.length-1].style.cssText = "text-shadow:1px 1px 1px #fff;color:rgb(0, 0, 0);";
 		
-console.log("HM")
+
 		on(timeDiv, ".dijitRuleLabelH:mouseover", function(e){
 			var ets = e.target.style, col = ets.color;
 			ets.backgroundColor = col;
@@ -894,7 +873,7 @@ console.log("HM")
 			ets.color = back;
 			ets.backgroundColor = "rgba(0, 0, 0, 0)";
 		});
-console.log("HM")
+
 		on(timeDiv, ".dijitRuleLabelH:mousedown", function(e){  //timeslider quicklinks handler
 			var yr = e.target.innerHTML;
 			if(yr.charAt(0)=== "A")
@@ -909,7 +888,7 @@ console.log("HM")
    		console.log("update-end");
    		redrawAllGraphics(tiout.graphics);							
     });
-console.log("HM")
+
     function setExtent(extent){
    // 	var bmap=map.getLayersVisibleAtScale()[0];
   //  	bmap.hide();
@@ -995,11 +974,11 @@ console.log("HM")
 				toggleRightPane();
 			else{
 				if(ie9){
-					var fxArgs ={node:rpCon, duration:200, properties:{opacity:0},
+					var fxArgs ={node:dataCon, duration:200, properties:{opacity:0},
 								onEnd:function(){
 									infoFunc.setHTML(attributes);
-									fx.fadeIn({node:rpCon}).play();
-									if(rpCon.positionIdentPane)rpCon.positionIdentPane();
+									fx.fadeIn({node:dataCon}).play();
+									if(dataCon.positionIdentPane)dataCon.positionIdentPane();
 								}};
 					if(gridNode.isShowing()){
 						fx.animateProperty(fxArgs).play();
@@ -1015,7 +994,7 @@ console.log("HM")
 							infoFunc.setHTML(attributes);
 							dataNode.style.opacity = 1;
 							downloadNode.style.opacity = 1;
-							if(rpCon.positionIdentPane)rpCon.positionIdentPane();
+							if(dataCon.positionIdentPane)dataCon.positionIdentPane();
 						}, 225);
 					}else{
 						infoFunc.setHTML(attributes);
@@ -1085,7 +1064,7 @@ console.log("HM")
 						timeout = 0;
    					clearNode(infoPane);
    					infoPaneOpen = 0;
-   					rpCon.style.borderBottom = "none";
+   					dataCon.style.borderBottom = "none";
    	}
 
 		function toggleHelpGlow(e){
@@ -1150,13 +1129,10 @@ console.log("HM")
    		on(foot, "mousedown", setHelp);
 
    	on(W, "resize", function(e){			//resize map on browser resize
-
 			var winHeight = W.innerHeight;
 
 			rPConHeight = winHeight - 257;
 			scroHeight = dScroll.clientHeight;
-			//map.resize();
-		//	gridObject.expand();
 
 			placeMap();
 			setHeaderText();
@@ -1167,13 +1143,13 @@ console.log("HM")
 			if(ie9){
 				fx.animateProperty({node:gridNode, duration:300, properties:{height:winHeight-225}}).play();
 				if(infoPaneOpen)
-					fx.animateProperty({node:rpCon, duration:300, properties:{height:winHeight-507}}).play();
-				else fx.animateProperty({node:rpCon, duration:300, properties:{height:winHeight-257}}).play();
+					fx.animateProperty({node:dataCon, duration:300, properties:{height:winHeight-507}}).play();
+				else fx.animateProperty({node:dataCon, duration:300, properties:{height:winHeight-257}}).play();
 			}else{
 				gridNode.style.height = winHeight-225+"px";
 				if(infoPaneOpen)
-					rpCon.style.height = winHeight-507+"px";
-				else rpCon.style.height = winHeight-257+"px";
+					dataCon.style.height = winHeight-507+"px";
+				else dataCon.style.height = winHeight-257+"px";
 			}
 		});
 
@@ -1197,14 +1173,14 @@ console.log("HM")
    					domClass.remove(lastButt,"activeFoot");
    			else{
    				infoPaneOpen = 1;
-   				rpCon.style.borderBottom = "2px solid #99ceff";
-   				rpCon.style.boxShadow="0 2px 3px -2px #bbf0ff";
+   				dataCon.style.borderBottom = "2px solid #99ceff";
+   				dataCon.style.boxShadow="0 2px 3px -2px #bbf0ff";
    				if(ie9){
    					fx.animateProperty({node:infoPane, duration:200, properties:{height:242}}).play();
-   					fx.animateProperty({node:rpCon, duration:200, properties:{height:rPConHeight-250}}).play();
+   					fx.animateProperty({node:dataCon, duration:200, properties:{height:rPConHeight-250}}).play();
    				}else{
    					infoPane.style.height = "242px";
-   					rpCon.style.height = rPConHeight-250+"px";
+   					dataCon.style.height = rPConHeight-250+"px";
    				}
    			}
 
@@ -1212,10 +1188,10 @@ console.log("HM")
    				timeout = W.setTimeout(clearHelp, 205);
    				if(ie9){
    					fx.animateProperty({node:infoPane, duration:200, properties:{height:0}}).play();
-   					fx.animateProperty({node:rpCon, duration:200, properties:{height:rPConHeight}}).play();
+   					fx.animateProperty({node:dataCon, duration:200, properties:{height:rPConHeight}}).play();
    				}else{
    					infoPane.style.height = 0;
-   					rpCon.style.height = rPConHeight+"px";
+   					dataCon.style.height = rPConHeight+"px";
    				}
    				lastButt = null;
    				return;
@@ -1559,6 +1535,33 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
 		function getInputBox(oid){
 			return gridObject.oidToRow(oid).firstChild.firstChild.childNodes[3].firstChild;
 		}
+
+		function makeViews(){
+			gridPane = DOC.createElement('div');
+   		dataPane = DOC.createElement('div');
+
+			if(touch){
+				gridPane.id = "gridView";
+   			dataPane.id = "dataView";
+   			gridPane.innerHTML = '<div id="gridNode"></div>';
+   		}else{
+   			gridPane.id = "lP";
+   			dataPane.id = "rP";
+   			dataPane.className = "mov atop";
+
+   			gridPane.innerHTML = '<div id="gridNode"></div><div id="lPSplitter"><div class="splitterThumb"></div></div>';
+   		}
+   		dataPane.innerHTML='<div id="dataCon"><div id="dataNode"></div><div id="downloadNode"><strong id="dlTitle">Downloads:</strong><a class="lrp" href="zips/Metadata.zip" target="_self">Metadata</a><a class="lrp" id="dlLink" href="tryagain.zip" target="_self">Dataset</a></div></div><div id="infopane"></div><div id="foot" class="unselectable"><div class="footDiv" id="help">Help</div><div class="footDiv" id="tou">Terms of Use</div><div class="footDiv" id="contact">Contact</div></div>';
+
+   		mainWindow.appendChild(gridPane);
+   		mainWindow.appendChild(dataPane);
+
+   		dataCon = dom.byId("dataCon");
+   		if(!touch){
+   			placeMap();
+   			resizeRp();
+   		}
+		}
 		function placeMap(){
    		  var innerWidth = W.innerWidth;
    	    var lPWidth = gridPane.clientWidth+6;
@@ -1573,6 +1576,7 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
 
    	function resizeRp(){
    		  	dataPane.style.height = W.innerHeight-225+"px";
+   		  	dataCon.style.height = dataPane.scrollHeight-32+"px";
    	}
 
 		function isNumber(n) {

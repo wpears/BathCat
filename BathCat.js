@@ -28,8 +28,6 @@ require(["dijit/layout/BorderContainer"
 				,"esri/dijit/TimeSlider"
 				,"esri/TimeExtent"
 				,"esri/dijit/Scalebar"
-				,"esri/tasks/query"
-				,"esri/tasks/QueryTask"
 				,"esri/renderers/SimpleRenderer"
 				,"esri/symbols/SimpleLineSymbol"
 				,"esri/symbols/SimpleFillSymbol"
@@ -76,8 +74,6 @@ function( BorderContainer
 			  , TimeSlider
 			  , TimeExtent
 			  , ScaleBar
-			  , Query
-			  , QueryTask
 			  , SimpleRenderer
 			  , SimpleLine
 				, SimpleFill
@@ -98,12 +94,8 @@ function( BorderContainer
 				, require
 				){
 
-		dijit = null;
-		dojox = null; //clear references
 
 
-   	var touch = has("touch");
-   	var ie9 =(document.all&&document.addEventListener&&!window.atob)?true:false;
   	var allowMM = 0;  // An absolutely obscene amount of event handlers. And TONS of triggered body/map mm events
 
   	(function(){
@@ -111,39 +103,70 @@ function( BorderContainer
 		HTMLElement.prototype.addEventListener = function(){
  			if(arguments[0]!== "mousemove"||allowMM){
     			eael.apply(this, arguments);
-      		}
-		};
-		})();
+		}
+
+		}})();
 		
    ready(function(){ //wait for the dom
-   	var placeMap = function(){
-   		var lP = dom.byId("lP");
-   		var mapDiv = dom.byId("mapDiv");
-   		return function(){
-   		  var innerWidth = window.innerWidth;
-   	    var lPWidth = lP.clientWidth+6;
-   	    if(ie9){
-						mapDiv.style.left = lPWidth+"px";
-					}else{
-						mapDiv.style["transform"] = "translate3d("+lPWidth+"px,0, 0)";
-						mapDiv.style["-webkit-transform"] = "translate3d("+lPWidth+"px,0, 0)";
-					}
-   			mapDiv.style.width = (innerWidth-lPWidth)+"px";
-   		}
-   	}();
+   	var W = window
+   		, DOC = document
+   		, touch = has("touch")
+   		, ie9 =(document.all&&document.addEventListener&&!window.atob)?true:false
+   		, mainWindow = dom.byId("mainWindow")
+   		, mapDiv = dom.byId("mapDiv")
+   		, gridPane
+   		, dataPane
+   		;
 
-   	var resizeRp = function(){
-   		  var rP = dom.byId("rP");
-   		  return function(){
-   		  	rP.style.height = window.innerHeight-225+"px";
-   		}
-   	}();
 
-   	if(!touch){
+
+   	if(touch);
+   	else{
+   		gridPane = DOC.createElement('div');
+   		dataPane = DOC.createElement('div');
+
+   		gridPane.id = "lP";
+   		dataPane.id = "rP";
+   		dataPane.className = "mov atop";
+
+   		gridPane.innerHTML = '<div id="gridNode"></div><div id="lPSplitter"><div class="splitterThumb"></div></div>';
+   		dataPane.innerHTML='<div id="rpCon"><div id="dataNode"></div><div id="downloadNode"><strong id="dlTitle">Downloads:</strong><a class="lrp" href="zips/Metadata.zip" target="_self">Metadata</a><a class="lrp" id="dlLink" href="tryagain.zip" target="_self">Dataset</a></div></div><div id="infopane"></div><div id="foot" class="unselectable"><div class="footDiv" id="help">Help</div><div class="footDiv" id="tou">Terms of Use</div><div class="footDiv" id="contact">Contact</div></div>';
+
+   		mainWindow.appendChild(gridPane);
+   		mainWindow.appendChild(dataPane);
+
    		placeMap();
    		resizeRp();
    	}
-   	document.body.style.visibility = "visible"; //show the page on load.. no unstyled content
+   	
+   	var  crossAnchor = dom.byId("cros")
+			, arro = dom.byId("arro")
+			, zSlid =dom.byId("mapDiv_zoom_slider")
+			, scaleBarLabels = dquery('.esriScalebarLabel')
+			, noClick = dom.byId("noClick")
+			, dlLink = dom.byId("dlLink")
+			, dataNode = dom.byId("dataNode")
+			, downloadNode = dom.byId('downloadNode')
+			, gridNode = dom.byId("gridNode")
+			, measureAnchor = dom.byId("mea")
+			, identAnchor = dom.byId("ident")
+			, shoP = dom.byId("shoP")	
+			, spl = dom.byId("lPSplitter")
+			, fex = dom.byId("fex")
+			, topo = dom.byId("topo")
+			, sat = dom.byId("sat")
+			, headLink = dom.byId("heaR")
+			, movers = dquery(".mov")
+			, rpCon = dom.byId("rpCon")
+			, timeDiv = dom.byId('timeDiv');
+
+			console.log("qwe",rpCon);
+
+		if(ie9) fx = require("dojo/_base/fx", function(fx){return fx});
+
+		rpCon.style.height = dataPane.scrollHeight-32+"px";
+
+   	DOC.body.style.visibility = "visible"; //show the page on load.. no unstyled content
 
 
    	esri.config.defaults.io.corsDetection = false;
@@ -155,12 +178,7 @@ function( BorderContainer
    		//var dataUrl = "http://mrsbmapp00642/ArcGIS/rest/services/BATH/data_out/MapServer/0?f=json"
    		var topoUrl = "http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer";
 
-   	//	var qt = new QueryTask(dataUrl)
-   		//var qry = new Query()
-   		var loadIt = dom.byId("loadingg")
-   		var dots = "."
-   		var gridLoaded
-   		var timeDiv = dom.byId('timeDiv')
+
    		var timeSlider;
    		var spatialRef = new SpatialReference(102100);
    		var intExt = new Extent(-13612000, 4519000,-13405000, 4662600,spatialRef);
@@ -169,7 +187,7 @@ function( BorderContainer
    	  if (touch)centerPoint = new Point({x: -13528681.36062705, y: 4583780.268055417,spatialReference:spatialRef});
      	else centerPoint = new Point({x: -13523942.264873397, y: 4586455.564045421,spatialReference:spatialRef});
 
-      var map = new Map("mapDiv", {extent:intExt,center:centerPoint,zoom:zoomLevel/*,basemap:"topo"*/})
+      var map = new Map(mapDiv, {extent:intExt,center:centerPoint,zoom:zoomLevel/*,basemap:"topo"*/})
       var tiout;
       var solidLine = SimpleLine.STYLE_SOLID;
 			var solidFill = SimpleFill.STYLE_SOLID
@@ -183,20 +201,7 @@ window.map = map
 
 		rasterLayer.setVisibleLayers([-1]);
 
-		(function loadDots(){
-			if(!gridLoaded){
-				loadIt.textContent = "Loading"+dots;
-				dots = dots === "..."?"":dots+".";
-				window.setTimeout(loadDots, 200);
-			}else
-			loadIt.textContent = "";
-		})();
 
-		//qry.returnGeometry = true;
-		//qry.outFields =["*"];
-		//qry.outSpatialReference = spatialRef;
-		//qry.where = "1 = 1";
-		//qt.execute(qry);
 		var layDef ={"geometryType":"esriGeometryPolygon"
 		            ,"spatialReference":spatialRef
 		            ,"displayFieldName": "OBJECTID"
@@ -217,6 +222,60 @@ window.map = map
 				      "type" : "esriFieldTypeString"}
 				  ]};
 
+
+
+	tiout = new FeatureLayer({featureSet:window.TIGHT_OUTLINES,
+														layerDefinition:{"geometryType":"esriGeometryPolygon"
+		            														,"spatialReference":spatialRef
+		            														,"displayFieldName": "Shape_Length"
+		            														, "fields" : [
+				    																	{"name" : "OBJECTID",
+				      																"type" : "esriFieldTypeOID"}
+				      																]
+				      															}
+				      						 },
+													  {id:"tiout",mode: 0}
+													 );
+  	tiout.setRenderer(new SimpleRenderer(blank));
+    map.addLayer(tiout);
+var time = Date.now();
+	var featureSet = window.DATA_OUTLINES,
+	  features = featureSet.features, featureCount=features.length, IE =!!document.all, fx,
+		outlines, grid, gridObject, dScroll, outlineMouseMove, outlineTimeout,
+		mouseDownTimeout, previousRecentTarget, justMousedUp = false,  outMoveTime = 0,
+	 	identifyUp, measure, tooltip, rPConHeight, sedToggle, satMap, cursor = 1,
+	 	crossTool, identTool, meaTool, tsNode, linArr;
+
+		var geoArr, splitGeoArr, geoBins, selectedGraphics =[], selectedGraphicsCount = 0,
+		legend, toggleRightPane, eventFeatures= [],
+		zoomEnd, adjustOnZoom, showSat, showTopo, previousLevel = 8,
+		processTimeUpdate,
+		mouseDownX = 0, mouseDownY = 0;
+	var	layerArray = new Array(featureCount),
+		oidArray = new Array(featureCount),
+		oidStore = new Array(featureCount),
+		hl = new Array(featureCount),
+		gdata = new Array(featureCount),
+		formattedDates = new Array(featureCount),
+		names = new Array(featureCount),
+		insideTimeBoundary = new Array(featureCount+1),
+		rastersShowing = {};
+
+console.log(Date.now()-time)
+		outlines = new FeatureLayer({layerDefinition:layDef, featureSet:featureSet}, {
+		  	id:"out",
+       	 	mode: 0,
+       	 	outFields: ["*"]
+  		});
+
+		outlines.setRenderer(new SimpleRenderer(blank));
+    map.addLayer(outlines);
+		eventFeatures[eventFeatures.length]=outlines;
+
+		satMap = new TiledLayer("http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer");
+	  map.addLayer(satMap);
+	  satMap.hide();
+
 	(function(){
 		new ScaleBar({map:map});
 		var tCount
@@ -235,96 +294,12 @@ window.map = map
 		timeSlider.setThumbIndexes([0, tCount]);
 		timeSlider.setTickCount(Math.ceil(tCount/2));
 		timeSlider.startup();
-		map.setTimeSlider(timeSlider);	  
+		map.setTimeSlider(timeSlider);
+	
+		tsNode = dom.byId("timeSlider")
+		linArr = dquery(".dijitRuleLabelH", tsNode)
 	})();
 
-var testld = {"geometryType":"esriGeometryPolygon"
-		            ,"spatialReference":spatialRef
-		            ,"displayFieldName": "Shape_Length"
-		            , "fields" : [
-				    {"name" : "OBJECTID",
-				      "type" : "esriFieldTypeOID"}
-				      ]};
-	tiout = new FeatureLayer({featureSet:window.TIGHT_OUTLINES,layerDefinition:testld},
-		{
-		  	id:"tiout",
-       	mode: 0
-  		})
-  	tiout.setRenderer(new SimpleRenderer(blank));
-    map.addLayer(tiout);
-
-		/*
-		tiout= new FeatureLayer("http://mrsbmapp00642/ArcGIS/rest/services/BATH/s_ti/MapServer/0",
-			{
-		  	id:"tiout",
-       	mode: 0,
-       	outFields: ["OBJECTID"],
-       	maxAllowableOffset:15
-  		});
-
-	on.once(tiout, "load", function(){
-    tiout.setRenderer(new SimpleRenderer(blank));
-    map.addLayer(tiout);
-  });*/
-
-	//on.once(qt, "complete", function(fs){ //declare most variables upfront for fewer vars/hoisting trouble
-	var W = window, DOC = document, featureSet = window.DATA_OUTLINES,
-	  features = featureSet.features, featureCount=features.length, IE =!!document.all, fx,
-		outlines, grid, gridObject, dScroll, outlineMouseMove, outlineTimeout,
-		mouseDownTimeout, previousRecentTarget, justMousedUp = false,  outMoveTime = 0,
-	 	identifyUp, measure, tooltip, rPConHeight, sedToggle, satMap, cursor = 1,
-	 	crossTool, identTool, meaTool;
-		var geoArr, splitGeoArr, geoBins, selectedGraphics =[], selectedGraphicsCount = 0,
-		legend, toggleRightPane, eventFeatures= [],
-		zoomEnd, adjustOnZoom, showSat, showTopo, previousLevel = 8,
-		processTimeUpdate,
-		mouseDownX = 0, mouseDownY = 0;
-	var	layerArray = new Array(featureCount),
-		oidArray = new Array(featureCount),
-		oidStore = new Array(featureCount),
-		hl = new Array(featureCount),
-		gdata = new Array(featureCount),
-		formattedDates = new Array(featureCount),
-		names = new Array(featureCount),
-		insideTimeBoundary = new Array(featureCount+1),
-		rastersShowing = {},
-		crossAnchor = dom.byId("cros"),
-		arro = dom.byId("arro"),
-		zSlid =dom.byId("mapDiv_zoom_slider"),
-		scaleBarLabels = dquery('.esriScalebarLabel'),
-		noClick = dom.byId("noClick"),
-		dlLink = dom.byId("dlLink"),
-		rP = dom.byId("rP"),
-		lP = dom.byId('lP'),
-		dataNode = dom.byId("dataNode"),
-		downloadNode = dom.byId('downloadNode'),
-		ilP = dom.byId("ilP"),
-		measureAnchor = dom.byId("mea"),
-		identAnchor = dom.byId("ident"),
-		tsNode = dom.byId("timeSlider"),
-		linArr = dquery(".dijitRuleLabelH", tsNode),
-		shoP = dom.byId("shoP"),
-		spl = dom.byId("lPSplitter"),
-		fex = dom.byId("fex"),
-		topo = dom.byId("topo"),
-		sat = dom.byId("sat"),
-		headLink = dom.byId("heaR"),
-		movers = dquery(".mov"),
-		rpCon = dom.byId("rpCon");
-
-		outlines = new FeatureLayer({layerDefinition:layDef, featureSet:featureSet}, {
-		  	id:"out",
-       	 	mode: 0,
-       	 	outFields: ["*"]
-  		});
-
-		outlines.setRenderer(new SimpleRenderer(blank));
-    map.addLayer(outlines);
-		eventFeatures[eventFeatures.length]=outlines;
-
-		satMap = new TiledLayer("http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer");
-	  map.addLayer(satMap);
-	  satMap.hide();
 
 	  map.on('click',function(e){console.log(e.screenPoint)});
 		(function(){
@@ -408,15 +383,14 @@ console.log('grid')
 								},
 							cellNavigation:0
 							},
-							ilP);
+							gridNode);
 
 
 			gdata.unshift({"__Date":1315008000000,Date:"Various",Project:"Soil Sedimentation",OBJECTID:gdata.length+1});
-			gridLoaded = 1;
 			grid.renderArray(gdata);
 			console.log("OI")
 
-			gridHeader = dom.byId("ilP-header").firstChild;
+			gridHeader = dom.byId("gridNode-header").firstChild;
 			headerNodes = gridHeader.childNodes;
 
 			headerNodes[0].title = "Sort by Name"; //maybe pass these into constructor
@@ -433,7 +407,7 @@ console.log('grid')
 			}
       lastNodePos[gdata.length-1]=0;
 
-			sedToggle = GridCategory(grid, gdata, "Project","Soil Sed.", ilP, lastNodePos);
+			sedToggle = GridCategory(grid, gdata, "Project","Soil Sed.", gridNode, lastNodePos);
 
 			function dateSortSeq(a, b){
 				return a.__Date-b.__Date
@@ -589,19 +563,20 @@ console.log('grid')
 
 			function expand(e){
 				var wid = e.x+"px";
-				lP.style.width = wid;
+				dataPane.style.width = wid;
 				placeMap();
 				expandReady = 1;
 			}
-
+		if (!touch){
 			on(spl, "mousedown", function(e){								//expand left pane
-				lP.style.minWidth = 0;
+				dataPane.style.minWidth = 0;
 		    var mM = on(W, "mousemove", triggerExpand);
 			  on.once(W,"mouseup", function(evt){
 				  map.resize();
 				  mM.remove();
 			  });
 			});
+		}
 
 			grid.on(".dgrid-cell:mouseover", function(e){
 				var oid = getOIDFromGrid(e);
@@ -774,7 +749,7 @@ console.log('grid')
 			}
 
 			function clearImageInputs(){
-				var inputArr = dquery(".dgrid-input", ilP);
+				var inputArr = dquery(".dgrid-input", gridNode);
 					for(var i = 0, j = inputArr.length;i<j;i++){
 						inputArr[i].checked = false;
 						rastersShowing[i+1] = 0;
@@ -887,9 +862,7 @@ console.log('post grid');
 					redhi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([243, 63, 51]), 4), DJblack),
 					grehi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([24, 211, 48]), 4), DJblack),
 			};
-
-   		if(ie9) fx = require("dojo/_base/fx", function(fx){return fx});
-			rpCon.style.height = rP.scrollHeight-32+"px";
+console.log("HM")
     	
 		function setLinkColor(){
 			if(satOn){
@@ -909,7 +882,7 @@ console.log('post grid');
 		setLinkColor();
 		linArr[linArr.length-1].style.cssText = "text-shadow:1px 1px 1px #fff;color:rgb(0, 0, 0);";
 		
-
+console.log("HM")
 		on(timeDiv, ".dijitRuleLabelH:mouseover", function(e){
 			var ets = e.target.style, col = ets.color;
 			ets.backgroundColor = col;
@@ -921,7 +894,7 @@ console.log('post grid');
 			ets.color = back;
 			ets.backgroundColor = "rgba(0, 0, 0, 0)";
 		});
-
+console.log("HM")
 		on(timeDiv, ".dijitRuleLabelH:mousedown", function(e){  //timeslider quicklinks handler
 			var yr = e.target.innerHTML;
 			if(yr.charAt(0)=== "A")
@@ -936,7 +909,7 @@ console.log('post grid');
    		console.log("update-end");
    		redrawAllGraphics(tiout.graphics);							
     });
-
+console.log("HM")
     function setExtent(extent){
    // 	var bmap=map.getLayersVisibleAtScale()[0];
   //  	bmap.hide();
@@ -1001,8 +974,8 @@ console.log('post grid');
    		else showSat();
    	});
 	toggleRightPane = function(e){
-		if(rP.isShowing()){//close button logic
-			rP.hidePane();
+		if(gridNode.isShowing()){//close button logic
+			gridNode.hidePane();
 			if(typeof identTool === 'object'&&identTool.isShowing())
 				tools.wipe(identTool, identAnchor, eventFeatures);
 			clearAllStoredOIDs();
@@ -1011,7 +984,7 @@ console.log('post grid');
 			dataNode.style.marginTop = 0;
 			clearNode(dataNode);
 			dataNode.innerHTML = toggleRightPane.introText;
-			W.setTimeout(rP.showPane, 0);
+			W.setTimeout(gridNode.showPane, 0);
 		}
 	};
 
@@ -1028,14 +1001,14 @@ console.log('post grid');
 									fx.fadeIn({node:rpCon}).play();
 									if(rpCon.positionIdentPane)rpCon.positionIdentPane();
 								}};
-					if(rP.isShowing()){
+					if(gridNode.isShowing()){
 						fx.animateProperty(fxArgs).play();
 					}else{
 					  infoFunc.setHTML(attributes);
-					  rP.showPane();
+					  gridNode.showPane();
 				  }
 				}else{
-					if(rP.isShowing()){
+					if(gridNode.isShowing()){
 						dataNode.style.opacity = 0;
 						downloadNode.style.opacity = 0;
 						W.setTimeout(function(){
@@ -1046,7 +1019,7 @@ console.log('post grid');
 						}, 225);
 					}else{
 						infoFunc.setHTML(attributes);
-						rP.showPane();
+						gridNode.showPane();
 					}
 				}
 			}
@@ -1131,8 +1104,8 @@ console.log('post grid');
 		   				domClass.toggle(sat,"helpglow");
 		   				break;
 		   			case "Sli":
-		   				//domClass.toggle(lP,"helpglow");
-		   		//		domClass.toggle(spl,"helpglow");
+		   				domClass.toggle(data,"helpglow");
+		   				domClass.toggle(spl,"helpglow");
 		   				break;
 		   			case "Ide":
 		   				domClass.toggle(identAnchor,"helpglow");
@@ -1152,7 +1125,7 @@ console.log('post grid');
    				}
    			}
 		}
-
+		if(!touch){
    		on(infoPane, "mouseover", function(e){
    			toggleHelpGlow(e);
    		});
@@ -1160,7 +1133,7 @@ console.log('post grid');
    		on(infoPane, "mouseout", function(e){
    			toggleHelpGlow(e);
    		});
-
+   	}
    		on(dlLink,"mouseover", function(e){  //remove spatial reference info from files
    			var pro =(dataNode.firstChild.textContent).split(" ").join(""),
    				dat = new Date(dataNode.firstChild.nextElementSibling.textContent.slice(-11)),
@@ -1192,12 +1165,12 @@ console.log('post grid');
 			if(+dataNode.style.marginTop.slice(0, 1)) dataNode.style.marginTop =(winHeight-257)/2-15+"px";
 
 			if(ie9){
-				fx.animateProperty({node:rP, duration:300, properties:{height:winHeight-225}}).play();
+				fx.animateProperty({node:gridNode, duration:300, properties:{height:winHeight-225}}).play();
 				if(infoPaneOpen)
 					fx.animateProperty({node:rpCon, duration:300, properties:{height:winHeight-507}}).play();
 				else fx.animateProperty({node:rpCon, duration:300, properties:{height:winHeight-257}}).play();
 			}else{
-				rP.style.height = winHeight-225+"px";
+				gridNode.style.height = winHeight-225+"px";
 				if(infoPaneOpen)
 					rpCon.style.height = winHeight-507+"px";
 				else rpCon.style.height = winHeight-257+"px";
@@ -1282,17 +1255,17 @@ console.log('post grid');
 		});
 
 
-  	rP.isShowing = function(){
-    	return rP.showing;
+  	gridNode.isShowing = function(){
+    	return gridNode.showing;
     }
 
-    rP.showPane = function(){
+    gridNode.showPane = function(){
 			var i = 0, j = movers.length;
-			rP.showing = 1;
+			gridNode.showing = 1;
 			arro.style.backgroundPosition = "-32px -16px";
 			if(ie9){
 				for(;i<j;i++){
-				if(movers[i] === rP)
+				if(movers[i] === gridNode)
 					fx.animateProperty({node:movers[i], duration:300, properties:{marginRight:0}}).play();
 				else fx.animateProperty({node:movers[i], duration:300, properties:{marginRight:285}}).play();
 				}
@@ -1302,14 +1275,14 @@ console.log('post grid');
 			}
 		}
 
-    rP.hidePane = function(){
+    gridNode.hidePane = function(){
 			var i = 0, j = movers.length;
-			rP.showing = 0;
+			gridNode.showing = 0;
 			downloadNode.style.display="none";
 			arro.style.backgroundPosition = "-96px -16px";
 			if(ie9){
 				for(;i<j;i++){
-				if(movers[i] === rP)
+				if(movers[i] === gridNode)
 					fx.animateProperty({node:movers[i], duration:250, properties:{marginRight:-285}}).play();
 				else fx.animateProperty({node:movers[i], duration:250, properties:{marginRight:0}}).play();
 				}
@@ -1319,59 +1292,6 @@ console.log('post grid');
 			}
 		}
 
-    /*function makeIdentContainer(node,previous){
-   		node.show = function(){
-   			if(!rP.isShowing()){
-   				clearNode(previous);
-   				rP.showPane();
-   			}
-   			identTool.getNode().style.display="block";
-   			node.positionIdentPane();
-   		};
-   		node.isDefault = function(){
-   			if(previous.innerHTML.slice(0, 5)=== "<p>Th")
-   				return true;
-   			return false;
-   		};
-   		node.isClear = function(){
-   			if(previous.innerHTML.slice(0, 5)=== "")
-   				return true;
-   			return false;
-   		};
-   		node.setDefault = function(){
-   			previous.innerHTML = toggleRightPane.introText;
-        previous.style.opacity = 1;
-   		};
-   		node.replaceDefault=function(){
-   			if(rP.isShowing()){
-   				previous.style.opacity=0;
-   				W.setTimeout(node.performReplace, 100);
-   			}else{
-   				node.performReplace();
-   				rP.showPane();
-   			}
-   		};
-   		node.performReplace=function(){
-   			clearNode(previous);
-   			identTool.getNode().style.display="block";
-   			node.positionIdentPane();
-   		};
-   		node.positionIdentPane = function(){
-				if (typeof identTool === 'object'&&identTool.isShowing()){
-					rpCon.scrollTop = 0;
-					var oHeightAndMarginTop =+dataNode.style.marginTop.slice(0,-2)+dataNode.offsetHeight+15
-						, idCon=identTool.getNode()
-						;
-					if(ie9){
-						idCon.style.top = oHeightAndMarginTop+75+"px";
-					}else{
-						idCon.style["transform"] = "translate3d(0px,"+oHeightAndMarginTop+"px, 0)";
-						idCon.style["-webkit-transform"] = "translate3d(0px,"+oHeightAndMarginTop+"px, 0)";
-					}
-				}
-			};
-   	return node;
-   }       */
 
 
 /************TOOLS***************/
@@ -1639,7 +1559,22 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
 		function getInputBox(oid){
 			return gridObject.oidToRow(oid).firstChild.firstChild.childNodes[3].firstChild;
 		}
-window.getInputBox= getInputBox
+		function placeMap(){
+   		  var innerWidth = W.innerWidth;
+   	    var lPWidth = gridPane.clientWidth+6;
+   	    if(ie9){
+						mapDiv.style.left = lPWidth+"px";
+					}else{
+						mapDiv.style["transform"] = "translate3d("+lPWidth+"px,0, 0)";
+						mapDiv.style["-webkit-transform"] = "translate3d("+lPWidth+"px,0, 0)";
+					}
+   			mapDiv.style.width = (innerWidth-lPWidth)+"px";
+   	}
+
+   	function resizeRp(){
+   		  	dataPane.style.height = W.innerHeight-225+"px";
+   	}
+
 		function isNumber(n) {
   			return !isNaN(parseFloat(n)) && isFinite(n);
 		}

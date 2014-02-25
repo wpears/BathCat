@@ -11,7 +11,6 @@ require(["dijit/layout/BorderContainer"
 				,"dojo/dom"
 				,"dojo/query"
 				,"dojo/dom-class"
-				,"dojo/_base/array"
 				,"dojo/on"
 				,"dojo/ready"
 				,"dojo/aspect"
@@ -58,7 +57,6 @@ function( BorderContainer
 				, dom
 				, dquery
 				, domClass
-				, darr
 				, on
 				, ready
 				, aspect
@@ -122,13 +120,13 @@ function( BorderContainer
 
 
    	makeViews();
-
+   	makePeripherals();
    	setHeaderText();
+
    	
    	var  crossAnchor = dom.byId("cros")
 			, arro = dom.byId("arro")
 			, zSlid =dom.byId("mapDiv_zoom_slider")
-			, scaleBarLabels = dquery('.esriScalebarLabel')
 			, noClick = dom.byId("noClick")
 			, dlLink = dom.byId("dlLink")
 			, dataNode = dom.byId("dataNode")
@@ -222,9 +220,9 @@ window.map = map
 var time = Date.now();
 	var featureSet = window.DATA_OUTLINES,
 	  features = featureSet.features, featureCount=features.length, IE =!!document.all, fx,
-		outlines, grid, gridObject, dScroll, outlineMouseMove, outlineTimeout,
+		outlines, grid, gridObject, dScroll, outlineMouseMove, outlineTimeout, labelCon,
 		mouseDownTimeout, previousRecentTarget, justMousedUp = false,  outMoveTime = 0,
-	 	identifyUp, measure, tooltip, rPConHeight, sedToggle, satMap, cursor = 1,
+	 	identifyUp, measure, tooltip, rPConHeight, sedToggle, satMap, cursor = 1, scalebarNode,
 	 	crossTool, identTool, meaTool;
 
 		var geoArr, splitGeoArr, geoBins, selectedGraphics =[], selectedGraphicsCount = 0,
@@ -259,6 +257,7 @@ console.log(Date.now()-time)
 
 	(function(){
 		new ScaleBar({map:map});
+		scalebarNode = dquery(".esriScalebar")[0]
 		var tCount
 			, timeExtent = new TimeExtent(new Date("01/01/2010 UTC"), new Date("12/31/2014 UTC"));
 		map.setTimeExtent(timeExtent);
@@ -277,15 +276,18 @@ console.log(Date.now()-time)
 		timeSlider.startup();
 		map.setTimeSlider(timeSlider);
 	
-		var labelCon = DOC.createElement('div');
+		labelCon = DOC.createElement('div');
 		var arr = [];
 		var endDate = timeSlider.fullTimeExtent.endTime.getFullYear() + 1;
 		labelCon.className = 'labelCon atop';
-		if (touch) labelCon.className += 'labelTouch';
+		if (touch){
+			labelCon.className += ' labelTouch';
+			timeDiv.style.display="none";
+		}
 		for(var startDate = 2010;startDate<=endDate;startDate++){
 			var elem = DOC.createElement('div');
 			arr[arr.length] = elem;
-			elem.className = "tsNode";
+			elem.className = "tsLabel";
 			if(startDate === endDate) elem.innerText = "All";
 			else elem.innerText = startDate;
 			labelCon.appendChild(elem);
@@ -865,27 +867,38 @@ console.log('post grid');
 
     	
 		function setLinkColor(){
+			var tsLinks = labelCon.childNodes;
 			if(satOn){
-				darr.forEach(scaleBarLabels, function(v){domClass.add(v,"whiteScaleLabels")});
+				domClass.add(scalebarNode,"whiteScaleLabels");
+			  tsLinks[0].style.color="rgb(24, 211, 48)";
+			  tsLinks[1].style.color="rgb(252, 109, 224)";
+			  tsLinks[2].style.color="rgb(119, 173, 255)";
+			  tsLinks[3].style.color="rgb(243, 63, 51)";
+			  tsLinks[4].style.color="rgb(169,152,137)";
 			}else{
-				darr.forEach(scaleBarLabels, function(v){domClass.remove(v,"whiteScaleLabels")});
+				domClass.remove(scalebarNode,"whiteScaleLabels");
+				tsLinks[0].style.color="rgb(18,160,0)";
+			  tsLinks[1].style.color="rgb(221,4,178)";
+			  tsLinks[2].style.color="rgb(50,84,255)";
+			  tsLinks[3].style.color="rgb(255,0,0)";
+			  tsLinks[4].style.color="rgb(112, 84, 59)";
 			}
 		}
-		
+		setLinkColor();
 
-		on(timeDiv, ".tsLabel:mouseover", function(e){
-			var ets = e.target.style, col = ets.color;
+		on(labelCon, ".tsLabel:mouseover", function(e){
+			var ets = e.target.style, col = getComputedStyle(e.target).color;
 			ets.backgroundColor = col;
 			ets.color = "#fff";
 		});
 
-		on(timeDiv, ".tsLabel:mouseout", function(e){
-			var ets = e.target.style, back = ets.backgroundColor;
+		on(labelCon, ".tsLabel:mouseout", function(e){
+			var ets = e.target.style, back = getComputedStyle(e.target).backgroundColor;
 			ets.color = back;
 			ets.backgroundColor = "rgba(0, 0, 0, 0)";
 		});
 
-		on(timeDiv, ".tsLabel:mousedown", function(e){  //timeslider quicklinks handler
+		on(labelCon, ".tsLabel:mousedown", function(e){  //timeslider quicklinks handler
 			var yr = e.target.innerHTML;
 			if(yr.charAt(0)=== "A")
 				timeSlider.setThumbIndexes([0, timeSlider.timeStops.length]);
@@ -941,7 +954,6 @@ console.log('post grid');
 			var ext = zoomObj.extent
 				, lev = zoomObj.level
 				;
-				console.log(lev)
 
 			if(lev > 17&&previousLevel<18&&topoOn) //extend topo to 18, 19 with satellite
 				showSat();
@@ -1561,6 +1573,13 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
    			resizeRp();
    		}
 		}
+
+   	function makePeripherals(){
+   		<div id="closeRp"class="mov atop unselectable">
+      <div id="arro"></div>
+    </div>);
+   	}
+
 		function placeMap(){
    		  var innerWidth = W.innerWidth;
    	    var lPWidth = gridPane.clientWidth+6;

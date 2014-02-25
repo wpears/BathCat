@@ -41,7 +41,9 @@
   text-decoration:underline;
   font-size:17px;
 }
-.dijitRuleLabelH{
+.labelCon{
+  top:100px;
+  left:500px;
   padding:0 4px 0 3px;
   cursor:pointer;
   border-radius:2px;
@@ -54,18 +56,45 @@
   transition:        all 0.1s ease;
  -o-transition:      all 0.1s ease;
 }
-.dijitRuleLabelContainerH:nth-child(1){
-  text-shadow:0 0 1px #0a5c00;color:rgb(18,160,0);
+.labelTouch{
+
 }
-.dijitRuleLabelContainerH:nth-child(2){
-  text-shadow:0 0 1px #9a037c;color:rgb(221,4,178);
+.tsNode:nth-child(1){
+  color:rgb(18,160,0);
 }
-.dijitRuleLabelContainerH:nth-child(3){
-  text-shadow:0 0 1px #0027ed;color:rgb(50,84,255);
+.tsNode:nth-child(2){
+  color:rgb(221,4,178);
 }
-.dijitRuleLabelContainerH:nth-child(4){
-  text-shadow:0 0 1px #b00;color:rgb(255,0,0);
+.tsNode:nth-child(3){
+  color:rgb(50,84,255);
 }
+.tsNode:nth-child(4){
+  color:rgb(255,0,0);
+}
+.tsNode:nth-child(5){
+  color:rgb(112, 84, 59);
+}
+.tsNodeImage:nth-child(1){
+  color:rgb(24, 211, 48);
+}
+.tsNodeImage:nth-child(2){
+  color:rgb(252, 109, 224);
+}
+.tsNodeImage:nth-child(3){
+  color:rgb(119, 173, 255);
+}
+.tsNodeImage:nth-child(4){
+  color:rgb(243, 63, 51);
+}
+.tsNodeImage:nth-child(5){
+  color:rgb(169,152,137);
+}
+
+      labelArr[0].style.cssText = "color:rgb(24, 211, 48);";
+        labelArr[1].style.cssText = "color:rgb(252, 109, 224);";
+        labelArr[2].style.cssText = "color:rgb(119, 173, 255);";
+        labelArr[3].style.cssText = "color:rgb(243, 63, 51);";
+        labelArr[4].style.cssText = "color:rgb(169,152,137);"
 
 .esriScalebar{
   margin-left:135px;
@@ -131,7 +160,7 @@ body{
   width:100%;height:100%;
 }
 
-#heaR{
+#appTitle{
   color: #99ceff;
   padding:10px 3px;
   border-radius: 4px;
@@ -148,11 +177,11 @@ body{
 
 
 
-#heaR:hover{
+#appTitle:hover{
   color: #5ADE6B;
   text-shadow:1px 1px 1px #23ad35;
 }
-#heaR:active{
+#appTitle:active{
   margin-top:1px;
 }
 .atop{
@@ -856,6 +885,9 @@ th:active{
 }
 .highlred{
   background-color:rgba(243,63,51,0.7);
+}
+.highlbro{
+  background-color:rgba(112, 84, 59, 0.7);
 }
 
  strong{

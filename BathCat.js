@@ -32,10 +32,10 @@ require(["dijit/layout/BorderContainer"
 				,"esri/symbols/SimpleLineSymbol"
 				,"esri/symbols/SimpleFillSymbol"
   			,"esri/symbols/SimpleMarkerSymbol"
-  			,'esri/geometry/Point'
+  			,"esri/geometry/Point"
 
 
-				,'modules/tools.js'
+				,"modules/tools.js"
 				,"modules/popup.js"
 				,"modules/crosstool.js"
 				,"modules/identtool.js"
@@ -114,6 +114,7 @@ function( BorderContainer
    		, ie9 =(document.all&&document.addEventListener&&!window.atob)?true:false
    		, mainWindow = dom.byId("mainWindow")
    		, mapDiv = dom.byId("mapDiv")
+   		, appTitle = dom.byId("appTitle")
    		, gridPane
    		, dataPane
    		, dataCon
@@ -121,7 +122,8 @@ function( BorderContainer
 
 
    	makeViews();
-   	
+
+   	setHeaderText();
    	
    	var  crossAnchor = dom.byId("cros")
 			, arro = dom.byId("arro")
@@ -139,7 +141,7 @@ function( BorderContainer
 			, fex = dom.byId("fex")
 			, topo = dom.byId("topo")
 			, sat = dom.byId("sat")
-			, headLink = dom.byId("heaR")
+
 			, movers = dquery(".mov")
 			, timeDiv = dom.byId('timeDiv');
 
@@ -223,7 +225,7 @@ var time = Date.now();
 		outlines, grid, gridObject, dScroll, outlineMouseMove, outlineTimeout,
 		mouseDownTimeout, previousRecentTarget, justMousedUp = false,  outMoveTime = 0,
 	 	identifyUp, measure, tooltip, rPConHeight, sedToggle, satMap, cursor = 1,
-	 	crossTool, identTool, meaTool, tsNode, linArr;
+	 	crossTool, identTool, meaTool;
 
 		var geoArr, splitGeoArr, geoBins, selectedGraphics =[], selectedGraphicsCount = 0,
 		legend, toggleRightPane, eventFeatures= [],
@@ -258,7 +260,7 @@ console.log(Date.now()-time)
 	(function(){
 		new ScaleBar({map:map});
 		var tCount
-			, timeExtent = new TimeExtent(new Date("01/01/2010 UTC"), new Date("12/31/2013 UTC"));
+			, timeExtent = new TimeExtent(new Date("01/01/2010 UTC"), new Date("12/31/2014 UTC"));
 		map.setTimeExtent(timeExtent);
 		timeSlider = new TimeSlider({                                            //create TimeSlider
 			style:"width:300px;",
@@ -268,15 +270,28 @@ console.log(Date.now()-time)
 			);
 		timeSlider.setThumbCount(2);
 		timeSlider.createTimeStopsByTimeInterval(timeExtent, 2, "esriTimeUnitsMonths");
-		timeSlider.setLabels([2010, 2011, 2012, 2013, "All"]);
+		//timeSlider.setLabels([2010, 2011, 2012, 2013, 2014, "All"]);
 		tCount = timeSlider.timeStops.length;
 		timeSlider.setThumbIndexes([0, tCount]);
 		timeSlider.setTickCount(Math.ceil(tCount/2));
 		timeSlider.startup();
 		map.setTimeSlider(timeSlider);
 	
-		tsNode = dom.byId("timeSlider")
-		linArr = dquery(".dijitRuleLabelH", tsNode)
+		var labelCon = DOC.createElement('div');
+		var arr = [];
+		var endDate = timeSlider.fullTimeExtent.endTime.getFullYear() + 1;
+		labelCon.className = 'labelCon atop';
+		if (touch) labelCon.className += 'labelTouch';
+		for(var startDate = 2010;startDate<=endDate;startDate++){
+			var elem = DOC.createElement('div');
+			arr[arr.length] = elem;
+			elem.className = "tsNode";
+			if(startDate === endDate) elem.innerText = "All";
+			else elem.innerText = startDate;
+			labelCon.appendChild(elem);
+		}
+		mapDiv.appendChild(labelCon);
+
 	})();
 
 
@@ -818,63 +833,59 @@ console.log('post grid');
 						magthin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([221, 4, 178]), 0.5), DJblack),
 						bluthin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([50, 84, 255]), 0.5), DJblack),
 						redthin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([255, 0, 0]), 0.5), DJblack),
+						brothin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([112, 84, 59]), 0.5), DJblack),
 						gre: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([18, 160, 0]), 1.5), DJblack),
 						mag: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([221, 4, 178]), 1.5), DJblack),
 						blu: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([50, 84, 255]), 1.5), DJblack),
 						red: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([255, 0, 0]), 1.5), DJblack),
+						bro: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([112, 84, 59]), 1.5), DJblack),
 						grehi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([18, 160, 0]), 4), DJblack),
 						maghi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([221, 4, 178]), 4), DJblack),
 						bluhi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([50, 84, 255]), 4), DJblack),
-						redhi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([255, 0, 0]), 4), DJblack)
+						redhi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([255, 0, 0]), 4), DJblack),
+						brohi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([112, 84, 59]), 4), DJblack)
 					}
 			, satSym ={
 					magthin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([252, 109, 224]), 1), DJblack),
 					bluthin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([119, 173, 255]), 1), DJblack),
 					redthin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([243, 63, 51]), 1), DJblack),
 					grethin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([24, 211, 48]), 1), DJblack),
+					brothin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([169, 152, 137]), 1), DJblack),
 					mag: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([252, 109, 224]), 1.5), DJblack),
 					blu: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([119, 173, 255]), 1.5), DJblack),
 					red: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([243, 63, 51]), 1.5), DJblack),
 					gre: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([24, 211, 48]), 1.5), DJblack),
+					bro: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([169, 152, 137]), 1.5), DJblack),
 					maghi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([252, 109, 224]), 4), DJblack),
 					bluhi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([119, 173, 255]), 4), DJblack),
 					redhi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([243, 63, 51]), 4), DJblack),
 					grehi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([24, 211, 48]), 4), DJblack),
+					brohi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([169, 152, 137]), 4), DJblack)
 			};
 
     	
 		function setLinkColor(){
 			if(satOn){
-				linArr[0].style.cssText = "text-shadow:0 0 1px #73ef83;color:rgb(24, 211, 48);";
-				linArr[3].style.cssText = "text-shadow:0 0 1px #faa9a3;color:rgb(243, 63, 51);";
-				linArr[2].style.cssText = "text-shadow:0 0 1px #eef5ff;color:rgb(119, 173, 255);";
-				linArr[1].style.cssText = "text-shadow:0 0 1px #fee1f9;color:rgb(252, 109, 224);";
 				darr.forEach(scaleBarLabels, function(v){domClass.add(v,"whiteScaleLabels")});
 			}else{
-				linArr[0].style.cssText = "text-shadow:0 0 1px #0a5c00;color:rgb(18, 160, 0);";
-				linArr[1].style.cssText = "text-shadow:0 0 1px #9a037c;color:rgb(221, 4, 178);";
-				linArr[2].style.cssText = "text-shadow:0 0 1px #0027ed;color:rgb(50, 84, 255);";
-				linArr[3].style.cssText = "text-shadow:0 0 1px #b00;color:rgb(255, 0, 0);";
 				darr.forEach(scaleBarLabels, function(v){domClass.remove(v,"whiteScaleLabels")});
 			}
 		}
-		setLinkColor();
-		linArr[linArr.length-1].style.cssText = "text-shadow:1px 1px 1px #fff;color:rgb(0, 0, 0);";
 		
 
-		on(timeDiv, ".dijitRuleLabelH:mouseover", function(e){
+		on(timeDiv, ".tsLabel:mouseover", function(e){
 			var ets = e.target.style, col = ets.color;
 			ets.backgroundColor = col;
 			ets.color = "#fff";
 		});
 
-		on(timeDiv, ".dijitRuleLabelH:mouseout", function(e){
+		on(timeDiv, ".tsLabel:mouseout", function(e){
 			var ets = e.target.style, back = ets.backgroundColor;
 			ets.color = back;
 			ets.backgroundColor = "rgba(0, 0, 0, 0)";
 		});
 
-		on(timeDiv, ".dijitRuleLabelH:mousedown", function(e){  //timeslider quicklinks handler
+		on(timeDiv, ".tsLabel:mousedown", function(e){  //timeslider quicklinks handler
 			var yr = e.target.innerHTML;
 			if(yr.charAt(0)=== "A")
 				timeSlider.setThumbIndexes([0, timeSlider.timeStops.length]);
@@ -1083,7 +1094,6 @@ console.log('post grid');
 		   				domClass.toggle(sat,"helpglow");
 		   				break;
 		   			case "Sli":
-		   				domClass.toggle(data,"helpglow");
 		   				domClass.toggle(spl,"helpglow");
 		   				break;
 		   			case "Ide":
@@ -1099,7 +1109,7 @@ console.log('post grid');
 		   				domClass.toggle(shoP,"helpglow");
 		   				break;
 		   			case "Tim":
-		   				domClass.toggle(tsNode,"helpglow");
+		   				domClass.toggle(dom.byId("timeSlider"),"helpglow");
 		   				break;
    				}
    			}
@@ -1153,19 +1163,7 @@ console.log('post grid');
 			}
 		});
 
-		function setHeaderText(){
-			var wid = W.innerWidth
-			if (wid < 600 && setHeaderText.fullText){
-				heaR.innerHTML = "Bathymetry";
-				heaR.style.width = "175px";
-				setHeaderText.fullText = 0;
-			}else if(wid > 599 && !setHeaderText.fullText){
-				heaR.style.width = "380px";
-				heaR.innerHTML = "Delta Bathymetry Catalog"
-				setHeaderText.fullText = 1;
-			}
-		}
-		setHeaderText.fullText = W.innerWidth > 599;
+
 
    		function setHelp(e){
    			if(timeout)clearTimeout(timeout);
@@ -1518,6 +1516,7 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
 			if (date < 1325376000000) return "mag";
 			if (date < 1357027200000) return "blu";
 			if (date < 1388563200000) return "red";
+			if (date < 1420099200000) return "bro";
 		}
 
 		function oidToGraphic(oid){
@@ -1578,6 +1577,19 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
    		  	dataPane.style.height = W.innerHeight-225+"px";
    		  	dataCon.style.height = dataPane.scrollHeight-32+"px";
    	}
+
+   	function setHeaderText(){
+			var wid = W.innerWidth;
+			if (wid < 600 && setHeaderText.fullText !== 0){
+				appTitle.innerHTML = "Bathymetry";
+				appTitle.style.width = "175px";
+				setHeaderText.fullText = 0;
+			}else if(wid > 599 && setHeaderText.fullText === 0){
+				appTitle.style.width = "380px";
+				appTitle.innerHTML = "Delta Bathymetry Catalog"
+				setHeaderText.fullText = 1;
+			}
+		}
 
 		function isNumber(n) {
   			return !isNaN(parseFloat(n)) && isFinite(n);

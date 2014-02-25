@@ -173,7 +173,7 @@ function( addSymbol
               addSecondPoint(e1, e2, profile);
           });
           self.handlers[4] = map.on("zoom-start",cancelProfile);
-          self.handlers[5] = map.on("pan-start", cancelProfile);
+          self.handlers[5] = map.on("pan-end", checkPan);
         }
 
       , resetHandlers = function(){
@@ -190,7 +190,13 @@ function( addSymbol
         currentNumber--;
       }
 
+      , checkPan = function(e){
+          var delt = e.delta;
+          if(delt.x||delt.y) cancelProfile();
+      }
+
       , cancelProfile = function(){
+        console.log("cancelling");
         removeProfile();
         resetHandlers();
       }

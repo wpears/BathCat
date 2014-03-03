@@ -528,6 +528,7 @@ console.log('grid')
 				currTime, currOID, currGraphic, gridData = gdata, currentCount = selectedGraphicsCount,
 				currRow, toBeHidden = timeUpdate.toBeHidden, oidRasterIndex,
 				rastersAsOIDs = timeUpdate.rastersAsOIDs;
+				console.log("flawed. don't clear indiscriminately. keep what you can")
 				for(var i = 0, j = gridData.length;i<j;i++){
 					currOID = gridData[i].OBJECTID;
 					if(currOID === j) continue;
@@ -566,7 +567,7 @@ console.log('grid')
 					setVisibleRasters(rastersAsOIDs, 0);
 				}
 				if(currentCount!== selectedGraphicsCount)//make rP reflect possible change
-					infoFunc.setHTML(null)
+					infoFunc(null)
 				rastersAsOIDs.length = 0;
 				toBeHidden.length = 0;
 			}
@@ -1402,7 +1403,6 @@ console.log('post grid');
 			if(mouseDown&&someTargeted){
 				if(prevArr.length===currArr.length&&W.JSON.stringify(prevArr)=== W.JSON.stringify(currArr)){
 					clearAllStoredOIDs();
-					geoSearch.prevArr.length = 0;
 					geoSearch.currArr.length = 0;
 				}else{
 					temp = prevArr;
@@ -1410,7 +1410,7 @@ console.log('post grid');
 					temp.length = 0;
 					geoSearch.currArr = temp;
 				}
-				infoFunc.setHTML(null);
+				infoFunc(null);
 			}
 
 			if(!someTargeted&&mouseDown&&prevArr){ //rehighlight true selections when clicking on
@@ -1528,13 +1528,11 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
 				gridPane.id = "gridView";
    			dataPane.id = "dataView";
    			gridPane.innerHTML = '<div id="gridNode"></div>';
-   			attachViews();
    		}else{
    			gridPane.id = "lP";
    			dataPane.id = "rP";
    			dataPane.className = "mov atop";
    			gridPane.innerHTML = '<div id="gridNode"></div><div id="lPSplitter"><div class="splitterThumb"></div></div>';
-   			attachPanes();
    		}
 
    		mainWindow.appendChild(gridPane);
@@ -1544,6 +1542,9 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
    		if(!touch){
    			placeMap();
    			resizeRp();
+   			attachPanes();
+   		}else{
+
    		}
 		}
 
@@ -1599,6 +1600,10 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
 				}
 			}
 
+			function isShowing(){
+				return showing;
+			}
+
 			function toggleRightPane(){
 				if(showing){//close button logic
 					hidePane();
@@ -1612,7 +1617,7 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
 			}
 
    		on(closeButton,"mousedown", toggleRightPane);
-   		infoFunc = makeInfoFunc();
+   		infoFunc = makeInfoFunc(isShowing,toggleRightPane, showPane);
    	}
 
    	function attachViews(){}
@@ -1623,11 +1628,11 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
    	}
     
 
-   function makeInfoFunc(){
+   function makeInfoFunc(isShowing, toggle, show){
    	
-   return function(attributes){
+   function infoFunc(attributes){
 			if(!attributes&&selectedGraphicsCount === 0)
-				toggleRightPane();
+				toggle();
 			else{
 				if(ie9){
 					var fxArgs ={node:dataCon, duration:200, properties:{opacity:0},
@@ -1635,14 +1640,14 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
 									infoFunc.setHTML(attributes);
 									fx.fadeIn({node:dataCon}).play();
 								}};
-					if(dataPane.isShowing()){
+					if(isShowing()){
 						fx.animateProperty(fxArgs).play();
 					}else{
 					  infoFunc.setHTML(attributes);
-					  dataPane.showPane();
+					  show();
 				  }
 				}else{
-					if(dataPane.isShowing()){
+					if(isShowing()){
 						dataNode.style.opacity = 0;
 						downloadNode.style.opacity = 0;
 						W.setTimeout(function(){
@@ -1652,13 +1657,13 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
 						}, 225);
 					}else{
 						infoFunc.setHTML(attributes);
-						dataPane.showPane();
+						show();
 					}
 				}
 			}
 		}
 
-		infoFunc.toggle = toggle
+		infoFunc.toggle = toggle;
 
 		infoFunc.WWays = function(attr){
 			switch(attr.Project.slice(0, 2)){
@@ -1711,6 +1716,7 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
 
 		infoFunc.ssMessage = "Data was collected to determine the sediment impacts of the agricultural barriers at Middle River, Grant Line Canal, and Old River near the Delta Mendota Canal. Measurements have been made since 1998 at nineteen stations. Multibeam/RTK bathymetry has been gathered since 2011. Four stations have monthly data, the rest are visited in the Fall and Spring.";
 
+		return infoFunc;
 }
 
 
@@ -1778,7 +1784,7 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
 		})(W)
 
 	attachHandlers();
-	//if(!touch)W.setTimeout(toggleRightPane, 300);
+	if(!touch)W.setTimeout(infoFunc.toggle, 300);
 	tiout.refresh() //ensure initial draw;
 	});
 

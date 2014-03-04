@@ -110,12 +110,14 @@ function( BorderContainer
    		, DOC = document
    		, touch = has("touch")
    		, ie9 =(document.all&&document.addEventListener&&!window.atob)?true:false
+   		, innerHeight = W.innerHeight
    		, mainWindow = dom.byId("mainWindow")
    		, mapDiv = dom.byId("mapDiv")
    		, gridPane
    		, dataPane
    		, dataCon
    		, infoFunc
+   		, introText = "<p>The <strong>Delta Bathymetry Catalog</strong> houses the complete set of multibeam bathymetric data collected by the Bathymetry and Technical Support section of the California Department of Water Resources.</p> <p id = 'beta'><b>Note: </b>The Catalog is still in active development. Please report any bugs or usability issues to <a href = 'mailto:wyatt.pearsall@water.ca.gov?subject = Bathymetry Catalog Issue'>Wyatt Pearsall</a>.</p><p>Click on a feature in the map or table to bring up its <strong>description</strong>. Double-click to view the <strong>raster image</strong>.</p> <p><strong>Download</strong> data as text files from the descrption pane.</p> <p><strong>Measure</strong> distances, <strong>identify</strong> raster elevations, and draw <strong>profile graphs</strong> with the tools at the top-right.</p> <p>Change what displays by <strong>collection date</strong> with the slider at bottom-right. <strong>Sort</strong> by date and name with the table's column headers.</p> <p>See the <strong>help</strong> below for further information.</p>"
    		;
 
    	makePeripherals();
@@ -205,7 +207,7 @@ var time = Date.now();
 	 	crossTool, identTool, meaTool;
 
 		var geoArr, splitGeoArr, geoBins, selectedGraphics =[], selectedGraphicsCount = 0,
-		legend, toggleRightPane, eventFeatures= [],
+		legend, eventFeatures= [],
 		zoomEnd, adjustOnZoom, showSat, showTopo, previousLevel = 8,
 		processTimeUpdate,
 		mouseDownX = 0, mouseDownY = 0;
@@ -684,9 +686,10 @@ console.log('grid')
 					previousRecentTarget = et;
 					mouseDownTimeout = W.setTimeout(nullPrevious, 400);
 					attributes = outlines.graphics[oid-1].attributes;
+
 					if(oidStore[oid]&&selectedGraphicsCount === 1){ //target is sole open
 						clearStoredOID(oid, 1, 1);
-						toggleRightPane();
+						infoFunc.toggle();
 					}else{
 						clearAndSetOID(oid, attributes);
 					} 	
@@ -1102,7 +1105,7 @@ console.log('post grid');
    		on(foot, "mousedown", setHelp);
 
    	on(W, "resize", function(e){			//resize map on browser resize
-			var winHeight = W.innerHeight;
+			var winHeight = innerHeight = W.innerHeight;
 
 			rPConHeight = winHeight - 257;
 			scroHeight = dScroll.clientHeight;
@@ -1162,7 +1165,7 @@ console.log('post grid');
    			whichButt === "H"?infoPane.innerHTML = helpText:whichButt === "T"?infoPane.innerHTML = termText:infoPane.innerHTML = conText;
    			domClass.add(lastButt,"activeFoot");
    		}
-   		rPConHeight = W.innerHeight - 257;
+   		rPConHeight = innerHeight - 257;
 		})();
 
 		legend = function(){
@@ -1539,17 +1542,36 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
    		mainWindow.appendChild(dataPane);
 
    		dataCon = dom.byId("dataCon");
-   		if(!touch){
+
+   		if(touch){
+   			attachViews();
+   		}else{
    			placeMap();
    			resizeRp();
    			attachPanes();
-   		}else{
-
    		}
 		}
 
    	function makePeripherals(){
    		if(touch){
+   			var dataTab = DOC.createElement('div');
+   			var gridTab = DOC.createElement('div');
+   			var mid = innerHeight/2;
+
+   			dataTab.id = 'dataTab';
+   			gridTab.id = 'gridTab';
+
+   			dataTab.className = "atop unselectable";
+   			gridTab.className = "atop unselectable";
+
+   			dataTab.innerHTML='<strong class="sideways">Info</strong>';
+   			gridTab.innerHTML='<strong class="sideways">Grid</strong>';
+
+   			dataTab.style.top = mid-100+"px";
+   			gridTab.style.bottom = mid-90+"px";
+   			mainWindow.appendChild(dataTab);
+   			mainWindow.appendChild(gridTab);
+
    		}else{
    			var closer = DOC.createElement('div');
    			closer.id = 'closeRp';
@@ -1564,7 +1586,6 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
    			, closeButton = dom.byId('closeRp')
    		 	, arro = dom.byId("arro")
    			, showing = 0
-   			, introText = "<p>The <strong>Delta Bathymetry Catalog</strong> houses the complete set of multibeam bathymetric data collected by the Bathymetry and Technical Support section of the California Department of Water Resources.</p> <p id = 'beta'><b>Note: </b>The Catalog is still in active development. Please report any bugs or usability issues to <a href = 'mailto:wyatt.pearsall@water.ca.gov?subject = Bathymetry Catalog Issue'>Wyatt Pearsall</a>.</p><p>Click on a feature in the map or table to bring up its <strong>description</strong>. Double-click to view the <strong>raster image</strong>.</p> <p><strong>Download</strong> data as text files from the descrption pane.</p> <p><strong>Measure</strong> distances, <strong>identify</strong> raster elevations, and draw <strong>profile graphs</strong> with the tools at the top-right.</p> <p>Change what displays by <strong>collection date</strong> with the slider at bottom-right. <strong>Sort</strong> by date and name with the table's column headers.</p> <p>See the <strong>help</strong> below for further information.</p>"
    			;
 
    		function showPane(){
@@ -1620,7 +1641,12 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
    		infoFunc = makeInfoFunc(isShowing,toggleRightPane, showPane);
    	}
 
-   	function attachViews(){}
+   	function attachViews(){
+   		var dataTab = dom.byId('dataTab');
+   		var gridTab = dom.byId('gridTab');
+
+   		infoFunc = makeInfoFunc()
+   	}
 
    	function attachHandlers(){
    		if(touch){}
@@ -1631,9 +1657,10 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
    function makeInfoFunc(isShowing, toggle, show){
    	
    function infoFunc(attributes){
-			if(!attributes&&selectedGraphicsCount === 0)
+   	console.log(attributes,selectedGraphicsCount)
+			if(selectedGraphicsCount === 0){
 				toggle();
-			else{
+			}else{
 				if(ie9){
 					var fxArgs ={node:dataCon, duration:200, properties:{opacity:0},
 								onEnd:function(){
@@ -1734,7 +1761,7 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
 
 
    	function resizeRp(){
-   		  	dataPane.style.height = W.innerHeight-225+"px";
+   		  	dataPane.style.height = innerHeight-225+"px";
    		  	dataCon.style.height = dataPane.scrollHeight-32+"px";
    	}
 

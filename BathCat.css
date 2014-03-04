@@ -225,6 +225,30 @@ a{
               -1px 1px 2px 0px #a5b6e0;        
 }
 
+#dataTab, #gridTab{
+  height:80px;
+  width:10%;
+  left:0;
+  line-height: 80px;
+  background: url(images/bg.png);
+  border-radius:2px;
+  box-shadow: 1px 1px 1px 0 #a5b6e0,
+             -1px 0px 1px 0 #a5b6e0;
+}
+
+.sideways{
+  font-size:20px;
+ display:block;
+ -ms-transform: rotate(-90deg);
+ -webkit-transform: rotate(-90deg);
+  transform: rotate(-90deg);
+ /*
+ -ms-transform-origin:20% 40%;
+ -webkit-transform-origin:20% 40%;
+  transform-origin:20% 40%;*/
+}
+
+
 
 #gridNode{
   height:100%;
@@ -789,8 +813,9 @@ right:21px;
   background-image:-moz-linear-gradient(top, #E1EBFB,#f3f3f3);
 }
 .gridToggleX::after{
-  transform:rotate(45deg);
  -webkit-transform:rotate(45deg);
+ -ms-transform:rotate(45deg);
+  transform:rotate(45deg);
 }
 
 

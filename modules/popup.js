@@ -39,7 +39,7 @@
             firstScript = null;
             popUp = DOC.createElement('div');
             popUp.id ='popUp';
-            popUp.innerHTML = '<div id = "popHeader"class = "panehead"> <span id = "popTitle">Profile Tool</span> <div id = "popClose"class = "closebox">X</div> </div> <div id = "popContainer"></div> <div id = "popSplitterV"> <div id = "popLineV"></div> </div> <div id = "popSplitterH"> <div id = "popLineH"></div> </div>';
+            popUp.innerHTML = '<div id = "popHeader"class = "panehead"> <span id = "popTitle">Profile Tool</span> <div id = "popClose"class = "closebox"></div> </div> <div id = "popContainer"></div> <div id = "popSplitterV"> <div id = "popLineV"></div> </div> <div id = "popSplitterH"> <div id = "popLineH"></div> </div>';
             DOC.body.appendChild(popUp);                  
         }
       , init = function(){

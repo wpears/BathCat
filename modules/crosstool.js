@@ -434,10 +434,9 @@ function( addSymbol
 
       , addCloseBox = function(profile){
           var box = DOC.createElement('div');
-          box.textContent = "X";
           box.className = "closebox graphclose";
           profile.chartContainer.appendChild(box);
-          on.once(box, "mousedown", function(){removeChart(profile,1);});
+          on.once(box, "click", function(){removeChart(profile,1);});
       }
 
       , addLegend = function(profile){
@@ -580,7 +579,7 @@ function( addSymbol
 
         on(anchor, "mousedown", handleClick);
 
-        on(container.getClose(),"mousedown", function(){
+        on(container.getClose(),"click", function(){
             tools.wipe(crossTool, anchor, eventFeatures);
         });
         chartTheme.chart.fill="rgba(0,0,0,0)"

@@ -111,6 +111,7 @@ function( BorderContainer
    		, touch = has("touch")
    		, ie9 =(document.all&&document.addEventListener&&!window.atob)?true:false
    		, innerHeight = W.innerHeight
+   		, innerWidth = W.innerWidth
    		, mainWindow = dom.byId("mainWindow")
    		, mapDiv = dom.byId("mapDiv")
    		, gridPane, gridNode, spl
@@ -121,15 +122,16 @@ function( BorderContainer
    		, introText = "<p>The <strong>Delta Bathymetry Catalog</strong> houses the complete set of multibeam bathymetric data collected by the Bathymetry and Technical Support section of the California Department of Water Resources.</p> <p id = 'beta'><b>Note: </b>The Catalog is still in active development. Please report any bugs or usability issues to <a href = 'mailto:wyatt.pearsall@water.ca.gov?subject = Bathymetry Catalog Issue'>Wyatt Pearsall</a>.</p><p>Click on a feature in the map or table to bring up its <strong>description</strong>. Double-click to view the <strong>raster image</strong>.</p> <p><strong>Download</strong> data as text files from the descrption pane.</p> <p><strong>Measure</strong> distances, <strong>identify</strong> raster elevations, and draw <strong>profile graphs</strong> with the tools at the top-right.</p> <p>Change what displays by <strong>collection date</strong> with the slider at bottom-right. <strong>Sort</strong> by date and name with the table's column headers.</p> <p>See the <strong>help</strong> below for further information.</p>"
    		;
 
-
    	makePeripherals();
    	makeViews();
    	setHeader();
+
 
    	
 		if(ie9) fx = require("dojo/_base/fx", function(fx){return fx});
 
    	DOC.body.style.visibility = "visible"; //show the page on load.. no unstyled content
+
 
 
    	esri.config.defaults.io.corsDetection = false;
@@ -448,6 +450,7 @@ on(window,"click",function(e){console.log("click",Date.now()-mTIME)})
 
 on(window,"touchmove",function(e){console.log('touchmove',e,Date.now()-mTIME)})
 */
+
 
 
 		//*****initialize grid and attach all handlers*******\\
@@ -1092,6 +1095,7 @@ console.log('post grid');
    		on(foot, "mousedown", setHelp);
 
    	on(W, "resize", function(e){			//resize map on browser resize
+
 			var winHeight = innerHeight = W.innerHeight;
 
 			rPConHeight = winHeight - 257;
@@ -1529,7 +1533,8 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
 			if(touch){
 				gridPane.id = "gridView";
    			dataPane.id = "dataView";
-   			gridPane.innerHTML = '<div id="gridNode"></div>';
+   			gridPane.innerHTML = '<div id="gridNode"></div><div class="closeView">x</div>';
+   			dataPane.innerHTML+='<div class="closeView">x</div>';
    		}else{
    			gridPane.id = "lP";
    			dataPane.id = "rP";
@@ -1589,16 +1594,16 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
    	}
 
    	function attachHandlers(){
-   		if(touch){}
-   		else {
-   			on(dataNode,".multiSelect:mousedown",function(e){
+   		if(touch){
+   		}else{
+   		}
+   		on(dataNode,".multiSelect:mousedown, .multiSelect:touchstart",function(e){
    				var node = e.target;
    				if (node.tagName === "STRONG") node = node.parentNode;
    				var oid = +node.getAttribute('data-oid');
    				node.style.cursor="default";
    				clearAndSetOID(oid,outlines.graphics[oid-1].attributes);
    			})
-   		}
    	}
     
 
@@ -1735,13 +1740,14 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
    		}
 
    		function showView(node){
-   			node.style["-webkit-transform"] = "translate3d(100%,0,0)";
-				node.style["transform"] = "translate3d(100%,0,0)";
+   			node.style["-webkit-transform"] = "translate3d("+innerWidth+"px,0,0)";
+				node.style["transform"] = "translate3d("+innerWidth+"px,0,0)";
 				history.pushState({node:node.id});
 				currPane = node;
    		}
 
    		function hideView(){
+   			console.log(Date.now(),"HIDING")
    			currPane.style["-webkit-transform"] = "translate3d(0,0,0)";
 				currPane.style["transform"] = "translate3d(0,0,0)";
    		}
@@ -1848,7 +1854,6 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
 
 
 		function placeMap(){
-   		  var innerWidth = W.innerWidth;
    	    var lPWidth = gridPane.clientWidth+6;
    	    if(ie9){
 						mapDiv.style.left = lPWidth+"px";
@@ -1867,7 +1872,7 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
 
 
    	function setHeader(){
-			var wid = W.innerWidth;
+			var wid = innerWidth;
 			var appTitle = setHeader.appTitle = setHeader.appTitle?setHeader.appTitle:dom.byId("appTitle");
 			if (wid < 600 && setHeader.fullText !== 0){
 				appTitle.innerHTML = "Bathymetry";

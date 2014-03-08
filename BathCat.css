@@ -192,7 +192,7 @@ a{
   top:0;
   right:100%;
   background: url(images/bg.png);
-  opacity:0.95;
+  
   transform:translate3d(0,0,0);
  -webkit-transform:translate3d(0,0,0);
  -webkit-transition: -webkit-transform 0.2s ease;
@@ -258,6 +258,21 @@ a{
 .dataglow>strong{
   margin-left:-1px;
   margin-top:4px;
+}
+
+.closeView{
+  font-family:"sans-serif";
+  position:absolute;
+  top:8px;
+  right:18px;
+  color:#a5b6e0;
+  font-weight:900;
+  font-size:28px;
+  text-shadow:1px 1px 1px #007FDE;
+}
+
+.closeView:active{
+  color:#ccdddd;
 }
 
 
@@ -832,7 +847,9 @@ right:21px;
 .gridToggleX::after{
  -webkit-transform:rotate(45deg);
  -ms-transform:rotate(45deg);
+ -moz-transform:rotate(45deg);
   transform:rotate(45deg);
+ -ms-filter: "progid:DXImageTransform.Microsoft.Matrix(SizingMethod='auto expand', M11=0.7071067811865476, M12=-0.7071067811865475, M21=0.7071067811865475, M22=0.7071067811865476)";
 }
 
 

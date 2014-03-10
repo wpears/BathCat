@@ -34,6 +34,11 @@ on(mapDiv,"mousedown",function(e){
 });
 }
 */
+
+      var pixelsPerMeter = 3779.52; //based on 96 dpi
+      var screenToMap;
+
+      
 if(0&&touch){
 on(mapDiv,"touchstart",function(e){
   //map.navigationManager._swipeInitHandle.remove();

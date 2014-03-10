@@ -133,7 +133,8 @@ body{
  }
 
 #mainWindow{
-  width:100%;height:100%;
+  width:100%;
+  height:100%;
 }
 
 #appTitle{
@@ -189,16 +190,23 @@ a{
   width:100%;
   height:100%;
   z-index:1000;
-  top:0;
+  bottom:-1px;
   right:100%;
   background: url(images/bg.png);
   
   transform:translate3d(0,0,0);
  -webkit-transform:translate3d(0,0,0);
- -webkit-transition: -webkit-transform 0.2s ease;
+ -webkit-transition: -webkit-transform 0.2s ease 0;
  -moz-transition:    transform 0.2s ease;
-  transition:        transform 0.2s ease;
+  transition:        transform 0.2s ease 0;
  -o-transition:      transform 0.2s ease;
+}
+
+#dataView{
+  overflow:hidden;
+}
+#gridView{
+  overflow-y:scroll;
 }
 #mapDiv {
   margin-bottom:1px;
@@ -260,20 +268,6 @@ a{
   margin-top:4px;
 }
 
-.closeView{
-  font-family:"sans-serif";
-  position:absolute;
-  top:8px;
-  right:18px;
-  color:#a5b6e0;
-  font-weight:900;
-  font-size:28px;
-  text-shadow:1px 1px 1px #007FDE;
-}
-
-.closeView:active{
-  color:#ccdddd;
-}
 
 
 
@@ -302,10 +296,6 @@ a{
   height:100%;
   transform:translate3d(0,0,0);
  -webkit-transform:translate3d(0,0,0);
- -webkit-transition: height 0.2s ease;
- -moz-transition:    height 0.2s ease;
-  transition:        height 0.2s ease;
- -o-transition:      height 0.2s ease;
 
 }
 #closeRp{
@@ -376,14 +366,6 @@ a{
   background-color:#aaa;
 }
 
-#contact{
-  margin-left:-4px;
-}
-#help{
-  margin-left:1px;
-  margin-right:-4px;
-}
-
 #downloadNode{
   display: none;
   padding:0 23px 5px 0;
@@ -418,22 +400,27 @@ a{
 }
 
 #foot{
+ -moz-box-sizing:border-box;
+  box-sizing:border-box;
   margin:0;
   position:absolute;
-  bottom:-2px;
-  left:-1px;
+  bottom:0;
+  left:0;
   font-size:1em;
   height:32px;
+  width:100%;
   white-space:nowrap;
   overflow:visible;
 }
 .footDiv{
+ -moz-box-sizing:border-box;
+  box-sizing:border-box;
   display:inline-block;
   vertical-align: top;
   border: 1px solid #a5b6e0;
-  height:22px;
+  height:32px;
   padding:3px;
-  width:93px;
+  width:33.3333333%;
   text-align:center;
   background-color:rgba(210,225,249,0.8);
   background-image:-webkit-linear-gradient(top, rgba(243,243,243,0.8), rgba(210,225,249,0.8));
@@ -442,7 +429,7 @@ a{
 }
 .footDiv:hover{
   cursor:pointer;
-background-image:-webkit-linear-gradient(top, #e1ebfb, #b4cdf5);
+  background-image:-webkit-linear-gradient(top, #e1ebfb, #b4cdf5);
   background-image:-moz-linear-gradient(top, #e1ebfb, #b4cdf5);
   background-color:#b4cdf5;
 }
@@ -454,19 +441,22 @@ background-image:-webkit-linear-gradient(top, #e1ebfb, #b4cdf5);
 }
 
 #infopane{
+  -moz-box-sizing:border-box;
+  box-sizing:border-box;
+  background:url(images/bg.png);
   overflow-y:scroll;
-  padding:3px 5px 0 0;
-  margin:3px 0 0 26px;
+  padding:3px 5px 0 26px;
+  margin-top:3px;
   position:absolute;
-  height:0px;
-  width:271px;
-  bottom:32px;
+  height:242px;
+  width:100%;
+  bottom:-210px;
   transform:translate3d(0,0,0);
  -webkit-transform:translate3d(0,0,0);
--webkit-transition: height 0.2s ease;
- -moz-transition:    height 0.2s ease;
-  transition:        height 0.2s ease;
- -o-transition:      height 0.2s ease;
+ -webkit-transition: -webkit-transform 0.2s ease;
+ -moz-transition:    transform 0.2s ease;
+  transition:        transform 0.2s ease;
+ -o-transition:      transform 0.2s ease;
 }
 #infoPaneTitle{
   font-size:1.5em;

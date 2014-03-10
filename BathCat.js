@@ -204,14 +204,12 @@ window.map = map
     map.addLayer(tiout);
 
 
-      var pixelsPerMeter = 3779.52; //based on 96 dpi
-   		var screenToMap;
 
 	var featureSet = window.DATA_OUTLINES,
 	  features = featureSet.features, featureCount=features.length, IE =!!document.all, fx,
 		outlines, grid, gridObject, dScroll, outlineMouseMove, outlineTimeout, 
 		mouseDownTimeout, previousRecentTarget, justMousedUp = false,  outMoveTime = 0,
-	 	identifyUp, measure, tooltip, rPConHeight=innerHeight-257, sedToggle, satMap, cursor = 1, scalebarNode,
+	 	identifyUp, measure, tooltip, rPConHeight=setrPConHeight(), sedToggle, satMap, cursor = 1, scalebarNode,
 	 	crossTool, identTool, meaTool;
 
 		var geoArr, splitGeoArr, geoBins, selectedGraphics =[], selectedGraphicsCount = 0,
@@ -1027,12 +1025,7 @@ console.log('post grid');
 		conText = "<strong id = 'infoPaneTitle'>Contact</strong><p>For information on scheduling new bathymetric surveys, contact  <a href = 'mailto:shawn.mayr@water.ca.gov?subject = Bathymetric Survey'>Shawn Mayr</a>, (916) 376-9664.</p><p>For information on this application or the data contained herein, contact  <a href = 'mailto:wyatt.pearsall@water.ca.gov?subject = Bathymetry Catalog'>Wyatt Pearsall</a>, (916) 376-9643.</p>",
 		infoPane = dom.byId("infopane"), foot = dom.byId("foot"), infoPaneOpen = 0, timeout, lastButt;
 
-		function clearHelp(){
-						timeout = 0;
-   					clearNode(infoPane);
-   					infoPaneOpen = 0;
-   					dataCon.style.borderBottom = "none";
-   	}
+
 
 		function toggleHelpGlow(e){
 			if(e.target.tagName === "B"){
@@ -1083,8 +1076,8 @@ console.log('post grid');
    			var pro =(dataNode.firstChild.textContent).split(" ").join(""),
    				dat = new Date(dataNode.firstChild.nextElementSibling.textContent.slice(-11)),
    				yea = dat.getFullYear(),
-   				mo = dat.getMonth()+1,
-   				dayy = dat.getDate();
+   				mo = dat.getUTCMonth()+1,
+   				dayy = dat.getUTCDate();
    				mo = mo+'';
    				dayy = dayy+'';
    				mo = (mo.length === 1?"0"+mo:mo);
@@ -1098,7 +1091,7 @@ console.log('post grid');
 
 			var winHeight = innerHeight = W.innerHeight;
 
-			rPConHeight = winHeight - 257;
+			setrPConHeight();
 			scroHeight = dScroll.clientHeight;
 
 			placeMap();
@@ -1120,6 +1113,41 @@ console.log('post grid');
 			}
 		});
 
+		function clearHelp(){
+			timeout = 0;
+   		clearNode(infoPane);
+  		infoPaneOpen = 0;
+   		infoPane.style.borderTop = "none";
+   	}
+   	function setdataConHeight(height){
+   		dataCon.style.height = height +"px";
+   	}
+
+		function hideInfoPane(){
+			timeout = W.setTimeout(clearHelp, 205);
+			if(ie9){
+   					fx.animateProperty({node:infoPane, duration:200, properties:{height:0}}).play();
+   					fx.animateProperty({node:dataCon, duration:200, properties:{height:rPConHeight}}).play();
+   				}else{
+   					setdataConHeight(rPConHeight)
+   					infoPane.style["-webkit-transform"] = "translate3d(0,0,0)";
+						infoPane.style["transform"] = "translate3d(0,0,0)";
+   				}
+		}
+
+		function showInfoPane(){
+		  infoPaneOpen = 1;
+			infoPane.style.borderTop = "2px solid #99ceff";
+			if(ie9){
+				fx.animateProperty({node:infoPane, duration:200, properties:{height:242}}).play();
+				fx.animateProperty({node:dataCon, duration:200, properties:{height:rPConHeight-250}}).play();
+			}else{
+				infoPane.style["-webkit-transform"] = "translate3d(0,-242px,0)";
+				infoPane.style["transform"] = "translate3d(0,-242px,0)";
+				setTimeout(function(){setdataConHeight(rPConHeight-242)},180)
+			}
+		}
+
 
 
    		function setHelp(e){
@@ -1127,27 +1155,11 @@ console.log('post grid');
    			if(lastButt)
    					domClass.remove(lastButt,"activeFoot");
    			else{
-   				infoPaneOpen = 1;
-   				dataCon.style.borderBottom = "2px solid #99ceff";
-   				dataCon.style.boxShadow="0 2px 3px -2px #bbf0ff";
-   				if(ie9){
-   					fx.animateProperty({node:infoPane, duration:200, properties:{height:242}}).play();
-   					fx.animateProperty({node:dataCon, duration:200, properties:{height:rPConHeight-250}}).play();
-   				}else{
-   					infoPane.style.height = "242px";
-   					dataCon.style.height = rPConHeight-250+"px";
-   				}
+   				showInfoPane();
    			}
 
    			if(lastButt === e.target){
-   				timeout = W.setTimeout(clearHelp, 205);
-   				if(ie9){
-   					fx.animateProperty({node:infoPane, duration:200, properties:{height:0}}).play();
-   					fx.animateProperty({node:dataCon, duration:200, properties:{height:rPConHeight}}).play();
-   				}else{
-   					infoPane.style.height = 0;
-   					dataCon.style.height = rPConHeight+"px";
-   				}
+   				hideInfoPane();
    				lastButt = null;
    				return;
    			}
@@ -1156,7 +1168,7 @@ console.log('post grid');
    			whichButt === "H"?infoPane.innerHTML = helpText:whichButt === "T"?infoPane.innerHTML = termText:infoPane.innerHTML = conText;
    			domClass.add(lastButt,"activeFoot");
    		}
-   		rPConHeight = innerHeight - 257;
+   		setrPConHeight();
 		})();
 
 if(!touch){
@@ -1528,19 +1540,18 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
 			gridPane = DOC.createElement('div');
    		dataPane = DOC.createElement('div');
 
-   		dataPane.innerHTML='<div id="dataCon"><div id="dataNode"></div><div id="downloadNode"><strong id="dlTitle">Downloads:</strong><a class="lrp" href="zips/Metadata.zip" target="_self">Metadata</a><a class="lrp" id="dlLink" href="tryagain.zip" target="_self">Dataset</a></div></div><div id="infopane"></div><div id="foot" class="unselectable"><div class="footDiv" id="help">Help</div><div class="footDiv" id="tou">Terms of Use</div><div class="footDiv" id="contact">Contact</div></div>';
 
 			if(touch){
 				gridPane.id = "gridView";
    			dataPane.id = "dataView";
-   			gridPane.innerHTML = '<div id="gridNode"></div><div class="closeView">x</div>';
-   			dataPane.innerHTML+='<div class="closeView">x</div>';
+   			gridPane.innerHTML = '<div id="gridNode"></div>';
    		}else{
    			gridPane.id = "lP";
    			dataPane.id = "rP";
    			dataPane.className = "mov atop";
    			gridPane.innerHTML = '<div id="gridNode"></div><div id="lPSplitter"><div class="splitterThumb"></div></div>';
    		}
+   		dataPane.innerHTML='<div id="dataCon"><div id="dataNode"></div><div id="downloadNode"><strong id="dlTitle">Downloads:</strong><a class="lrp" href="zips/Metadata.zip" target="_self">Metadata</a><a class="lrp" id="dlLink" href="tryagain.zip" target="_self">Dataset</a></div></div><div id="infopane"></div><div id="foot" class="unselectable"><div class="footDiv">Help</div><div class="footDiv">Terms of Use</div><div class="footDiv">Contact</div></div>';
 
    		mainWindow.appendChild(gridPane);
    		mainWindow.appendChild(dataPane);
@@ -1594,19 +1605,21 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
    	}
 
    	function attachHandlers(){
-   		if(touch){
-   		}else{
-   		}
-   		on(dataNode,".multiSelect:mousedown, .multiSelect:touchstart",function(e){
-   				var node = e.target;
-   				if (node.tagName === "STRONG") node = node.parentNode;
-   				var oid = +node.getAttribute('data-oid');
-   				node.style.cursor="default";
-   				clearAndSetOID(oid,outlines.graphics[oid-1].attributes);
-   			})
-   	}
-    
 
+			function oneFromMany(e){
+   			var node = e.target;
+   			if (node.tagName === "STRONG") node = node.parentNode;
+   			var oid = +node.getAttribute('data-oid');
+   			node.style.cursor="default";
+   			clearAndSetOID(oid,outlines.graphics[oid-1].attributes);
+   		}
+
+   		if(touch){
+   			on(dataNode,".multiSelect:touchstart",oneFromMany);
+   		}else{
+   			on(dataNode,".multiSelect:mousedown",oneFromMany);
+   		}
+   	}
 
    	function attachPanes(){
    		var movers = dquery(".mov")
@@ -1710,7 +1723,7 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
    		var dataTab = dom.byId('dataTab');
    		var gridTab = dom.byId('gridTab');
    		var glowing = 0;
-   		var currPane = "";
+   		var currPane;
 
    		function addGlow(){
    			if(selectedGraphicsCount === 0){
@@ -1746,10 +1759,10 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
 				currPane = node;
    		}
 
-   		function hideView(){
-   			console.log(Date.now(),"HIDING")
+   		function hideView(e){
    			currPane.style["-webkit-transform"] = "translate3d(0,0,0)";
 				currPane.style["transform"] = "translate3d(0,0,0)";
+				console.log(Date.now(),"HIDING",currPane.style["-webkit-transform"]);
    		}
 
    		on(W,"popstate", hideView);
@@ -1757,7 +1770,6 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
    		on(gridTab,"touchstart",function(){showView(gridPane)})
    		infoFunc = makeInfoFunc(prep)
    		setIntro();
-   		console.log("stuff is terrible, but don't performance tune yet... also, figure out the actual touch ->mouseover mappings... fix panning")
    	}
 
 
@@ -1867,7 +1879,7 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
 
    	function resizeRp(){
    		  	dataPane.style.height = innerHeight-225+"px";
-   		  	dataCon.style.height = dataPane.scrollHeight-32+"px";
+   		  	dataCon.style.height = innerHeight-257+"px";
    	}
 
 
@@ -1883,6 +1895,12 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
 				appTitle.innerHTML = "Delta Bathymetry Catalog"
 				setHeader.fullText = 1;
 			}
+		}
+
+		function setrPConHeight(){
+			if(touch) rPConHeight = innerHeight-32;
+			else rPConHeight = innerHeight - 257;
+			return rPConHeight;
 		}
 
 

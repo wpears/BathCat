@@ -95,15 +95,14 @@ function( BorderContainer
 
 
   	var allowMM = 0;  // An absolutely obscene amount of event handlers. And TONS of triggered body/map mm events
-
-  	(function(){
+/*
+  	(function(){ this patch breaks ie11. I'm omitting until I seem a need in chrome.
 		var eael = HTMLElement.prototype.addEventListener;
 		HTMLElement.prototype.addEventListener = function(){
  			if(arguments[0]!== "mousemove"||allowMM){
     			eael.apply(this, arguments);
 		}
-
-		}})();
+		}})();*/
 		
    ready(function(){ //wait for the dom
    	var W = window
@@ -1119,9 +1118,7 @@ console.log('post grid');
   		infoPaneOpen = 0;
    		infoPane.style.borderTop = "none";
    	}
-   	function setdataConHeight(height){
-   		dataCon.style.height = height +"px";
-   	}
+
 
 		function hideInfoPane(){
 			timeout = W.setTimeout(clearHelp, 205);
@@ -1273,7 +1270,6 @@ if(0&&touch){
 }else{
 
 		outlines.on("mouse-over", function(e) {//map mouseover handler
-			console.log("mouse-over fired")
 			if(outlineMouseMove) outlineMouseMove.remove();
 			outlineMouseMove = outlines.on("mouse-move", mmManager);    	
 		});
@@ -1545,6 +1541,8 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
 				gridPane.id = "gridView";
    			dataPane.id = "dataView";
    			gridPane.innerHTML = '<div id="gridNode"></div>';
+   	//		gridPane.style.height=dataPane.style.height=innerHeight+"px";
+  // 			gridPane.style.width=dataPane.style.width=innerWidth+"px";
    		}else{
    			gridPane.id = "lP";
    			dataPane.id = "rP";
@@ -1558,6 +1556,7 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
 
 
    		defineDOMHandles();
+   		setdataConHeight(innerHeight-32);
 
    		if(touch){
    			attachViews();
@@ -1723,6 +1722,7 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
    		var dataTab = dom.byId('dataTab');
    		var gridTab = dom.byId('gridTab');
    		var glowing = 0;
+   		var translate = "translate3d("+innerWidth+"px,0,0)";
    		var currPane;
 
    		function addGlow(){
@@ -1753,16 +1753,17 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
    		}
 
    		function showView(node){
-   			node.style["-webkit-transform"] = "translate3d("+innerWidth+"px,0,0)";
-				node.style["transform"] = "translate3d("+innerWidth+"px,0,0)";
-				history.pushState({node:node.id});
+   			node.style["-webkit-transform"] = translate;
+				node.style["transform"] = translate;
+				history.pushState(null);
 				currPane = node;
    		}
 
    		function hideView(e){
+   		//	console.log(currPane.style["-webkit-transform"]);
    			currPane.style["-webkit-transform"] = "translate3d(0,0,0)";
 				currPane.style["transform"] = "translate3d(0,0,0)";
-				console.log(Date.now(),"HIDING",currPane.style["-webkit-transform"]);
+		//		console.log(Date.now(),"HIDING",currPane.style["-webkit-transform"]);
    		}
 
    		on(W,"popstate", hideView);
@@ -1882,6 +1883,9 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
    		  	dataCon.style.height = innerHeight-257+"px";
    	}
 
+   	function setdataConHeight(height){
+   		dataCon.style.height = height +"px";
+   	}
 
    	function setHeader(){
 			var wid = innerWidth;

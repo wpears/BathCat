@@ -112,13 +112,11 @@ user-select: none;
 }
 .closebox{
   font-family:sans-serif;
-  background-image:url(../images/add24.png);
-  background-repeat:no-repeat;
+  background: rgba(0,0,0,0) url(../images/add24.png) no-repeat;
  -webkit-transform:rotate(45deg);
  -moz-transform:rotate(45deg);
  -ms-transform:rotate(45deg);
   transform:rotate(45deg);
- -ms-filter: "progid:DXImageTransform.Microsoft.Matrix(SizingMethod='auto expand', M11=0.7071067811865476, M12=-0.7071067811865475, M21=0.7071067811865475, M22=0.7071067811865476)";
   width:24px;
   height:24px;
   font-size:22px;

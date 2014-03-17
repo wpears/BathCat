@@ -1123,7 +1123,7 @@ console.log('post grid');
 		function hideInfoPane(){
 			timeout = W.setTimeout(clearHelp, 205);
 			if(ie9){
-   					fx.animateProperty({node:infoPane, duration:200, properties:{height:0}}).play();
+   					fx.animateProperty({node:infoPane, duration:200, properties:{bottom:-210}}).play();
    					fx.animateProperty({node:dataCon, duration:200, properties:{height:rPConHeight}}).play();
    				}else{
    					setdataConHeight(rPConHeight)
@@ -1136,8 +1136,9 @@ console.log('post grid');
 		  infoPaneOpen = 1;
 			infoPane.style.borderTop = "2px solid #99ceff";
 			if(ie9){
-				fx.animateProperty({node:infoPane, duration:200, properties:{height:242}}).play();
-				fx.animateProperty({node:dataCon, duration:200, properties:{height:rPConHeight-250}}).play();
+				infoPane.style.width=dataCon.offsetWidth+16+"px";
+				fx.animateProperty({node:infoPane, duration:200, properties:{bottom:0}}).play();
+				fx.animateProperty({node:dataCon, duration:200, properties:{height:rPConHeight-210}}).play();
 			}else{
 				infoPane.style["-webkit-transform"] = "translate3d(0,-242px,0)";
 				infoPane.style["transform"] = "translate3d(0,-242px,0)";

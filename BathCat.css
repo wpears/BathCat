@@ -422,7 +422,7 @@ a{
   padding:3px;
   width:33.3333333%;
   text-align:center;
-  background-color:rgba(210,225,249,0.8);
+  background-color:rgba(210,225,249,1);
   background-image:-webkit-linear-gradient(top, rgba(243,243,243,0.8), rgba(210,225,249,0.8));
   background-image:-moz-linear-gradient(top, rgba(243,243,243,0.8), rgba(210,225,249,0.8));
   cursor:default;
@@ -434,7 +434,7 @@ a{
   background-color:#b4cdf5;
 }
 .footDiv:active{
-  background-color:rgba(243,243,243,0.8);
+  background-color:rgba(243,243,243,1);
   background-image:-webkit-linear-gradient(top,#a0bce5,#f0f5fd);
   background-image:-moz-linear-gradient(top,#a0bce5,#f0f5fd);
   padding-top:4px;
@@ -464,7 +464,7 @@ a{
 }
 
 .activeFoot,.activeFoot:hover{
-  background-color:rgba(243,243,243,0.8);
+  background-color:rgba(243,243,243,1);
   background-image:-webkit-linear-gradient(top,#a0bce5,#f0f5fd);
   background-image:-moz-linear-gradient(top,#a0bce5,#f0f5fd);
 }

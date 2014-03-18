@@ -1,0 +1,2 @@
+to cdn copy:
+baseUrl: (location.protocol === 'file:' ? 'http:' : location.protocol) + "../api/js/dojo/dojo"

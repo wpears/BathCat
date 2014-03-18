@@ -457,7 +457,8 @@ console.log('grid')
 				intData, featureAttr, lastNodePos =new Array(gdata.length+1),nameSorted = 0, dateSorted = 1,
 				adGr = declare([Grid, ColumnResizer]), gridHeader, headerNodes;
 
-				grid = new adGr({columns:{
+				grid = new adGr({bufferRows:Infinity,
+							columns:{
 								Project:{label:"Project", sortable:false},
 								Date:{label:"Date", sortable:false},
 								OBJECTID:{label:"OBJECTID"},
@@ -484,6 +485,7 @@ console.log('grid')
 			dScroll = dquery(".dgrid-scroller")[0];
 			scroTop = dScroll.scrollTop;
 			scroHeight = dScroll.clientHeight;
+			dScroll.style.overflowY="scroll";
 			
 			for(var i = 0, j = gdata.length;i<j;i++){
 				lastNodePos[i] = i+1;
@@ -1723,7 +1725,9 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
    		var dataTab = dom.byId('dataTab');
    		var gridTab = dom.byId('gridTab');
    		var glowing = 0;
-   		var translate = "translate3d("+innerWidth+"px,0,0)";
+   		var translate = "translate3d("+innerWidth+"px,0,0);";
+   		var cssShow = "-webkit-transform:"+translate+"transform:"+translate;
+   		var cssHide= "-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0);";
    		var currPane;
 
    		function addGlow(){
@@ -1754,17 +1758,14 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
    		}
 
    		function showView(node){
-   			node.style["-webkit-transform"] = translate;
-				node.style["transform"] = translate;
-				history.pushState(null);
+   			node.style.cssText=cssShow;
 				currPane = node;
+				history.pushState(null)		
    		}
 
+
    		function hideView(e){
-   		//	console.log(currPane.style["-webkit-transform"]);
-   			currPane.style["-webkit-transform"] = "translate3d(0,0,0)";
-				currPane.style["transform"] = "translate3d(0,0,0)";
-		//		console.log(Date.now(),"HIDING",currPane.style["-webkit-transform"]);
+   	  	currPane.style.cssText=cssHide;
    		}
 
    		on(W,"popstate", hideView);

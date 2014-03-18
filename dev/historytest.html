@@ -1,0 +1,7 @@
+<body>
+<div id="mydiv">I am a div, see me gwar. It's the api. The damn api. Check the timer fired. Track it down. Get rid of all the terrible mobile code if possible. Just punt on first initialization.</div>
+</body>
+<script>
+mydiv.addEventListener("mousedown",function(){console.log("PUSH");history.pushState(null);})
+window.addEventListener("popstate",function(){console.log("POP")})
+</script>

@@ -136,8 +136,7 @@ function( BorderContainer
    	esri.config.defaults.io.corsDetection = false;
    	esri.config.defaults.io.corsEnabledServers.push("mrsbmapp00642");//enable cors for quicker queries
    	esri.config.defaults.geometryService = new esri.tasks.GeometryService("http://sampleserver3.arcgisonline.com/arcgis/rest/services/Geometry/GeometryServer"); 	
-   		
-   		
+
    		var rasterUrl = "http://mrsbmapp00642/ArcGIS/rest/services/BATH/Web_Rr/MapServer" 
    		var topoUrl = "http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer";
 
@@ -237,7 +236,7 @@ window.map = map
 
 		outlines.setRenderer(new SimpleRenderer(blank));
     map.addLayer(outlines);
-		eventFeatures[eventFeatures.length]=outlines;
+		eventFeatures.push(outlines);
 
 		satMap = new TiledLayer("http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer");
 	  map.addLayer(satMap);
@@ -275,43 +274,72 @@ window.map = map
 		labelCon = DOC.createElement('div');
 		var arr = [];
 		var endDate = timeSlider.fullTimeExtent.endTime.getFullYear() + 1;
+		var currNode;
+
 		labelCon.className = 'labelCon atop';
+
 		if (touch){
 			labelCon.className += ' labelTouch';
 			timeDiv.style.display="none";
 		}
+
 		for(var startDate = 2010;startDate<=endDate;startDate++){
 			var elem = DOC.createElement('div');
-			arr[arr.length] = elem;
+			arr.push(elem);
 			elem.className = "tsLabel";
-			if(startDate === endDate) elem.innerText = "All";
+			if(startDate === endDate){
+				elem.innerText = "All";
+				currNode = elem;
+			}
 			else elem.innerText = startDate;
 			labelCon.appendChild(elem);
 		}
 		mapDiv.appendChild(labelCon);
 
-		on(labelCon, ".tsLabel:mouseover", function(e){
-			var ets = e.target.style, col = getComputedStyle(e.target).color;
+		highlightLabel(currNode);
+
+		function highlightLabel(node){
+			var ets = node.style, col = getComputedStyle(node).color;
 			ets.backgroundColor = col;
 			ets.color = "#fff";
-		});
+		}
 
-		on(labelCon, ".tsLabel:mouseout", function(e){
-			var ets = e.target.style, back = getComputedStyle(e.target).backgroundColor;
-			ets.color = back;
-			ets.backgroundColor = "rgba(0, 0, 0, 0)";
-		});
+		function clearHighlight(node) {
+			if(node){
+				var ets = node.style, back = getComputedStyle(node).backgroundColor;
+				ets.color = back;
+				ets.backgroundColor = "rgba(0, 0, 0, 0)";
+			}
+		}
 
-		on(labelCon, ".tsLabel:mousedown", function(e){  //timeslider quicklinks handler
+		function setTime(e){  //timeslider quicklinks handler
 			var yr = e.target.innerHTML;
 			if(yr.charAt(0)=== "A")
 				timeSlider.setThumbIndexes([0, timeSlider.timeStops.length]);
 			else
 				timeSlider.setThumbIndexes([6*(yr-2010), 6*(yr-2010)+6]);
-		});
+		}
 
-		 //handle time extent change
-
+		if(touch){
+			on(labelCon,".tsLabel:touchstart",function(e){
+				clearHighlight(currNode);
+				currNode=e.target
+				highlightLabel(currNode);
+				setTimeout(function(){setTime(e)},0);
+			})
+		}else{
+			on(labelCon, ".tsLabel:mouseover", function(e){
+				if(e.target!==currNode)highlightLabel(e.target);
+			});
+			on(labelCon, ".tsLabel:mouseout", function(e){
+				if(e.target!==currNode)clearHighlight(e.target);
+			});
+			on(labelCon, ".tsLabel:mousedown", function(e){
+				clearHighlight(currNode);
+				currNode = e.target;
+				setTime(e)
+			});
+		}
 	})();
 
 
@@ -437,16 +465,6 @@ window.map = map
 			caCh(oid,"hi", 1, 1);
 			infoFunc(attributes);
 		}
-/*
-
-var mTIME=0;
-on(window,"mousedown",function(){console.log('md',Date.now()-mTIME)})
-on(window,"touchstart",function(){mTIME=Date.now();console.log('touchstart')})
-on(window,"touchend",function(){console.log('touchend',Date.now()-mTIME)})
-on(window,"click",function(e){console.log("click",Date.now()-mTIME)})
-
-on(window,"touchmove",function(e){console.log('touchmove',e,Date.now()-mTIME)})
-*/
 
 
 
@@ -455,9 +473,9 @@ console.log('grid')
 		gridObject =(function(){
 			var j = featureCount, gridCon, expandReady=1, scroTop, scroHeight,
 				intData, featureAttr, lastNodePos =new Array(gdata.length+1),nameSorted = 0, dateSorted = 1,
-				adGr = declare([Grid, ColumnResizer]), gridHeader, headerNodes;
+				gridHeader, headerNodes;
 
-				grid = new adGr({bufferRows:Infinity,
+				grid = new Grid({bufferRows:Infinity,
 							columns:{
 								Project:{label:"Project", sortable:false},
 								Date:{label:"Date", sortable:false},
@@ -541,6 +559,7 @@ console.log('grid')
 			}
 
 			function timeUpdate(e){
+				console.log("TU")
 				var startTime = e.startTime, endTime = e.endTime, currentRasters = rasterLayer.visibleLayers,
 				currTime, currOID, currGraphic, gridData = gdata, currentCount = selectedGraphicsCount,
 				currRow, toBeHidden = timeUpdate.toBeHidden, oidRasterIndex,
@@ -549,37 +568,37 @@ console.log('grid')
 				for(var i = 0, j = gridData.length;i<j;i++){
 					currOID = gridData[i].OBJECTID;
 					if(currOID === j) continue;
-					if(oidStore[currOID])
-						clearStoredOID(currOID, 1, 1);
 					currGraphic = oidToGraphic(currOID);
 					currRow = oidToRow(currOID);
 					currTime =+gridData[i].__Date
 					if(currTime<startTime||currTime>endTime){
-							domClass.add(currRow, "hiddenRow");
-							if(map.layerIds[2]){
-								oidRasterIndex = currOID-1;
-								toBeHidden[toBeHidden.length] = currOID;
-								for(var k = 1;k<currentRasters.length;k++){
-									if(currentRasters[k] === oidRasterIndex){
-										splice(currentRasters, k);
-										k--;
-								  }
-							  }
+						if(oidStore[currOID])
+							clearStoredOID(currOID, 1, 1);
+						domClass.add(currRow, "hiddenRow");
+						if(map.layerIds[2]){
+							oidRasterIndex = currOID-1;
+							toBeHidden.push(currOID);
+							for(var k = 1;k<currentRasters.length;k++){
+								if(currentRasters[k] === oidRasterIndex){
+									splice(currentRasters, k);
+									k--;
+								}
 							}
-							insideTimeBoundary[currOID] = 0;
-							currGraphic.setSymbol(blank);
+						}
+						insideTimeBoundary[currOID] = 0;
+						currGraphic.setSymbol(blank);
 					}else{
-							if(insideTimeBoundary[currOID] === 0){
-								domClass.remove(currRow, "hiddenRow");
-								insideTimeBoundary[currOID] = 1;
-								caCh(currOID, "", 1, 0);
-							}
+						if(insideTimeBoundary[currOID] === 0){
+							domClass.remove(currRow, "hiddenRow");
+							insideTimeBoundary[currOID] = 1;
+							caCh(currOID, "", 1, 0);
+						}
 					}
 				}
 				if(map.layerIds[2]){
 					uncheckImageInputs(toBeHidden);
 					for(var i = 1;i<currentRasters.length;i++){
-						rastersAsOIDs[rastersAsOIDs.length] = currentRasters[i]+1;
+						rastersAsOIDs.push(currentRasters[i]+1);
 					}
 					setVisibleRasters(rastersAsOIDs, 0);
 				}
@@ -620,7 +639,7 @@ console.log('grid')
         return false;
       }
 
-			on(headerNodes[0], "mousedown", function(){
+			function runNameSort(){
 				if(nameSorted>0){
 					renderSort(nameSortInv, gdata, gridCon);
 					nameSorted = -1;
@@ -629,8 +648,9 @@ console.log('grid')
 					nameSorted = 1;
 				}
 				nameSortEffects();
-			});
-			on(headerNodes[1], "mousedown", function(){
+			}
+
+			function runDateSort(){
 				if(dateSorted>0){
 					renderSort(dateSortInv, gdata, gridCon);
 					dateSorted = -1;
@@ -639,7 +659,28 @@ console.log('grid')
 					dateSorted = 1;
 				}
 				dateSortEffects();
-			});
+			}
+
+
+			function showAllImages(){      						//mass image display/clear
+				var someChecked = 0;
+				for(var i = 1, j = layerArray.length;i<=j;i++){
+					if(rastersShowing[i]){
+						someChecked = 1;
+						break;
+					}
+				}
+				if(someChecked){
+					setVisibleRasters.reusableArray.length = 0;
+					setVisibleRasters(setVisibleRasters.reusableArray, 0);
+					clearImageInputs();
+				}else{
+					setVisibleRasters(oidArray, 0);
+					checkImageInputs(oidArray);
+				}
+			}
+
+
       
 			function triggerExpand(e){
 				if(expandReady){
@@ -654,42 +695,13 @@ console.log('grid')
 				placeMap();
 				expandReady = 1;
 			}
-		if (!touch){
-			on(spl, "mousedown", function(e){								//expand left pane
-				gridPane.style.minWidth = 0;
-		    var mM = on(W, "mousemove", triggerExpand);
-			  on.once(W,"mouseup", function(evt){
-				  map.resize();
-				  mM.remove();
-			  });
-			});
-		}
-
-			grid.on(".dgrid-cell:mouseover", function(e){
-				var oid = getOIDFromGrid(e);
-				if(oid)caCh(oid,"hi", 1, 1);	
-			});
 
 
-			grid.on(".dgrid-cell:mouseout", function(e){						//grid mouseout handler
-				var oid = getOIDFromGrid(e);
-				if(oidStore[oid])
-					return;
-				else
-					caCh(oid,"", 1, 1);
-			});
 
-
-			grid.on(".dgrid-cell:mousedown", function(e){	//grid click handler
+			function cellClick(e){	//grid click handler
 				var et = e.target, oid = getOIDFromGrid(e), attributes;
-
-				if(!et.firstChild||		
-					domClass.contains(et.firstChild,"dgrid-resize-header-container")||
-					domClass.contains(et,"dgrid-resize-header-container")||
-					domClass.contains(et,"field-Image")||
-					domClass.contains(et,"dgrid-input"))
-						return;
-
+				if(!oid)return;
+				caCh(oid,"hi", 1, 1);
 				if(et!== previousRecentTarget){ //prevent click before double click
 					window.clearTimeout(mouseDownTimeout);
 					previousRecentTarget = et;
@@ -703,7 +715,8 @@ console.log('grid')
 						clearAndSetOID(oid);
 					} 	
 		 		}
-			});
+		 	}
+
 
 			
 			function gridDbl(e){
@@ -745,8 +758,6 @@ console.log('grid')
 			makeViewable.xcutoff=6500;
 			makeViewable.ycutoff=4500;
 
-			grid.on(".dgrid-cell:dblclick", gridDbl);
-
 
 			setVisibleRasters.reusableArray =[];
 			function setVisibleRasters(newOIDs, fromCheck){
@@ -767,7 +778,7 @@ console.log('grid')
 					(function(){
 						for(var i = 0, j = newOIDs.length;i<j;i++){
 							if(insideTimeBoundary[newOIDs[i]]&&visibleRasterOIDs.indexOf(newOIDs[i]-1)===-1)
-								visibleRasterOIDs[visibleRasterOIDs.length] = newOIDs[i]-1;
+								visibleRasterOIDs.push(newOIDs[i]-1);
 						}
 					})();
 				}
@@ -799,8 +810,9 @@ console.log('grid')
 					if(!touch)legend.hide();
 				}
 				setToolVisibility(visibleRasterOIDs);
-
 			}
+
+
 			function setToolVisibility(visibleRasterOIDs){
 				if(visibleRasterOIDs.length>1){//working identify logic below
 					domClass.replace(identAnchor,"clickable","unclick");
@@ -810,6 +822,7 @@ console.log('grid')
 					domClass.replace(crossAnchor,"unclick","clickable");
 				}
 			}
+
 
 			function checkImageInputs(oidArr){
 				var curr;
@@ -822,6 +835,7 @@ console.log('grid')
 				}
 			}
 
+
 			function uncheckImageInputs(oidArr){
 				var curr;
 				for(var i = 0, j = oidArr.length;i<j;i++){
@@ -831,6 +845,7 @@ console.log('grid')
 					}
 			}
 
+
 			function clearImageInputs(){
 				var inputArr = dquery(".dgrid-input", gridNode);
 					for(var i = 0, j = inputArr.length;i<j;i++){
@@ -838,6 +853,7 @@ console.log('grid')
 						rastersShowing[i+1] = 0;
 					}
 			}
+
 
 			on(grid,".dgrid-input:change", function(e){
 					var oid =+e.target.parentNode.parentNode.childNodes[2].innerHTML;
@@ -851,25 +867,36 @@ console.log('grid')
 					setVisibleRasters(setVisibleRasters.reusableArray, 1);
 			});
 
+			if(touch){
 
-			on(headerNodes[3],"mousedown", function(e){      						//mass image display/clear
-				var someChecked = 0;
-				for(var i = 1, j = layerArray.length;i<=j;i++){
-					if(rastersShowing[i]){
-						someChecked = 1;
-						break;
-					}
-				}
-				if(someChecked){
-					setVisibleRasters.reusableArray.length = 0;
-					setVisibleRasters(setVisibleRasters.reusableArray, 0);
-					clearImageInputs();
-				}else{
-					setVisibleRasters(oidArray, 0);
-					checkImageInputs(oidArray);
-				}
-			});
+			}else{
+				grid.on(".dgrid-cell:mousedown", cellClick);
+				grid.on(".dgrid-cell:dblclick", gridDbl);
+				grid.on(".dgrid-cell:mouseover", function(e){
+					var oid = getOIDFromGrid(e);
+					if(oid)caCh(oid,"hi", 1, 1);	
+				});
+			  grid.on(".dgrid-cell:mouseout", function(e){
+				  var oid = getOIDFromGrid(e);
+				  if(oidStore[oid])
+					  return;
+				  else
+					  caCh(oid,"", 1, 1);
+			  });
 
+				on(headerNodes[0], "mousedown", runNameSort);
+				on(headerNodes[1], "mousedown", runDateSort);
+				on(headerNodes[3],"mousedown", showAllImages);
+
+				on(spl, "mousedown", function(e){								//expand left pane
+					gridPane.style.minWidth = 0;
+		    	var mM = on(W, "mousemove", triggerExpand);
+			 		on.once(W,"mouseup", function(evt){
+				  	map.resize();
+				  	mM.remove();
+			  	});
+				});
+			}
 			return { timeUpdate:timeUpdate
 				     , oidToRow:oidToRow
 				     , scrollToRow:scrollToRow
@@ -1468,9 +1495,9 @@ if(0&&touch){
 				}
 		}
 																//main highlighting logic, separated by year with different basemap
-function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var symbo=topoOn?symbols:satSym,date,graphic=oidToGraphic(oid),row;if(!graphic)return;date=features[oid-1].attributes.Date;color=getColor(date);if(evt){row=gridObject.oidToRow(oid);if(hi!==""){domClass.add(row,"highl"+color);hl[oid]=1;}else{domClass.remove(row,"highl"+color);hl[oid]=0;}}if(previousLevel>12){if(hi)hi="";else color+="thin";}graphic.setSymbol(symbo[color+hi]);}
+//function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var symbo=topoOn?symbols:satSym,date,graphic=oidToGraphic(oid),row;if(!graphic)return;date=features[oid-1].attributes.Date;color=getColor(date);if(evt){row=gridObject.oidToRow(oid);if(hi!==""){domClass.add(row,"highl"+color);hl[oid]=1;}else{domClass.remove(row,"highl"+color);hl[oid]=0;}}if(previousLevel>12){if(hi)hi="";else color+="thin";}graphic.setSymbol(symbo[color+hi]);}
 
-/*		function caCh(oid, hi, evt, nm){
+		function caCh(oid, hi, evt, nm){
 			if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid])) return;
 			var symbo = topoOn?symbols:satSym
 				, date
@@ -1498,7 +1525,7 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
 			}
 			graphic.setSymbol(symbo[color+hi]);
 		}
-*/
+
 		function getColor(date){
 			if (date < 1293840000000) return "gre";
 			if (date < 1325376000000) return "mag";
@@ -1544,8 +1571,6 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
 				gridPane.id = "gridView";
    			dataPane.id = "dataView";
    			gridPane.innerHTML = '<div id="gridNode"></div>';
-   	//		gridPane.style.height=dataPane.style.height=innerHeight+"px";
-  // 			gridPane.style.width=dataPane.style.width=innerWidth+"px";
    		}else{
    			gridPane.id = "lP";
    			dataPane.id = "rP";
@@ -1559,13 +1584,12 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
 
 
    		defineDOMHandles();
-   		setdataConHeight(innerHeight-32);
+   		resizeRp();
 
    		if(touch){
    			attachViews();
    		}else{
    			placeMap();
-   			resizeRp();
    			attachPanes();
    		}
 		}
@@ -1586,7 +1610,7 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
    			gridTab.innerHTML='<strong class="sideways">Grid</strong>';
 
    			dataTab.style.top = mid-100+"px";
-   			gridTab.style.bottom = mid-90+"px";
+   			gridTab.style.top = mid-100+"px";
    			mainWindow.appendChild(dataTab);
    			mainWindow.appendChild(gridTab);
 
@@ -1724,9 +1748,12 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
    	function attachViews(){
    		var dataTab = dom.byId('dataTab');
    		var gridTab = dom.byId('gridTab');
-   		var glowing = 0;
-   		var translate = "translate3d("+innerWidth+"px,0,0);";
-   		var cssShow = "-webkit-transform:"+translate+"transform:"+translate;
+   		var gridShowing = 0;
+   		var dataShowing = 0;
+   		var translateRight = "translate3d("+innerWidth+"px,0,0);";
+   		var translateLeft = "translate3d(-"+innerWidth+"px,0,0);";
+   		var dataTrans = "-webkit-transform:"+translateRight+"transform:"+translateRight;
+   		var gridTrans = "-webkit-transform:"+translateLeft+"transform:"+translateLeft;
    		var cssHide= "-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0);";
    		var currPane;
 
@@ -1753,24 +1780,47 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
 			}
 
    		function prep(setData, attr){
+   			if(selectedGraphicsCount === 0){
+					return hideView(dataPane);
+				}
    			setData(attr);
-   			addGlow();
+   			showView(dataPane, dataTrans)
    		}
 
-   		function showView(node){
-   			node.style.cssText=cssShow;
-				currPane = node;
-				history.pushState(null)		
+   		function showView(node,transform){
+   			node.style.cssText=transform;
    		}
 
 
-   		function hideView(e){
-   	  	currPane.style.cssText=cssHide;
+   		function hideView(node){
+   	  	node.style.cssText=cssHide;
    		}
 
-   		on(W,"popstate", hideView);
-   		on(dataTab,"touchstart", function(){showView(dataPane)});
-   		on(gridTab,"touchstart",function(){showView(gridPane)})
+   		function dataToggle(){
+   			if(dataShowing){
+   				hideView(dataPane);
+   				dataShowing = 0;
+   			}else{
+   				showView(dataPane,dataTrans);
+   				dataShowing = 1;
+   			}
+   		}
+
+   		function gridToggle(){
+   			if(gridShowing){
+   				hideView(gridPane);
+   				gridShowing = 0;
+   			}else{
+   				showView(gridPane,gridTrans);
+   				gridShowing = 1;
+   			}
+   		}
+
+
+   		on(dataTab,"touchstart", dataToggle);
+   		on(gridTab,"touchstart", gridToggle);
+
+
    		infoFunc = makeInfoFunc(prep)
    		setIntro();
    	}
@@ -1881,8 +1931,12 @@ function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var
 
 
    	function resizeRp(){
-   		  	dataPane.style.height = innerHeight-225+"px";
-   		  	dataCon.style.height = innerHeight-257+"px";
+   		if(touch){
+   			setdataConHeight(innerHeight/2 - 32);
+   		}else{
+   		  dataPane.style.height = innerHeight-225+"px";
+   		  setdataConHeight(innerHeight-257);
+   		}
    	}
 
    	function setdataConHeight(height){

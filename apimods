@@ -1,2 +1,3 @@
 to cdn copy:
 baseUrl: (location.protocol === 'file:' ? 'http:' : location.protocol) + "../api/js/dojo/dojo"
+commented out event listeners in dojo touch

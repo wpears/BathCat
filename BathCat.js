@@ -196,7 +196,7 @@ window.map = map
 				      																]
 				      															}
 				      						 },
-													  {id:"tiout",mode: 0}
+													  {id:"tiout",mode: FeatureLayer.MODE_SNAPSHOT}
 													 );
   	tiout.setRenderer(new SimpleRenderer(blank));
     map.addLayer(tiout);
@@ -230,7 +230,7 @@ window.map = map
 
 		outlines = new FeatureLayer({layerDefinition:layDef, featureSet:featureSet}, {
 		  	id:"out",
-       	 	mode: 0,
+       	 	mode: FeatureLayer.MODE_SNAPSHOT,
        	 	outFields: ["*"]
   		});
 
@@ -250,9 +250,11 @@ window.map = map
 
 
 
-	(function(){
+	var setTextColor = (function(){
 		new ScaleBar({map:map});
 		scalebarNode = dquery(".esriScalebar")[0]
+
+
 		var tCount
 			, timeExtent = new TimeExtent(new Date("01/01/2010 UTC"), new Date("12/31/2014 UTC"));
 		map.setTimeExtent(timeExtent);
@@ -271,10 +273,12 @@ window.map = map
 		timeSlider.startup();
 		map.setTimeSlider(timeSlider);
 	
+
 		labelCon = DOC.createElement('div');
-		var arr = [];
 		var endDate = timeSlider.fullTimeExtent.endTime.getFullYear() + 1;
 		var currNode;
+		var tsLinks = [];
+
 
 		labelCon.className = 'labelCon atop';
 
@@ -285,7 +289,7 @@ window.map = map
 
 		for(var startDate = 2010;startDate<=endDate;startDate++){
 			var elem = DOC.createElement('div');
-			arr.push(elem);
+			tsLinks.push(elem);
 			elem.className = "tsLabel";
 			if(startDate === endDate){
 				elem.innerText = "All";
@@ -299,17 +303,11 @@ window.map = map
 		highlightLabel(currNode);
 
 		function highlightLabel(node){
-			var ets = node.style, col = getComputedStyle(node).color;
-			ets.backgroundColor = col;
-			ets.color = "#fff";
+			domClass.add(node,"tsHighlight")
 		}
 
 		function clearHighlight(node) {
-			if(node){
-				var ets = node.style, back = getComputedStyle(node).backgroundColor;
-				ets.color = back;
-				ets.backgroundColor = "rgba(0, 0, 0, 0)";
-			}
+			domClass.remove(node,"tsHighlight")
 		}
 
 		function setTime(e){  //timeslider quicklinks handler
@@ -340,6 +338,18 @@ window.map = map
 				setTime(e)
 			});
 		}
+
+		function setTextColor(){
+			if(satOn){
+				domClass.add(scalebarNode,"whiteScaleLabels");
+				domClass.add(labelCon,"satLabels")
+			}else{
+				domClass.remove(scalebarNode,"whiteScaleLabels");
+				domClass.remove(labelCon,"satLabels")
+			}
+		}
+		setTextColor();
+		return setTextColor;
 	})();
 
 
@@ -471,7 +481,7 @@ window.map = map
 		//*****initialize grid and attach all handlers*******\\
 console.log('grid')
 		gridObject =(function(){
-			var j = featureCount, gridCon, expandReady=1, scroTop, scroHeight,
+			var j = featureCount, gridCon, expandReady=1,
 				intData, featureAttr, lastNodePos =new Array(gdata.length+1),nameSorted = 0, dateSorted = 1,
 				gridHeader, headerNodes;
 
@@ -493,7 +503,7 @@ console.log('grid')
 			console.log("OI")
 
 			gridHeader = dom.byId("gridNode-header").firstChild;
-			headerNodes = gridHeader.childNodes;
+			headerNodes = gridHeader.children;
 
 			headerNodes[0].title = "Sort by Name"; //maybe pass these into constructor
 			headerNodes[1].title = "Sort by Date";         
@@ -501,8 +511,6 @@ console.log('grid')
 			
 			gridCon = dquery(".dgrid-content")[0];
 			dScroll = dquery(".dgrid-scroller")[0];
-			scroTop = dScroll.scrollTop;
-			scroHeight = dScroll.clientHeight;
 			dScroll.style.overflowY="scroll";
 			
 			for(var i = 0, j = gdata.length;i<j;i++){
@@ -527,7 +535,7 @@ console.log('grid')
 				return a.Project>b.Project?-1:1
 			}
 			function renderSort(sorter, gdata, gCon){
-				var i = 0, j = gdata.length, newCon, currentNodes = gCon.childNodes,
+				var i = 0, j = gdata.length, newCon, currentNodes = gCon.children,
 					nodeIndex, node, frag = DOC.createDocumentFragment(), togId = sedToggle.getRow().id,
 				tog = gdata.shift();	
 				gdata.sort(sorter);
@@ -547,33 +555,33 @@ console.log('grid')
 			}
 
 			function oidToRow(oid){
-				return gridCon.childNodes[lastNodePos[oid-1]];
+				return gridCon.children[lastNodePos[oid-1]];
 			}
 
 			function scrollToRow(oid){
-				var offset = lastNodePos[oid-1]*30;
-					if(offset>scroHeight+scroTop||offset<scroTop){
-						scroTop = offset-155;
-						dScroll.scrollTop = scroTop;
-					}
+				var row = oidToRow(oid);
+				var offset = row.offsetTop;
+				if (!offset&&(domClass.contains(row,"hiddenRow")||domClass.contains(row,"hiddenGridToggle")))
+					return;
+				var scrollTop = dScroll.scrollTop;
+				if(offset>dScroll.clientHeight+scrollTop-55||offset<scrollTop)
+						dScroll.scrollTop = offset-95;
 			}
 
 			function timeUpdate(e){
-				console.log("TU")
 				var startTime = e.startTime, endTime = e.endTime, currentRasters = rasterLayer.visibleLayers,
-				currTime, currOID, currGraphic, gridData = gdata, currentCount = selectedGraphicsCount,
+				currTime, currOID, rawGraphic, gridData = gdata, currentCount = selectedGraphicsCount,
 				currRow, toBeHidden = timeUpdate.toBeHidden, oidRasterIndex,
 				rastersAsOIDs = timeUpdate.rastersAsOIDs;
-				console.log("flawed. don't clear indiscriminately. keep what you can")
 				for(var i = 0, j = gridData.length;i<j;i++){
 					currOID = gridData[i].OBJECTID;
 					if(currOID === j) continue;
-					currGraphic = oidToGraphic(currOID);
+					rawGraphic = oidToGraphic(currOID)._shape.rawNode;
 					currRow = oidToRow(currOID);
 					currTime =+gridData[i].__Date
 					if(currTime<startTime||currTime>endTime){
-						if(oidStore[currOID])
-							clearStoredOID(currOID, 1, 1);
+				//		if(oidStore[currOID])
+				//	  	clearStoredOID(currOID, 1, 1);
 						domClass.add(currRow, "hiddenRow");
 						if(map.layerIds[2]){
 							oidRasterIndex = currOID-1;
@@ -586,12 +594,12 @@ console.log('grid')
 							}
 						}
 						insideTimeBoundary[currOID] = 0;
-						currGraphic.setSymbol(blank);
+						rawGraphic.setAttribute("class","hiddenPath")
 					}else{
 						if(insideTimeBoundary[currOID] === 0){
 							domClass.remove(currRow, "hiddenRow");
 							insideTimeBoundary[currOID] = 1;
-							caCh(currOID, "", 1, 0);
+							rawGraphic.setAttribute("class","")
 						}
 					}
 				}
@@ -630,7 +638,7 @@ console.log('grid')
 				if(selectedGraphicsCount)scrollToRow(selectedGraphics[0])
 			}
 		  function clickSort(){
-		    if(nameSorted === 0&&selectedGraphicsCount>1){
+		    if(nameSorted === 0 && selectedGraphicsCount>1){
 				  renderSort(nameSortSeq, gdata, gridCon);
 					nameSorted = 1;
 					nameSortEffects();
@@ -856,7 +864,7 @@ console.log('grid')
 
 
 			on(grid,".dgrid-input:change", function(e){
-					var oid =+e.target.parentNode.parentNode.childNodes[2].innerHTML;
+					var oid =+e.target.parentNode.parentNode.children[2].innerHTML;
 					if(rastersShowing[oid]){
 						rastersShowing[oid] = 0;
 					}else{
@@ -904,8 +912,8 @@ console.log('grid')
 				     , checkImageInputs:checkImageInputs
 				     , clickSort:clickSort
 				     , expand:triggerExpand
+				     , sedToggle:sedToggle
 				     };
-
 		})();
 console.log('post grid');
 
@@ -958,25 +966,6 @@ console.log('post grid');
 			};
 
 
-		function setLinkColor(){
-			var tsLinks =setLinkColor.tsLinks = setLinkColor.tsLinks ? setLinkColor.tsLinks:dquery('.tsLabel',mapDiv)
-			if(satOn){
-				domClass.add(scalebarNode,"whiteScaleLabels");
-			  tsLinks[0].style.color="rgb(24, 211, 48)";
-			  tsLinks[1].style.color="rgb(252, 109, 224)";
-			  tsLinks[2].style.color="rgb(119, 173, 255)";
-			  tsLinks[3].style.color="rgb(243, 63, 51)";
-			  tsLinks[4].style.color="rgb(169,152,137)";
-			}else{
-				domClass.remove(scalebarNode,"whiteScaleLabels");
-				tsLinks[0].style.color="rgb(18,160,0)";
-			  tsLinks[1].style.color="rgb(221,4,178)";
-			  tsLinks[2].style.color="rgb(50,84,255)";
-			  tsLinks[3].style.color="rgb(255,0,0)";
-			  tsLinks[4].style.color="rgb(112, 84, 59)";
-			}
-		}
-		setLinkColor();
 
 
 		tiout.on("update-end", function(e, f, g, h){ // allows feature updating
@@ -998,7 +987,7 @@ console.log('post grid');
 			topoOn=0;
 			domClass.remove(topo,"currentbmap");
 			domClass.add(sat,"currentbmap");
-			setLinkColor();
+			setTextColor();
 			redrawAllGraphics(tiout.graphics);
 		};
 		showTopo = function(){
@@ -1008,7 +997,7 @@ console.log('post grid');
 			topoOn=1;
 			domClass.remove(sat,"currentbmap");
 			domClass.add(topo,"currentbmap");
-			setLinkColor();
+			setTextColor();
 			redrawAllGraphics(tiout.graphics);
 		};
 		basemapOff = function(){
@@ -1120,7 +1109,6 @@ console.log('post grid');
 			var winHeight = innerHeight = W.innerHeight;
 
 			setrPConHeight();
-			scroHeight = dScroll.clientHeight;
 
 			placeMap();
 			setHeader();
@@ -1498,7 +1486,7 @@ if(0&&touch){
 //function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var symbo=topoOn?symbols:satSym,date,graphic=oidToGraphic(oid),row;if(!graphic)return;date=features[oid-1].attributes.Date;color=getColor(date);if(evt){row=gridObject.oidToRow(oid);if(hi!==""){domClass.add(row,"highl"+color);hl[oid]=1;}else{domClass.remove(row,"highl"+color);hl[oid]=0;}}if(previousLevel>12){if(hi)hi="";else color+="thin";}graphic.setSymbol(symbo[color+hi]);}
 
 		function caCh(oid, hi, evt, nm){
-			if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid])) return;
+			if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid])) return; //short circuit unless time slider(nm==) or redraw (evt==0)
 			var symbo = topoOn?symbols:satSym
 				, date
 			  , graphic = oidToGraphic(oid)
@@ -1540,14 +1528,14 @@ if(0&&touch){
 
 		function getOIDFromGrid(e){ //returns the gets an ObjectID from an event either on the grid or map
 			var etP = e.target.parentNode;
-			if(etP.childNodes[2])
-				return +etP.childNodes[2].innerHTML;
+			if(etP.children[2])
+				return +etP.children[2].innerHTML;
 			else if(e.target.className == "dgrid-input")
-				return +etP.parentNode.childNodes[2].innerHTML;
+				return +etP.parentNode.children[2].innerHTML;
 		}
 
 		function getInputBox(oid){
-			return gridObject.oidToRow(oid).firstChild.firstChild.childNodes[3].firstChild;
+			return gridObject.oidToRow(oid).firstChild.firstChild.children[3].firstChild;
 		}
 
 
@@ -1748,13 +1736,15 @@ if(0&&touch){
    	function attachViews(){
    		var dataTab = dom.byId('dataTab');
    		var gridTab = dom.byId('gridTab');
+   		var zIndex = 1000;
    		var gridShowing = 0;
    		var dataShowing = 0;
+   		var dataDisplayed = 0;
    		var translateRight = "translate3d("+innerWidth+"px,0,0);";
    		var translateLeft = "translate3d(-"+innerWidth+"px,0,0);";
    		var dataTrans = "-webkit-transform:"+translateRight+"transform:"+translateRight;
    		var gridTrans = "-webkit-transform:"+translateLeft+"transform:"+translateLeft;
-   		var cssHide= "-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0);";
+   		var cssHide= "-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0);z-index:9999";
    		var currPane;
 
    		function addGlow(){
@@ -1780,39 +1770,53 @@ if(0&&touch){
 			}
 
    		function prep(setData, attr){
-   			if(selectedGraphicsCount === 0){
+   			if(dataDisplayed&&selectedGraphicsCount === 0){
 					return hideView(dataPane);
 				}
    			setData(attr);
+   			if(gridShowing&&!dataDisplayed) return;
    			showView(dataPane, dataTrans)
+   			dataShowing = 1;
+   			dataDisplayed = 1;
    		}
 
    		function showView(node,transform){
    			node.style.cssText=transform;
+   			node.style.zIndex = ++zIndex;
    		}
 
 
    		function hideView(node){
    	  	node.style.cssText=cssHide;
+   	  	setTimeout(function(){
+   	  		zIndex--;
+   	  		node.style.zIndex=1000;
+   	  	},155)
+
+
    		}
 
    		function dataToggle(){
-   			if(dataShowing){
+   			if(dataShowing&&dataDisplayed){
    				hideView(dataPane);
    				dataShowing = 0;
+   				dataDisplayed = 0;
    			}else{
    				showView(dataPane,dataTrans);
    				dataShowing = 1;
+   				dataDisplayed = 1;
    			}
    		}
 
    		function gridToggle(){
-   			if(gridShowing){
+   			if(gridShowing&&!dataDisplayed){
    				hideView(gridPane);
    				gridShowing = 0;
+   				if(dataShowing) dataDisplayed = 1;
    			}else{
    				showView(gridPane,gridTrans);
    				gridShowing = 1;
+   				dataDisplayed = 0;
    			}
    		}
 
@@ -1971,18 +1975,27 @@ if(0&&touch){
 		//Convenience and shims
 
 
-
+		/*on(W,'click',function(){
+			var t=Date.now();
+			caCh(2,)
+		})*/
 
 		function isNumber(n) {
   			return !isNaN(parseFloat(n)) && isFinite(n);
 		}
 
-				function splice(arr, index){
+		function splice(arr,index){
+			var newLen = arr.length-1;
+			arr[index] = arr[newLen];
+			arr.length = newLen;
+			return arr;
+		}
+			/*	function splice(arr, index){
 			for (var i = index, len = arr.length - 1; i < len; i++)
         		arr[i] = arr[i + 1];
 			arr.length = len;
 			return arr;
-		}
+		}*/
 
 
 		function nullPrevious(){

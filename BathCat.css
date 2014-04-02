@@ -35,58 +35,8 @@
 .dijitTooltip iframe{
   display:none;
 }
-.sortTarget{
-  text-decoration:underline;
-  font-size:17px;
-}
-.labelCon{
-  width:320px;
-  bottom:40px;
-  right:13px;
-  position:absolute;
-  font-size:1.2em;
-  font-weight:900;
- -webkit-transition: all 0.1s ease;
- -moz-transition:    all 0.1s ease;
-  transition:        all 0.1s ease;
- -o-transition:      all 0.1s ease;
-}
-.labelTouch{
-  width:48px;
-  margin:0;
-  bottom:5px;
-  right:3px;
-}
-.tsLabel{
-  float:left;
-  margin-right:7px;
-  cursor:pointer;
-  border-radius:2px;
-  padding:2px 4px;
-}
-
-.tsLabel:nth-child(6){
-  color:rgb(25,25,35);
-}
 
 
-.esriScalebar{
-  margin-left:131px;
-  margin-bottom:-10px;
-  color: #444;
-}
-.esriScalebarLabel{
-  margin-top:-28px;
-  font-family:SSP;
-  font-size:0.75em;
-  font-weight:bold;
-}
-.whiteScaleLabels{
-  color:#fff;
-}
-.dijitSliderMoveable{
-	outline:none;
-}
 
 @font-face{
   font-family: Harabara;
@@ -95,9 +45,6 @@
 @font-face{
   font-family:SSP;
   src: url("fonts/SourceSansPro-Regular.ttf");
-}
-h4{
-color:green;
 }
 
 html, body { 
@@ -121,18 +68,14 @@ body{
   right:0;
  }
 
- #beta{
-  font-size:0.875em;
- }
- 
- a{
-  color: #5ADE6B;
-  font-weight:900;
- }
 
 #mainWindow{
   width:100%;
   height:100%;
+}
+
+#beta{
+  font-size:0.875em;
 }
 
 #appTitle{
@@ -176,7 +119,13 @@ body{
   -webkit-transform:translate3d(-285px,0,0);
 }
 
+h4{
+  color:green;
+}
+
 a{
+  color: #5ADE6B;
+  font-weight:900;
  -webkit-transition: background-color 0.1s ease, color 0.1s ease;
  -moz-transition: background-color 0.1s ease, color 0.1s ease;
   transition: background-color 0.1s ease, color 0.1s ease;
@@ -272,7 +221,9 @@ a{
   margin-top:4px;
 }
 
-
+.hiddenPath{
+  visibility:hidden;
+}
 
 
 #gridNode{
@@ -698,6 +649,137 @@ li{
  -o-transition:      transform 0.15s ease-out;
 }
 
+
+
+.labelCon{
+  width:320px;
+  bottom:40px;
+  right:13px;
+  position:absolute;
+  font-size:1.2em;
+  font-weight:900;
+ -webkit-transition: all 0.1s ease;
+ -moz-transition:    all 0.1s ease;
+  transition:        all 0.1s ease;
+ -o-transition:      all 0.1s ease;
+}
+.labelTouch{
+  width:48px;
+  margin:0;
+  bottom:5px;
+  right:3px;
+}
+.tsLabel{
+  float:left;
+  margin-right:7px;
+  cursor:pointer;
+  border-radius:2px;
+  padding:2px 4px;
+}
+
+
+.tsLabel:nth-child(1){
+  color:rgb(18,160,0);
+}
+.tsLabel:nth-child(2){
+  color:rgb(221,4,178);
+}
+.tsLabel:nth-child(3){
+  color:rgb(50,84,255);
+}
+.tsLabel:nth-child(4){
+  color:rgb(255,0,0);
+}
+.tsLabel:nth-child(5){
+  color:rgb(112, 84, 59);
+}
+.tsLabel:nth-child(6){
+  color:rgb(25,25,35);
+}
+
+.tsHighlight:nth-child(1){
+  background-color:rgb(18,160,0);
+}
+.tsHighlight:nth-child(2){
+  background-color:rgb(221,4,178);
+}
+.tsHighlight:nth-child(3){
+  background-color:rgb(50,84,255);
+}
+.tsHighlight:nth-child(4){
+  background-color:rgb(255,0,0);
+}
+.tsHighlight:nth-child(5){
+  background-color:rgb(112, 84, 59);
+}
+.tsHighlight:nth-child(6){
+  background-color:rgb(25,25,35);
+}
+
+.satLabels>.tsLabel:nth-child(1){
+  color:rgb(24, 211, 48);
+}
+.satLabels>.tsLabel:nth-child(2){
+  color:rgb(252, 109, 224);
+}
+.satLabels>.tsLabel:nth-child(3){
+  color:rgb(119, 173, 255);
+}
+.satLabels>.tsLabel:nth-child(4){
+  color:rgb(243, 63, 51);
+}
+.satLabels>.tsLabel:nth-child(5){
+  color:rgb(169,152,137);
+}
+.satLabels>.tsLabel:nth-child(6){
+  color:#fff;
+}
+
+.satLabels>.tsHighlight:nth-child(1){
+  background-color:rgb(24, 211, 48);
+}
+.satLabels>.tsHighlight:nth-child(2){
+  background-color:rgb(252, 109, 224);
+}
+.satLabels>.tsHighlight:nth-child(3){
+  background-color:rgb(119, 173, 255);
+}
+.satLabels>.tsHighlight:nth-child(4){
+  background-color:rgb(243, 63, 51);
+}
+.satLabels>.tsHighlight:nth-child(5){
+  background-color:rgb(169,152,137);
+}
+.satLabels>.tsHighlight:nth-child(6){
+  background-color:rgb(25,25,35);
+}
+
+.tsLabel.tsHighlight,.satLabels>.tsLabel.tsHighlight{
+  color:#fff;
+}
+
+
+.esriScalebar{
+  margin-left:131px;
+  margin-bottom:-10px;
+  color: #444;
+}
+.esriScalebarLabel{
+  margin-top:-28px;
+  font-family:SSP;
+  font-size:0.75em;
+  font-weight:bold;
+}
+.whiteScaleLabels{
+  color:#fff;
+}
+.dijitSliderMoveable{
+  outline:none;
+}
+
+
+
+
 .activeTool{
   box-shadow:0 0 12px 4px #99ceff !important;
   background-color:#a3d4f3;
@@ -760,6 +842,11 @@ user-select: none;
 
 .dgrid-sortable{
   text-overflow:clip;
+}
+
+.sortTarget{
+  text-decoration:underline;
+  font-size:17px;
 }
 
 .dgrid-row{

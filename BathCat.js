@@ -266,7 +266,6 @@ window.map = map
 			);
 		timeSlider.setThumbCount(2);
 		timeSlider.createTimeStopsByTimeInterval(timeExtent, 2, "esriTimeUnitsMonths");
-		//timeSlider.setLabels([2010, 2011, 2012, 2013, 2014, "All"]);
 		tCount = timeSlider.timeStops.length;
 		timeSlider.setThumbIndexes([0, tCount]);
 		timeSlider.setTickCount(Math.ceil(tCount/2));
@@ -442,14 +441,14 @@ window.map = map
 
 		function clearStoredOID(oid, doSplice, fromGrid){
 			var oidIndex = geoSearch.prevArr.indexOf(oid);
-			caCh(oid,"", 1, 1);
+			caCh(oid,"", 1);
 			if(oidStore[oid]){
 				oidStore[oid] = 0;
 				if(fromGrid&&oidIndex>-1)splice(geoSearch.prevArr, oidIndex);
 				selectedGraphicsCount--;
 				if(doSplice)
 					splice(selectedGraphics, selectedGraphics.indexOf(oid));
-			}
+			}else{console.log("NOT STORED")}
 		}
 
 		function storeOID(oid){
@@ -472,7 +471,7 @@ window.map = map
 			storeOID(oid);
 			geoSearch.prevArr.length = 1;
 			geoSearch.prevArr[0] = oid;
-			caCh(oid,"hi", 1, 1);
+			caCh(oid,"hi", 1);
 			infoFunc(attributes);
 		}
 
@@ -580,7 +579,7 @@ console.log('grid')
 					currRow = oidToRow(currOID);
 					currTime =+gridData[i].__Date
 					if(currTime<startTime||currTime>endTime){
-				//		if(oidStore[currOID])
+				//		if(oidStore[currOID]) deselect a project if it outside the current time extent
 				//	  	clearStoredOID(currOID, 1, 1);
 						domClass.add(currRow, "hiddenRow");
 						if(map.layerIds[2]){
@@ -709,7 +708,7 @@ console.log('grid')
 			function cellClick(e){	//grid click handler
 				var et = e.target, oid = getOIDFromGrid(e), attributes;
 				if(!oid)return;
-				caCh(oid,"hi", 1, 1);
+				caCh(oid,"hi", 1);
 				if(et!== previousRecentTarget){ //prevent click before double click
 					window.clearTimeout(mouseDownTimeout);
 					previousRecentTarget = et;
@@ -882,14 +881,14 @@ console.log('grid')
 				grid.on(".dgrid-cell:dblclick", gridDbl);
 				grid.on(".dgrid-cell:mouseover", function(e){
 					var oid = getOIDFromGrid(e);
-					if(oid)caCh(oid,"hi", 1, 1);	
+					if(oid)caCh(oid,"hi", 1);	
 				});
 			  grid.on(".dgrid-cell:mouseout", function(e){
 				  var oid = getOIDFromGrid(e);
 				  if(oidStore[oid])
 					  return;
 				  else
-					  caCh(oid,"", 1, 1);
+					  caCh(oid,"", 1);
 			  });
 
 				on(headerNodes[0], "mousedown", runNameSort);
@@ -974,10 +973,7 @@ console.log('post grid');
     });
 
     function setExtent(extent){
-   // 	var bmap=map.getLayersVisibleAtScale()[0];
-  //  	bmap.hide();
     	map.setExtent(extent);
-  //  	bmap.show();
     }
 
 		showSat = function(){										//turn on imagery
@@ -1017,7 +1013,7 @@ console.log('post grid');
 			if(lev > 17&&previousLevel<18&&topoOn) //extend topo to 18, 19 with satellite
 				showSat();
 			previousLevel = lev;
-			redrawAllGraphics(tiout.graphics);
+			//redrawAllGraphics(tiout.graphics);
 			//tiout.setMaxAllowableOffset(offs);
 			//tiout.refresh();
 		};
@@ -1387,11 +1383,7 @@ if(0&&touch){
 			}
 
 			if(mouseDown&&binArr!== geoSearch.lastClickBin){
-				/*	binTemp = binArr;
-					binArr = binArr.concat(geoSearch.lastClickBin);
-					geoSearch.lastClickBin = binTemp;
-					binTemp = null;*/
-				clearAllStoredOIDs();
+				clearAllStoredOIDs(); //clear other bin
 				geoSearch.lastClickBin = binArr;
 			}
 
@@ -1409,24 +1401,22 @@ if(0&&touch){
 				if(insideTimeBoundary[oid]){
 					if(curr.xmax>= mapX&&curr.xmin<= mapX&&curr.ymin<= mapY&&curr.ymax>= mapY){
 						someTargeted = 1;
-						caCh(oid,"hi", 1, 1);
+						caCh(oid,"hi", 1);
 						if(cursor){
 							map.setMapCursor("pointer");
 							cursor = 0;
 						}
 						if(mouseDown){
-						//	if(currArr.indexOf(oid)==-1){
 								currArr.push(oid);
 								if(!oidStore[oid])
 									storeOID(oid);
-						//	}
 						}
 					}else{
 						if(oidStore[oid]){
-							if(mouseDown) clearStoredOID(oid, 1, 0);
+							if(mouseDown)clearStoredOID(oid, 1, 0); //clear unclicked from this bin
 							continue;
 						}else{
-							caCh(oid,"", 1, 1);//clear mouseover highlight. Have to do whole bin since might be multiple hl
+							caCh(oid,"", 1);//clear mouseover highlight. Have to do whole bin since might be multiple hl
 						}
 					}
 				}
@@ -1447,7 +1437,7 @@ if(0&&touch){
 
 			if(!someTargeted&&mouseDown&&prevArr){ //rehighlight true selections when clicking on
 				for(var i = 0;i<prevArr.length;i++){ // TS hidden stuff
-					caCh(prevArr[i],"hi", 1, 1);
+					caCh(prevArr[i],"hi", 1);
 					if(!oidStore[prevArr[i]])
 						storeOID(prevArr[i]);
 				}
@@ -1476,17 +1466,16 @@ if(0&&touch){
 					var oid = graphics[i].attributes.OBJECTID;
 					if(insideTimeBoundary[oid]){
 						if(oidStore[oid])
-							caCh(oid,"hi", 0, 1);
+							caCh(oid,"hi", 0);
 					else
-							caCh(oid,"", 0, 1);
+							caCh(oid,"", 0);
 					}
 				}
 		}
 																//main highlighting logic, separated by year with different basemap
-//function caCh(oid,hi,evt,nm){if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid]))return;var symbo=topoOn?symbols:satSym,date,graphic=oidToGraphic(oid),row;if(!graphic)return;date=features[oid-1].attributes.Date;color=getColor(date);if(evt){row=gridObject.oidToRow(oid);if(hi!==""){domClass.add(row,"highl"+color);hl[oid]=1;}else{domClass.remove(row,"highl"+color);hl[oid]=0;}}if(previousLevel>12){if(hi)hi="";else color+="thin";}graphic.setSymbol(symbo[color+hi]);}
 
-		function caCh(oid, hi, evt, nm){
-			if(nm&&evt&&(hi&&hl[oid]||!hi&&!hl[oid])) return; //short circuit unless time slider(nm==) or redraw (evt==0)
+		function caCh(oid, hi, evt){
+			if(evt&&(hi&&hl[oid]||!hi&&!hl[oid])) return; //short circuit unless on a redraw (evt==0)
 			var symbo = topoOn?symbols:satSym
 				, date
 			  , graphic = oidToGraphic(oid)
@@ -1974,16 +1963,11 @@ if(0&&touch){
 
 		//Convenience and shims
 
-
-		/*on(W,'click',function(){
-			var t=Date.now();
-			caCh(2,)
-		})*/
-
 		function isNumber(n) {
   			return !isNaN(parseFloat(n)) && isFinite(n);
 		}
 
+//doesn't preserve order 
 		function splice(arr,index){
 			var newLen = arr.length-1;
 			arr[index] = arr[newLen];

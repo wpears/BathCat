@@ -441,7 +441,7 @@ window.map = map
 
 		function clearStoredOID(oid, doSplice, fromGrid){
 			var oidIndex = geoSearch.prevArr.indexOf(oid);
-			caCh(oid,"", 1);
+			highlighter(oid,"", 1);
 			if(oidStore[oid]){
 				oidStore[oid] = 0;
 				if(fromGrid&&oidIndex>-1)splice(geoSearch.prevArr, oidIndex);
@@ -471,7 +471,7 @@ window.map = map
 			storeOID(oid);
 			geoSearch.prevArr.length = 1;
 			geoSearch.prevArr[0] = oid;
-			caCh(oid,"hi", 1);
+			highlighter(oid,"hi", 1);
 			infoFunc(attributes);
 		}
 
@@ -708,7 +708,7 @@ console.log('grid')
 			function cellClick(e){	//grid click handler
 				var et = e.target, oid = getOIDFromGrid(e), attributes;
 				if(!oid)return;
-				caCh(oid,"hi", 1);
+				highlighter(oid,"hi", 1);
 				if(et!== previousRecentTarget){ //prevent click before double click
 					window.clearTimeout(mouseDownTimeout);
 					previousRecentTarget = et;
@@ -881,14 +881,14 @@ console.log('grid')
 				grid.on(".dgrid-cell:dblclick", gridDbl);
 				grid.on(".dgrid-cell:mouseover", function(e){
 					var oid = getOIDFromGrid(e);
-					if(oid)caCh(oid,"hi", 1);	
+					if(oid)highlighter(oid,"hi", 1);	
 				});
 			  grid.on(".dgrid-cell:mouseout", function(e){
 				  var oid = getOIDFromGrid(e);
 				  if(oidStore[oid])
 					  return;
 				  else
-					  caCh(oid,"", 1);
+					  highlighter(oid,"", 1);
 			  });
 
 				on(headerNodes[0], "mousedown", runNameSort);
@@ -1401,7 +1401,7 @@ if(0&&touch){
 				if(insideTimeBoundary[oid]){
 					if(curr.xmax>= mapX&&curr.xmin<= mapX&&curr.ymin<= mapY&&curr.ymax>= mapY){
 						someTargeted = 1;
-						caCh(oid,"hi", 1);
+						highlighter(oid,"hi", 1);
 						if(cursor){
 							map.setMapCursor("pointer");
 							cursor = 0;
@@ -1416,7 +1416,7 @@ if(0&&touch){
 							if(mouseDown)clearStoredOID(oid, 1, 0); //clear unclicked from this bin
 							continue;
 						}else{
-							caCh(oid,"", 1);//clear mouseover highlight. Have to do whole bin since might be multiple hl
+							highlighter(oid,"", 1);//clear mouseover highlight. Have to do whole bin since might be multiple hl
 						}
 					}
 				}
@@ -1437,7 +1437,7 @@ if(0&&touch){
 
 			if(!someTargeted&&mouseDown&&prevArr){ //rehighlight true selections when clicking on
 				for(var i = 0;i<prevArr.length;i++){ // TS hidden stuff
-					caCh(prevArr[i],"hi", 1);
+					highlighter(prevArr[i],"hi", 1);
 					if(!oidStore[prevArr[i]])
 						storeOID(prevArr[i]);
 				}
@@ -1466,15 +1466,15 @@ if(0&&touch){
 					var oid = graphics[i].attributes.OBJECTID;
 					if(insideTimeBoundary[oid]){
 						if(oidStore[oid])
-							caCh(oid,"hi", 0);
+							highlighter(oid,"hi", 0);
 					else
-							caCh(oid,"", 0);
+							highlighter(oid,"", 0);
 					}
 				}
 		}
 																//main highlighting logic, separated by year with different basemap
 
-		function caCh(oid, hi, evt){
+		function highlighter(oid, hi, evt){
 			if(evt&&(hi&&hl[oid]||!hi&&!hl[oid])) return; //short circuit unless on a redraw (evt==0)
 			var symbo = topoOn?symbols:satSym
 				, date

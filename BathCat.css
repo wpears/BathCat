@@ -790,9 +790,8 @@ li{
   background-color:#5ADE6B;             
 }
 
-.dataglow{
-  box-shadow:0 0 12px 4px #5ADE6B !important;
-  background-color:#5ADE6B;             
+.tabglow{
+  box-shadow:0 0 8px 4px #99ceff !important;            
 }
 
 ::selection{

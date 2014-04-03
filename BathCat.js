@@ -186,7 +186,7 @@ window.map = map
 
 
 
-	tiout = new FeatureLayer({featureSet:window.TIGHT_OUTLINES,
+	window.tiout=tiout = new FeatureLayer({featureSet:window.TIGHT_OUTLINES,
 														layerDefinition:{"geometryType":"esriGeometryPolygon"
 		            														,"spatialReference":spatialRef
 		            														,"displayFieldName": "Shape_Length"
@@ -201,7 +201,14 @@ window.map = map
   	tiout.setRenderer(new SimpleRenderer(blank));
     map.addLayer(tiout);
 
-
+tiout.on("graphic-node-add",function(e){
+	if(insideTimeBoundary[e.graphic.attributes.OBJECTID]){
+		//console.log("returning. inside boundary");
+		//console.log(e.graphic.attributes,outlines.graphics[e.graphic.attributes.OBJECTID-1].attributes,outlines.graphics[e.graphic.attributes.OBJECTID-1].attributes.Project);
+		return;
+}
+	e.node.setAttribute("class","hiddenPath")
+})
 
 	var featureSet = window.DATA_OUTLINES,
 	  features = featureSet.features, featureCount=features.length, IE =!!document.all, fx,
@@ -219,12 +226,12 @@ window.map = map
 
 	var	layerArray = new Array(featureCount),
 		oidArray = new Array(featureCount),
-		oidStore = new Array(featureCount),
-		hl = new Array(featureCount),
+		oidStore = new Array(featureCount + 1),
+		hl = new Array(featureCount + 1),
 		gdata = new Array(featureCount),
 		formattedDates = new Array(featureCount),
 		names = new Array(featureCount),
-		insideTimeBoundary = new Array(featureCount+1),
+		insideTimeBoundary = new Array(featureCount + 1),
 		rastersShowing = {};
 
 
@@ -374,8 +381,9 @@ window.map = map
 			}
 		})();
 		hl[featureCount] = 0;
-		insideTimeBoundary[featureCount]=1;
-
+		oidStore[featureCount] = 0;
+		insideTimeBoundary[featureCount] = 1;
+window.oidStore = oidStore;
 		(function(){
 			for(var i = 0; i<featureCount; i++){
 				var intData ={};
@@ -480,7 +488,7 @@ window.map = map
 		//*****initialize grid and attach all handlers*******\\
 console.log('grid')
 		gridObject =(function(){
-			var j = featureCount, gridCon, expandReady=1,
+			var j = featureCount, gridCon, expandReady=1,toggleCount = 0,
 				intData, featureAttr, lastNodePos =new Array(gdata.length+1),nameSorted = 0, dateSorted = 1,
 				gridHeader, headerNodes;
 
@@ -518,6 +526,7 @@ console.log('grid')
       lastNodePos[gdata.length-1]=0;
 
 			sedToggle = GridCategory(grid, gdata, "Project","Soil Sed.", gridNode, lastNodePos);
+			toggleCount++;
 
 			function dateSortSeq(a, b){
 				return a.__Date-b.__Date
@@ -568,16 +577,19 @@ console.log('grid')
 			}
 
 			function timeUpdate(e){
-				var startTime = e.startTime, endTime = e.endTime, currentRasters = rasterLayer.visibleLayers,
+				var startTime = +e.startTime, endTime = +e.endTime, currentRasters = rasterLayer.visibleLayers,
 				currTime, currOID, rawGraphic, gridData = gdata, currentCount = selectedGraphicsCount,
-				currRow, toBeHidden = timeUpdate.toBeHidden, oidRasterIndex,
+				currRow, toBeHidden = timeUpdate.toBeHidden, oidRasterIndex, shape,
 				rastersAsOIDs = timeUpdate.rastersAsOIDs;
-				for(var i = 0, j = gridData.length;i<j;i++){
+				for(var i = toggleCount, j = gridData.length;i<j;i++){
 					currOID = gridData[i].OBJECTID;
 					if(currOID === j) continue;
-					rawGraphic = oidToGraphic(currOID)._shape.rawNode;
+					shape = oidToGraphic(currOID)._shape
+
+					if(shape) rawGraphic = shape.rawNode;
 					currRow = oidToRow(currOID);
 					currTime =+gridData[i].__Date
+
 					if(currTime<startTime||currTime>endTime){
 				//		if(oidStore[currOID]) deselect a project if it outside the current time extent
 				//	  	clearStoredOID(currOID, 1, 1);
@@ -593,12 +605,15 @@ console.log('grid')
 							}
 						}
 						insideTimeBoundary[currOID] = 0;
-						rawGraphic.setAttribute("class","hiddenPath")
+						if(shape){
+							rawGraphic.setAttribute("class","hiddenPath")
+						}
 					}else{
 						if(insideTimeBoundary[currOID] === 0){
 							domClass.remove(currRow, "hiddenRow");
 							insideTimeBoundary[currOID] = 1;
-							rawGraphic.setAttribute("class","")
+							if(shape)
+								rawGraphic.setAttribute("class","")
 						}
 					}
 				}
@@ -1460,15 +1475,14 @@ if(0&&touch){
 
 
 																					//apply highlighting logic to an array
-		function redrawAllGraphics(graphics){    
+		function redrawAllGraphics(){    
 			console.log("redrawing")
-				for(var i =0, j = graphics.length;i<j;i++){
-					var oid = graphics[i].attributes.OBJECTID;
-					if(insideTimeBoundary[oid]){
-						if(oidStore[oid])
-							highlighter(oid,"hi", 0);
+				for(var i =1;i<featureCount;i++){
+					if(insideTimeBoundary[i]){
+						if(oidStore[i])
+							highlighter(i,"hi", 0);
 					else
-							highlighter(oid,"", 0);
+							highlighter(i,"", 0);
 					}
 				}
 		}
@@ -1743,25 +1757,28 @@ if(0&&touch){
 					return;
 				}
    			if(glowing) return;
-   			domClass.add(dataTab,'dataglow')
-   			dataTab.firstElementChild.innerText="Data";
+   			domClass.add(dataTab,'tabglow')
+   			
    		}
 
    		function fade(){
-   			domClass.remove(dataTab,'dataglow')
-   			dataTab.firstElementChild.innerText="Info";
+   			domClass.remove(dataTab,'tabglow')
+   			
    		}
 
    		function setIntro(){
-				dataNode.style.marginTop = 0;
+				//dataNode.style.marginTop = 0;
+				dataTab.firstElementChild.innerText="Info";
 				clearNode(dataNode);
 				dataNode.innerHTML = introText;
 			}
 
    		function prep(setData, attr){
    			if(dataDisplayed&&selectedGraphicsCount === 0){
+   				setIntro();
 					return hideView(dataPane);
 				}
+				dataTab.firstElementChild.innerText="Data";
    			setData(attr);
    			if(gridShowing&&!dataDisplayed) return;
    			showView(dataPane, dataTrans)
@@ -1769,29 +1786,29 @@ if(0&&touch){
    			dataDisplayed = 1;
    		}
 
-   		function showView(node,transform){
+   		function showView(node,tab,transform){
    			node.style.cssText=transform;
    			node.style.zIndex = ++zIndex;
+   			domClass.add(tab,"tabglow")
    		}
 
 
-   		function hideView(node){
+   		function hideView(node,tab){
    	  	node.style.cssText=cssHide;
+   	  	domClass.remove(tab,"tabglow")
    	  	setTimeout(function(){
    	  		zIndex--;
    	  		node.style.zIndex=1000;
    	  	},155)
-
-
    		}
 
    		function dataToggle(){
    			if(dataShowing&&dataDisplayed){
-   				hideView(dataPane);
+   				hideView(dataPane,dataTab);
    				dataShowing = 0;
    				dataDisplayed = 0;
    			}else{
-   				showView(dataPane,dataTrans);
+   				showView(dataPane,dataTab,dataTrans);
    				dataShowing = 1;
    				dataDisplayed = 1;
    			}
@@ -1799,11 +1816,12 @@ if(0&&touch){
 
    		function gridToggle(){
    			if(gridShowing&&!dataDisplayed){
-   				hideView(gridPane);
+   				hideView(gridPane,gridTab);
    				gridShowing = 0;
    				if(dataShowing) dataDisplayed = 1;
+   				else zIndex = 1000;
    			}else{
-   				showView(gridPane,gridTrans);
+   				showView(gridPane,gridTab,gridTrans);
    				gridShowing = 1;
    				dataDisplayed = 0;
    			}

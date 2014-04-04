@@ -1,3 +1,12 @@
 to cdn copy:
 baseUrl: (location.protocol === 'file:' ? 'http:' : location.protocol) + "../api/js/dojo/dojo"
-commented out event listeners in dojo touch
+
+commented out event listeners in dojo touch...! need to build this out
+
+to esri/MouseEvents: return from _onMouseDragHandler
+
+structure of _onPanHandler in TiledMapServiceLayer
+
+
+
+

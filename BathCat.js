@@ -159,7 +159,72 @@ function( BorderContainer
 			var topoOn = 1;
 			var satOn = 0;
 window.map = map
+window.topoMap = topoMap
 			map.addLayer(topoMap);
+
+
+
+	var transX=0;
+	var transY=0;
+(function(){
+	var updateX=0;
+	var updateY=0;
+	var locX=0;
+	var locY=0;
+	var waiting = 0;
+	var panHandle
+	var layerNode;
+
+	map.on("load",function(e){
+		layerNode = dom.byId("mapDiv_layers")
+		layerNode.style.cssText= "-webkit-transform:translate3d(0,0,0);";
+	})
+
+if(touch){
+	on(mapDiv,"touchstart",panStart)
+	on(mapDiv,"touchmove", schedulePan)
+}else{
+	on(mapDiv,"mousedown",function(e){
+		panStart(e);
+		panHandle=on(W,"mousemove", schedulePan)
+	})
+	on(W,"mouseup",function(){
+		panHandle.remove();
+	})
+}
+
+	function schedulePan(e){
+		e.preventDefault();
+		if(waiting) return;
+		transX += e.pageX-locX;
+		transY += e.pageY-locY;
+		locX = e.pageX;
+		locY = e.pageY;
+		requestAnimationFrame(pan);
+		waiting = 1;
+	}
+
+	function panStart(e){
+		e.preventDefault();
+		locX = e.pageX;
+		locY = e.pageY;
+	}
+
+	function pan(e){
+		layerNode.style.cssText = "-webkit-transform:translate3d("+transX+"px,"+transY+"px,0);";
+	//	if(Math.abs(transX-updateX)>100||Math.abs(transY-updateY)>100){
+			topoMap._updateImages({
+				x:-transX,
+				y:-transY,
+				width:map.width,
+				height:map.height
+			})
+		waiting = 0;
+		//	updateX = transX;
+	//		updateY = transY;
+	//	}	
+	}
+})();
 
 		rasterLayer.setVisibleLayers([-1]);
 
@@ -504,11 +569,8 @@ console.log('grid')
 							},
 							gridNode);
 
-
 			gdata.unshift({"__Date":1315008000000,Date:"Various",Project:"Soil Sedimentation",OBJECTID:gdata.length+1});
 			grid.renderArray(gdata);
-			console.log("OI")
-
 			gridHeader = dom.byId("gridNode-header").firstChild;
 			headerNodes = gridHeader.children;
 
@@ -1231,7 +1293,7 @@ if(!touch){
 
 
 
-/************TOOLS***************/
+/************TOOLS**************/
 
 
 
@@ -1286,16 +1348,10 @@ if(!touch){
 //FEATURE MOUSE EVENTS
 
 
-if(0&&touch){
-	W.setTimeout(function(){
-	var outlayer = dom.byId("out_layer");
-	on(outlayer,"touchstart",function(e){
-		outlines.emit("mouse-over",e);
-		console.log("touchstart",e)})
-},500);
-	outlines.on("mouse-over", function(e) {
-		geoSearch(e, 1);
-	})
+if(touch){
+	outlines.on('touchstart',function(e){
+		console.log(e)
+	});
 }else{
 
 		outlines.on("mouse-over", function(e) {//map mouseover handler
@@ -1380,12 +1436,15 @@ if(0&&touch){
 		//	console.log("searching")
 			var timee=Date.now();
 			var i = 0, j = geoSearch.binLength-1, curr, oid, temp, binTemp, prevArr = geoSearch.prevArr,
-			currArr = geoSearch.currArr,mapX, mapY, breakMax, binArr, someTargeted = 0;
+			currArr = geoSearch.currArr,mapX, mapY, mapPoint, breakMax, binArr, someTargeted = 0;
 
 			if(e === null) binArr = geoSearch.lastMouseBin;
 			else{
-				mapX = e.mapPoint.x;
-				mapY = e.mapPoint.y;
+				e.screenPoint.x -= transX;
+				e.screenPoint.y -= transY;
+				mapPoint = map.toMap(e.screenPoint)
+				mapX = mapPoint.x
+				mapY = mapPoint.y;
 				breakMax = mapX+1000;
 
 				for(;i<j;i++){ //find the right bin
@@ -1406,7 +1465,6 @@ if(0&&touch){
 				j = binArr.length;
 			else
 				j= 0;
-
 			for(;i<j;i++){
 				curr = binArr[i];
 				oid = curr.oid;
@@ -1495,7 +1553,6 @@ if(0&&touch){
 			  , graphic = oidToGraphic(oid)
 				,	row
 				;
-
 			if(!graphic) return;
 
 			date = features[oid-1].attributes.Date;
@@ -1997,8 +2054,8 @@ if(0&&touch){
         		arr[i] = arr[i + 1];
 			arr.length = len;
 			return arr;
-		}*/
-
+		}
+*/
 
 		function nullPrevious(){
 			previousRecentTarget = null;
@@ -2012,7 +2069,7 @@ if(0&&touch){
 	tiout.refresh() //ensure initial draw;
 	});
 
-//	});
+
 
 //return from the require
 });

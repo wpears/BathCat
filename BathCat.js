@@ -43,6 +43,7 @@ require(["dijit/layout/BorderContainer"
 				,"modules/tooltip.js"
 				,"modules/getdate.js"
 				,"modules/gridcategory.js"
+				,"modules/addsymbol.js"
 
 				,"require"
 				],
@@ -88,6 +89,7 @@ function( BorderContainer
 				, Tooltip
 				, getDate
         , GridCategory
+        , addSymbol
 
 				, require
 				){
@@ -111,6 +113,8 @@ function( BorderContainer
    		, ie9 =(document.all&&document.addEventListener&&!window.atob)?true:false
    		, innerHeight = W.innerHeight
    		, innerWidth = W.innerWidth
+   		, svgWidth = innerWidth*256
+   		, svgHeight = innerHeight*256
    		, mainWindow = dom.byId("mainWindow")
    		, mapDiv = dom.byId("mapDiv")
    		, gridPane, gridNode, spl
@@ -160,7 +164,14 @@ function( BorderContainer
 			var satOn = 0;
 window.map = map
 window.topoMap = topoMap
-			map.addLayer(topoMap);
+			map.on("layer-add",function(e){
+				var layer = e.layer
+				if(layer.graphics){
+					layer._div.rawNode.style.cssText = "-webkit-transform:translate3d("+svgWidth/2+"px,"+svgHeight/2+"px,0);";
+				}
+			})
+		map.addLayer(topoMap);
+
 
 
 
@@ -174,22 +185,32 @@ window.topoMap = topoMap
 	var waiting = 0;
 	var panHandle
 	var layerNode;
+	var container = dom.byId("mapDiv_container")
 
 	map.on("load",function(e){
 		layerNode = dom.byId("mapDiv_layers")
+		var svgStyle = layerNode.lastChild.style;
 		layerNode.style.cssText= "-webkit-transform:translate3d(0,0,0);";
+		svgStyle.width=svgWidth+"px";
+		svgStyle.height=svgHeight+"px";
+		svgStyle.margin=-svgHeight/2+"px 0 0 "+-svgWidth/2+"px";
+		dom.byId("mapDiv_graphics_layer").style.cssText = "-webkit-transform:translate3d("+svgWidth/2+"px,"+svgHeight/2+"px,0);";
 	})
 
+	map.on('zoom-end',function(){setTimeout(updateImages,0)})
+	map.on('zoom-start',function(){
+		console.log("bc zoomstart")
+	})
 if(touch){
-	on(mapDiv,"touchstart",panStart)
-	on(mapDiv,"touchmove", schedulePan)
+	on(container,"touchstart",panStart)
+	on(container,"touchmove", schedulePan)
 }else{
-	on(mapDiv,"mousedown",function(e){
+	on(container,"mousedown",function(e){
 		panStart(e);
 		panHandle=on(W,"mousemove", schedulePan)
 	})
 	on(W,"mouseup",function(){
-		panHandle.remove();
+		panHandle&&panHandle.remove();
 	})
 }
 
@@ -210,19 +231,44 @@ if(touch){
 		locY = e.pageY;
 	}
 
-	function pan(e){
-		layerNode.style.cssText = "-webkit-transform:translate3d("+transX+"px,"+transY+"px,0);";
-	//	if(Math.abs(transX-updateX)>100||Math.abs(transY-updateY)>100){
-			topoMap._updateImages({
+	function updateImages(){
+		topoMap._updateImages({
 				x:-transX,
 				y:-transY,
 				width:map.width,
 				height:map.height
 			})
+	}
+
+	function pan(e){
+		layerNode.style.cssText = "-webkit-transform:translate3d("+transX+"px,"+transY+"px,0);";
+	//	if(Math.abs(transX-updateX)>100||Math.abs(transY-updateY)>100){
+			updateImages();
 		waiting = 0;
 		//	updateX = transX;
 	//		updateY = transY;
-	//	}	
+	//	}
+	}
+
+	window.modulate = function(factor){
+		transX*=factor;
+		transY*=factor;
+		pan();
+	}
+	window.showPoints = function(p,w){
+		var dataPointSymbol =  new SimpleMarker({"size":6,"color":new Color([0, 0, 0])})
+
+		addSymbol(map, new Point(p.left,p.top), dataPointSymbol, []);
+		addSymbol(map, new Point(w.left,w.top), dataPointSymbol, []);
+	} 
+	window.modAnim = function(anim){
+		var obj = {};
+		obj.left = anim.left - transX/map._ratioW;
+		obj.top = anim.top + transY/map._ratioH;
+		obj.width = anim.width;
+		obj.height = anim.height;
+
+		return obj;
 	}
 })();
 

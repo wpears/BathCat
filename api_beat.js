@@ -7378,6 +7378,7 @@ require({
                             lods: n
                         }))
                     }
+
                     var X = J.toMapPoint,
                         Y = J.toScreenPoint,
                         Q = q.connect,
@@ -7722,13 +7723,17 @@ require({
                             this.__zoom(a, b, this._zoomAnimDiv.anchor)
                         },
                         _zoomEndHandler: function () {
+                            console.log("zend start")
                             var a = this._zoomAnimDiv,
-                                b = a.extent,
+                                b =  a.extent,
                                 c = this.extent.getWidth() / b.getWidth(),
                                 e = a.anchor,
                                 n = a.newLod,
                                 m = a.levelChange;
                             a.extent = a.anchor = a.levelChange = a.startingExtent = a.newLod = this._delta = this._zoomAnim = null;
+                            console.log("z end",b,c,e,n,m)
+                            modulate(c)
+                            //extent, zoom amount, screenpoint where mouse is, newlod, level is changing
                             this.__zoomEnd(b,
                                 c, e, n, m)
                         },
@@ -7913,18 +7918,41 @@ require({
                             ])
                         },
                         _extentUtil: function (a, b, c, e, n) {
+                            //object with level/center/scale, ?, new extent, ?, ?
+                            console.log("extentutil",a,b,c,e,n)
+                        //    debugger;
                             var m = new h,
                                 f, r, g, s, d, u, v, A, l, q, B = this.width,
                                 p = this.height,
                                 G, z, x;
-                            a && (f = a.numLevels, r = a.targetLevel, G = w.isDefined(r), g = a.factor, s = a.mapAnchor, d = a.screenAnchor, u = a.mapCenter, z = a.levelOrFactor, v = a.targetScale, A = w.isDefined(v) && 0 < v);
-                            b && (l = b.dx, q = b.dy, u = b.mapCenter);
-                            k.isArray(u) && (u = new t(u));
+                            if(a){
+                                f = a.numLevels;
+                                r = a.targetLevel;
+                                G = w.isDefined(r);
+                                g = a.factor;
+                                s = a.mapAnchor;
+                                d = a.screenAnchor;
+                                u = a.mapCenter;
+                                z = a.levelOrFactor;
+                                v = a.targetScale;
+                                A = w.isDefined(v) && 0 < v;
+                            }
+                            if(b){
+                                l = b.dx;
+                                q = b.dy;
+                                u = b.mapCenter
+                            }
+
+                            if(k.isArray(u))
+                                u = new t(u);
+
                             var C = this._panAnim;
                             b = (a = this._stopAnim()) ? a.divExtent : this.extent;
                             var y = this.__tileInfo,
                                 H = this._params;
+
                             if (!this.loaded) {
+                                console.log("NOT LOADED")
                                 if (c) b && (c = this._convertGeometry(b, c)), c && (this.extent =
                                     c, H.zoom = H.scale = -1, H.center = null);
                                 else if (u || G || A) {
@@ -7937,13 +7965,24 @@ require({
                                 m.resolve();
                                 return m
                             }
+                            
+                            //reject if unconvertable
                             if (u && (u = this._convertGeometry(this, u), !u) || s && (s = this._convertGeometry(this, s), !s) || c && (c = this._convertGeometry(this, c), !c)) return m.reject(), m;
+
+
                             C && (s && d) && (s = X(this.extent, B, p, d));
                             a && (s && d) && (s = X(a.divExtent, B, p, d));
+                            console.log(s,"map anchor or nothing")
+
+                            //don't allow zooming beyong max or min states
                             G && (y ? (f = this.getMinZoom(), G = this.getMaxZoom(), r < f ? r = f : r >
                                 G && (r = G), f = r - (a ? a.level : this.getLevel())) : (f = 0 < r ? -1 : 1, x = z ? r : null));
+                            console.log(c,"extent if called")
+                            console.log(g,"g=factor")
+                            console.log(f,y,a)
                             if (!c)
-                                if (w.isDefined(f)) y ? (B = a ? a.level : this.getLevel(), p = this.__getExtentForLevel(B + f, u, b).extent) : (p = (a ? a.end : this.extent).expand(x || (0 < f ? 0.5 * f : 2 * -f)), x && u && (p = p.centerAt(u))), p && (u ? c = p : (B = s || b.getCenter(), l = b.ymax - (p.getHeight() - b.getHeight()) * (B.y - b.ymax) / b.getHeight(), B = b.xmin - (p.getWidth() - b.getWidth()) * (B.x - b.xmin) / b.getWidth(), c = new E(B, l - p.getHeight(), B + p.getWidth(), l, this.spatialReference)));
+                                if (w.isDefined(f)) 
+                                    y ? (B = a ? a.level : this.getLevel(), p = this.__getExtentForLevel(B + f, u, b).extent) : (p = (a ? a.end : this.extent).expand(x || (0 < f ? 0.5 * f : 2 * -f)), x && u && (p = p.centerAt(u))), p && (u ? c = p : (B = s || b.getCenter(), l = b.ymax - (p.getHeight() - b.getHeight()) * (B.y - b.ymax) / b.getHeight(), B = b.xmin - (p.getWidth() - b.getWidth()) * (B.x - b.xmin) / b.getWidth(), c = new E(B, l - p.getHeight(), B + p.getWidth(), l, this.spatialReference)));
                                 else if (A) c = F.getExtentForScale(this,
                                 v, b);
                             else if (w.isDefined(g)) c = b.expand(g);
@@ -7954,6 +7993,7 @@ require({
                             return m
                         },
                         __setExtent: function (a, b, c, e, n, m) {
+                            console.log('set extent',arguments)
                             try {
                                 if (this._firstLayerId) this.extent = a;
                                 else {
@@ -7983,6 +8023,7 @@ require({
                                             width: s,
                                             height: k
                                         };
+                                        showPoints(p,w)
                                         var x = new t(a.xmin, a.ymax, r),
                                             C = new t(a.xmin, a.ymin, r),
                                             y = new t(this.extent.xmin, this.extent.ymax, r),
@@ -7992,7 +8033,9 @@ require({
                                     }
                                     this._ratioW = this.width / s;
                                     this._ratioH = this.height / k;
+
                                     var N = this._zoomAnimDiv;
+                                   console.log("SET EXTENT IS THE ONLY THING FINISH THIS")
                                     if (f) V(this._layersDiv, {
                                         left: "0px",
                                         top: "0px"
@@ -8062,11 +8105,14 @@ require({
                             b && b._active && (b.stop(), b._fire("onEnd", [b.node]))
                         },
                         __getExtentForLevel: function (a, b, c) {
+                            //new level, center point, current extent
+                            console.log('gefl',a,b,c)
                             var e = this.__tileInfo,
                                 e = e && e.lods;
                             a = w.isDefined(a) ? a : 0;
                             c = c || this.extent;
                             b = b || c && c.getCenter();
+                   //         b = modulateExtentPoint(b);
                             if (e) {
                                 if (b) {
                                     c = this.getMinZoom();
@@ -9365,6 +9411,7 @@ require({
                             return this._renderProto.apply(a, arguments)
                         },
                         _refresh: function (a) {
+                            console.log("_refresh called. calling draw on all graphics")
                             var b = this.graphics,
                                 c = b.length,
                                 e, n = this._draw;
@@ -9380,10 +9427,12 @@ require({
                             this._panDx = c.x;
                             this._panDy = c.y;
                             var e = this._map.__visibleRect;
-                            this._div.setTransform(b.translate({
+                            var trans = b.translate({
                                 x: e.x + c.x,
                                 y: e.y + c.y
-                            }))
+                            })
+
+                            this._div.setTransform(trans)
                         },
                         _onPanEndUpdateHandler: function (a, c) {
                             if (!this._params._child && (c.x !== this._panDx || c.y !== this._panDy)) {
@@ -9393,7 +9442,7 @@ require({
                                     y: e.y
                                 }))
                             }
-                            this._refresh(!1);
+                           // this._refresh(!1);
                             if (this.graphics.length) this.onUpdate()
                         },
                         _onPanStartHandler: function () {
@@ -9505,40 +9554,17 @@ require({
                             angle: 0
                         },
                         _draw: function (a, b) {
-                            if (this._params.drawMode && this._map && !this.suspended) try {
-                                var c = a._extent,
-                                    e, n, m = !B || this.styling,
-                                    f = B && this.dataAttributes,
-                                    t = a.getDojoShape(),
-                                    r;
-                                if (a.visible && c && (e = this._intersects(this._map, c, a.geometry._originOnly)) && (n = m ? this._getSymbol(a) :
-                                    this._defaultMarker)) {
-                                    if (!a._offsets || a._offsets.join(",") !== e.join(",") ? a._offsets = e : r = !0, !t || b || !r) {
-                                        var g = a.geometry.type,
-                                            c = {
-                                                graphic: a
-                                            }, h = a._bgShape,
-                                            s = m && !a.symbol ? this._getRenderer(a) : null,
-                                            k = s && s.backgroundFillSymbol;
-                                        if ("point" === g) this._isInvalidShape(n, t) && this._removeShape(a), a._shape = this._drawPoint(this._div, a.geometry, n, a.getDojoShape(), e, s, a), m && this._symbolizePoint(a.getDojoShape(), n, s, a);
-                                        else if ("multipoint" === g) this._drawMarkers(a, n, e, s), m && this._symbolizeMarkers(a, n, s);
-                                        else {
-                                            var d, g =
-                                                    n,
-                                                l, q;
-                                            m && (g = (d = n.isInstanceOf(u) ? n : null) ? k : n);
-                                            g && g === k && (l = this._bgGroup);
-                                            h && !l && this._removeBgShape(a);
-                                            g && (!l && this._isInvalidShape(g, a._shape) && this._removeShape(a, !1), q = this._drawShape(a, e, l || this._div, l ? h : a.getDojoShape()), this._symbolizeShape(q, g, !k && s, a), a[l ? "_bgShape" : "_shape"] = q);
-                                            d && (this._isInvalidShape(d, a._shape) && this._removeShape(a, !1), q = this._drawPoint(this._div, a.geometry.getCentroid(), d, a._shape, e, s, a), this._symbolizePoint(q, d, s, a), a._shape = q)
-                                        }
-                                        C || (a._bgShape && this._initNode(a, a._bgShape,
-                                            a._bgShape !== h, c, f), a._shape && this._initNode(a, a._shape, a._shape !== t, c, f));
-                                        this.onGraphicDraw(c)
-                                    }
-                                } else t && this._removeShape(a)
-                            } catch (v) {
-                                this._errorHandler(v, a)
+                            if (this._params.drawMode && this._map && !this.suspended){
+                                var n = this._getSymbol(a)
+                                  , q
+                                  ;
+                                if(!n) return                                
+                                this._draw.cToInit ? this._draw.cToInit.graphic = a : (this._draw.cToInit = {graphic: a})
+                                this._draw.zeroArr?1:(this._draw.zeroArr=[0])
+                                q = this._drawShape(a, this._draw.zeroArr, this._div, a.getDojoShape());
+                                this._symbolizeShape(q, n, null,null);
+                                this._initNode(a, q, false, this._draw.cToInit, null);
+                                a._shape = q;
                             }
                         },
                         _initNode: function (a, b, c, e, n) {
@@ -9575,33 +9601,26 @@ require({
                             }
                         },
                         _drawShape: function (a, b, c, e) {
-                            a = a.geometry;
+                            //graphic, zero arr, _div, dojoshape
+                            
                             var n = a.type,
+                                geo = a.geometry,
                                 m = this._map,
                                 f = m.extent,
                                 t = m.width,
                                 r = m.height,
                                 m = m.__visibleRect,
-                                g = [],
-                                h, s;
-                            h = "extent" === n;
-                            if ("rect" === n || h) g = {
-                                x: 0,
-                                y: 0,
-                                spatialReference: a.spatialReference
-                            }, g.x = h ? a.xmin : a.x, g.y = h ? a.ymax : a.y, n = w.toScreenPoint(f, t, r, g), g.x = h ? a.xmax : a.x + a.width, g.y = h ? a.ymin : a.y + a.height, a = w.toScreenPoint(f, t, r, g), b = {
-                                x: n.x - m.x + b[0],
-                                y: n.y - m.y,
-                                width: Math.abs(a.x - n.x),
-                                height: Math.abs(a.y - n.y)
-                            }, 0 === b.width && (b.width = 1), 0 === b.height && (b.height = 1), e = this._drawRect(c,
-                                e, b);
-                            else if ("polyline" === n || "polygon" === n) {
-                                h = 0;
-                                for (s = b.length; h < s; h++) g = g.concat(w._toScreenPath(f, t, r, a, -m.x + b[h], -m.y));
-                                e = this._drawPath(c, e, g);
-                                this._rendererLimits && ("polyline" === n ? this._clipPolyline(e, a) : this._clipPolygon(e, a))
-                            }
+                                g,
+                                s;
+
+                               g = w._toScreenPath(f, t, r, geo, -m.x + b[0], -m.y);
+                               if(a.attributes&&a.attributes.OBJECTID === 8){
+                                if(!window.minerPaths)window.minerPaths = [];
+                                    var txt = g.join(" ")
+                                    window.minerPaths.push(txt)
+
+                               }
+                               e = this._drawPath(c, e, g);
                             return e
                         },
                         _drawRect: function (a, b, c) {
@@ -9622,8 +9641,11 @@ require({
                                 a._overrideSize(b.getEventSource());
                                 return b
                             } : function (a, b, c, e) {
-                                c = e ? c : c.join(" ");
-                                return b ? b.setShape(c) : a.createPath(c)
+                                //_div, dojoshape, screenpath
+                                var str = c.join(" ");
+                               // if(b)console.log('setting')
+                               // else console.log('creating')
+                                return b ?b.setShape(str) : a.createPath(str)
                             }
                         }(),
                         _drawText: function (a, b, c) {
@@ -15314,7 +15336,6 @@ require({
                         this._fire("onDblClick", this._processEvent(a))
                     },
                     _onMouseWheelHandler: function (a) {
-                        return;
                         var b = this.map;
                         (b ? b.isScrollWheelZoom || b.isScrollWheelPan : this.preventPageScroll) && k.stop(a);
                         var b = q("ie") || q("webkit") ? a.wheelDelta / this.wheelDivisor : -a.detail / this.mozWheelDivisor,
@@ -37516,7 +37537,29 @@ require({
                                 g = this._tileW;
                                 p = this._tileH;
                                 a = new s(-a.x, -a.y, a.width, a.height);
-                                for (h = this._tileIds.length - 1; 0 <= h; h--)(l = this._tileIds[h]) ? (m = this._tiles[l], q = f.getMarginBox(m), q = new s(q.l, q.t, g, p), "css-transforms" === d.navigationMode && (q.x = m._left, q.y = m._top), a.intersects(q) ? this._tileBounds[l] = q : (this._loadingList.contains(l) && this._tilePopPop(m), k.destroy(m), this._tileIds.splice(h, 1), delete this._tileBounds[l], delete this._tiles[l])) : (this._tileIds.splice(h, 1), delete this._tileBounds[l], delete this._tiles[l])
+                                for (h = this._tileIds.length - 1; 0 <= h; h--)
+                                    if(l = this._tileIds[h]){
+                                        m = this._tiles[l];
+                                        q = f.getMarginBox(m);
+                                        q = new s(q.l, q.t, g, p);
+                                        if("css-transforms" === d.navigationMode){
+                                            q.x = m._left;
+                                            q.y = m._top;
+                                        }
+                                        if(a.intersects(q)){
+                                            this._tileBounds[l] = q 
+                                        }else if(this._loadingList.contains(l)){
+                                            this._tilePopPop(m);
+                                            k.destroy(m);
+                                            this._tileIds.splice(h, 1);
+                                            delete this._tileBounds[l];
+                                            delete this._tiles[l];
+                                        }
+                                    }else{
+                                        this._tileIds.splice(h, 1);
+                                        delete this._tileBounds[l];
+                                        delete this._tiles[l];
+                                    }
                             }
                         },
                         _onPanHandler: function (a, c) {

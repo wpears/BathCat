@@ -133,6 +133,7 @@ function( addSymbol
         
 
       function clickCallback(e){
+        console.log("yooo")
         var mapPoint = e.mapPoint;
         var screenPoint = e.screenPoint;
         var sym = addSymbol(map, mapPoint, dataPointSymbol, self.graphics);
@@ -154,6 +155,7 @@ function( addSymbol
         graphics:[],
         labels:[],
         init:function(e){
+          console.log('init')
           self = this;
           addCSS();
           function handleClick(e){

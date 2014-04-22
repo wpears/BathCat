@@ -7920,7 +7920,8 @@ require({
                         _extentUtil: function (a, b, c, e, n) {
                             //object with level/center/scale, ?, new extent, ?, ?
                             console.log("extentutil",a,b,c,e,n)
-                            if(a===null)setTimeout(window.resetTrans,50)
+                            var passingExtent = (a===null)
+                            if(passingExtent)setTimeout(window.resetTrans,50)
                         //    debugger;
                             var m = new h,
                                 f, r, g, s, d, u, v, A, l, q, B = this.width,
@@ -7988,7 +7989,7 @@ require({
                                 v, b);
                             else if (w.isDefined(g)) c = b.expand(g);
                             else if (l || q) a ? (c = a.end, s = c.getCenter(), x = Y(c, B, p, s), x.x += l, x.y += q, x = X(c, B, p, x), c = c.offset(x.x - s.x, x.y - s.y)) : (l = new D(B / 2 + l, p / 2 + q), q = X(b, B, p, l), p = b.getWidth(), l = b.getHeight(), B = q.x - p / 2, q = q.y - l / 2, c = new E(B, q, B + p, q + l, this.spatialReference));
-                            c = adjustExtent(c,f);
+                            if(!passingExtent)c = adjustExtent(c,f);
                             c || (u ? (b = a ? a.end : b, p = b.getWidth(), l = b.getHeight(), B = u.x - p / 2, q = u.y - l / 2, c = new E(B, q, B + p, q + l, this.spatialReference)) : a && (c = a.end));
                             c ? (this._extentDfd && -1 === this._extentDfd.fired && this._extentDfd.reject(), this._extentDfd = m, this.__setExtent(c,
                                 null, d, e, a, n)) : m.reject();
@@ -8013,12 +8014,14 @@ require({
                                         z = n && n.divExtent;
                                     if (P.zoomDuration && f && g) {
                                         z = z || new E(g);
+                                        console.log("p",p)
                                         p = p || {
                                             left: g.xmin,
                                             top: g.ymax,
                                             width: g.getWidth(),
                                             height: g.getHeight()
                                         };
+                                        console.log(p,"p")
                                         w = {
                                             left: a.xmin,
                                             top: a.ymax,

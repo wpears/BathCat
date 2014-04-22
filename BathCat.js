@@ -43,7 +43,6 @@ require(["dijit/layout/BorderContainer"
 				,"modules/tooltip.js"
 				,"modules/getdate.js"
 				,"modules/gridcategory.js"
-				,"modules/addsymbol.js"
 
 				,"require"
 				],
@@ -89,7 +88,6 @@ function( BorderContainer
 				, Tooltip
 				, getDate
         , GridCategory
-        , addSymbol
 
 				, require
 				){
@@ -162,8 +160,10 @@ function( BorderContainer
      	var rasterLayer = new DynamicLayer(rasterUrl, {id:"raster"})
 			var topoOn = 1;
 			var satOn = 0;
+			var mapContainer = dom.byId("mapDiv_container");
+
 window.map = map
-window.topoMap = topoMap
+
 			map.on("layer-add",function(e){
 				var layer = e.layer
 				if(layer.graphics){
@@ -185,7 +185,7 @@ window.topoMap = topoMap
 	var waiting = 0;
 	var panHandle
 	var layerNode;
-	var container = dom.byId("mapDiv_container")
+	
 
 	map.on("load",function(e){
 		layerNode = dom.byId("mapDiv_layers")
@@ -202,10 +202,10 @@ window.topoMap = topoMap
 		console.log("bc zoomstart")
 	})
 if(touch){
-	on(container,"touchstart",panStart)
-	on(container,"touchmove", schedulePan)
+	on(mapContainer,"touchstart",panStart)
+	on(mapContainer,"touchmove", schedulePan)
 }else{
-	on(container,"mousedown",function(e){
+	on(mapContainer,"mousedown",function(e){
 		panStart(e);
 		panHandle=on(W,"mousemove", schedulePan)
 	})
@@ -243,11 +243,33 @@ if(touch){
 	function pan(e){
 		layerNode.style.cssText = "-webkit-transform:translate3d("+transX+"px,"+transY+"px,0);";
 	//	if(Math.abs(transX-updateX)>100||Math.abs(transY-updateY)>100){
-			updateImages();
+		updateImages();
 		waiting = 0;
 		//	updateX = transX;
 	//		updateY = transY;
 	//	}
+	}
+
+	window.adjustExtent = function(ext,numLevels){
+		console.log("ADJUSTING")
+		var levelCorrection = numLevels*2;
+		if(numLevels < 0) levelCorrection = 2/levelCorrection;
+		var ratio = 1/map._ratioW/levelCorrection;
+		var transXR = ratio*transX;
+		var transYR = ratio*transY;
+		ext.xmin-=transXR;
+		ext.xmax-=transXR;
+		ext.ymin+=transYR;
+		ext.ymax+=transYR;
+		return ext;
+	}
+
+	window.resetTrans = function(){
+		transX = 0;
+		transY = 0;
+		locX = 0;
+		locY = 0;
+		pan();
 	}
 
 	window.modulate = function(factor){
@@ -255,12 +277,8 @@ if(touch){
 		transY*=factor;
 		pan();
 	}
-	window.showPoints = function(p,w){
-		var dataPointSymbol =  new SimpleMarker({"size":6,"color":new Color([0, 0, 0])})
 
-		addSymbol(map, new Point(p.left,p.top), dataPointSymbol, []);
-		addSymbol(map, new Point(w.left,w.top), dataPointSymbol, []);
-	} 
+
 	window.modAnim = function(anim){
 		var obj = {};
 		obj.left = anim.left - transX/map._ratioW;
@@ -1329,7 +1347,7 @@ if(!touch){
 	}();
 }
 		on(fex,"mousedown", function(e){                  //go to initial extent
-			map.centerAndZoom(centerPoint,zoomLevel)
+			map.setExtent(intExt)
 		});
 
 
@@ -1363,6 +1381,8 @@ if(!touch){
 
 		on.once (identAnchor,"mousedown", function(e){
 				var options= { map: map
+										 , mapDiv : mapDiv
+										 , mapContainer : mapContainer
 										 , rastersShowing: rastersShowing
 										 , eventFeatures:eventFeatures
 										 , names:names

@@ -8,6 +8,7 @@ define(['modules/addsymbol.js'
 
         ,"esri/symbols/SimpleLineSymbol"
         ,"esri/symbols/SimpleMarkerSymbol"
+        ,"esri/geometry/ScreenPoint"
 
        ,'dojo/on'
        ,'dojo/dom-class'
@@ -23,6 +24,7 @@ function( addSymbol
 
         , SimpleLine
         , SimpleMarker
+        , ScreenPoint
 
         , on
         , domClass
@@ -37,8 +39,9 @@ function( addSymbol
         , names = options.names||[]
         , dates = options.dates||[]
         , toolTooltip = options.tooltip||null
+        , mapDiv = options.mapDiv||DOC.getElementById("mapDiv")
+        , mapContainer = options.mapContainer||DOC.getElementsById("mapDiv_container")
         , identify = Identify(url, map, layerArray, rastersShowing)
-        , mapDiv = DOC.getElementById("mapDiv")
         , solidLine = SimpleLine.STYLE_SOLID
         , lineSymbol = new SimpleLine(solidLine, new Color([0, 0, 0]), 2)
         , dataPointSymbol = new SimpleMarker({"size":6,"color":new Color([0, 0, 0])})
@@ -63,12 +66,11 @@ function( addSymbol
       }
 
       function show(e){
+        var offset = DOC.body.clientWidth - mapContainer.clientWidth;
         var sty = this.style;
-        var top = (e.offsetY-10)+"px";
-        var left = (e.offsetX+10)+"px";
-        sty.top = top;
-        sty.left = left;
-        sty.display = "block";
+        var top = "top:"+(e.pageY-10)+"px;";
+        var left = "left:"+(e.pageX-offset+10)+"px;";
+        sty.cssText = top+left+"display:block;";
       }
 
       function hide(e){
@@ -133,9 +135,9 @@ function( addSymbol
         
 
       function clickCallback(e){
-        console.log("yooo")
-        var mapPoint = e.mapPoint;
-        var screenPoint = e.screenPoint;
+        var offset = DOC.body.clientWidth - mapContainer.clientWidth;
+        var screenPoint = new ScreenPoint (e.pageX-offset,e.pageY)
+        var mapPoint = map.toMap(screenPoint)
         var sym = addSymbol(map, mapPoint, dataPointSymbol, self.graphics);
         identify(mapPoint).then(function(idArr){
           renderIdent(idArr, sym, screenPoint);
@@ -155,13 +157,12 @@ function( addSymbol
         graphics:[],
         labels:[],
         init:function(e){
-          console.log('init')
           self = this;
           addCSS();
           function handleClick(e){
-            if(domClass.contains(ident,"clickable"))
+            if(domClass.contains(ident,"clickable")){
               return tools.toggle(e, self);
-            else 
+            }else 
               if (toolTooltip) toolTooltip(e);
           }
           handleClick(e);
@@ -182,8 +183,8 @@ function( addSymbol
         revive:function(){
           FeatureEvents.disable(eventFeatures)
           map.setMapCursor("help");
-          this.handlers[0] = map.on("mouse-down", function(evt){mouseDownX = evt.pageX;mouseDownY = evt.pageY;});
-          this.handlers[1] = map.on("mouse-up", function(e){
+          this.handlers[0] = on(mapContainer,"mousedown", function(evt){mouseDownX = evt.pageX;mouseDownY = evt.pageY;});
+          this.handlers[1] = on(mapContainer,"mouseup", function(e){
           if(e.pageX<mouseDownX+10&&e.pageX>mouseDownX-10&&e.pageY<mouseDownY+10&&e.pageY>mouseDownY-10)
             clickCallback(e)});
           identOff = 0;

@@ -7731,8 +7731,8 @@ require({
                                 n = a.newLod,
                                 m = a.levelChange;
                             a.extent = a.anchor = a.levelChange = a.startingExtent = a.newLod = this._delta = this._zoomAnim = null;
-                            console.log("z end",b,c,e,n,m)
-                            modulate(c)
+                            console.log("z end.. modulate?",b,c,e,n,m)
+                         //   modulate(c)
                             //extent, zoom amount, screenpoint where mouse is, newlod, level is changing
                             this.__zoomEnd(b,
                                 c, e, n, m)
@@ -7920,6 +7920,7 @@ require({
                         _extentUtil: function (a, b, c, e, n) {
                             //object with level/center/scale, ?, new extent, ?, ?
                             console.log("extentutil",a,b,c,e,n)
+                            if(a===null)setTimeout(window.resetTrans,50)
                         //    debugger;
                             var m = new h,
                                 f, r, g, s, d, u, v, A, l, q, B = this.width,
@@ -7987,6 +7988,7 @@ require({
                                 v, b);
                             else if (w.isDefined(g)) c = b.expand(g);
                             else if (l || q) a ? (c = a.end, s = c.getCenter(), x = Y(c, B, p, s), x.x += l, x.y += q, x = X(c, B, p, x), c = c.offset(x.x - s.x, x.y - s.y)) : (l = new D(B / 2 + l, p / 2 + q), q = X(b, B, p, l), p = b.getWidth(), l = b.getHeight(), B = q.x - p / 2, q = q.y - l / 2, c = new E(B, q, B + p, q + l, this.spatialReference));
+                            c = adjustExtent(c,f);
                             c || (u ? (b = a ? a.end : b, p = b.getWidth(), l = b.getHeight(), B = u.x - p / 2, q = u.y - l / 2, c = new E(B, q, B + p, q + l, this.spatialReference)) : a && (c = a.end));
                             c ? (this._extentDfd && -1 === this._extentDfd.fired && this._extentDfd.reject(), this._extentDfd = m, this.__setExtent(c,
                                 null, d, e, a, n)) : m.reject();
@@ -8023,7 +8025,6 @@ require({
                                             width: s,
                                             height: k
                                         };
-                                        showPoints(p,w)
                                         var x = new t(a.xmin, a.ymax, r),
                                             C = new t(a.xmin, a.ymin, r),
                                             y = new t(this.extent.xmin, this.extent.ymax, r),
@@ -8035,26 +8036,54 @@ require({
                                     this._ratioH = this.height / k;
 
                                     var N = this._zoomAnimDiv;
-                                   console.log("SET EXTENT IS THE ONLY THING FINISH THIS")
-                                    if (f) V(this._layersDiv, {
-                                        left: "0px",
-                                        top: "0px"
-                                    }), b = new D(0, 0), this.__visibleRect.x = this.__visibleRect.y = 0, p && w ? (this._delta = b, N.id = "_zAD", N.startingExtent = z, N.extent = a, N.levelChange = f, N.newLod =
-                                        h.lod, N.anchor = c ? c : !q && n ? n.anchor : Y(this.extent, this.width, this.height, q), this._zoomAnim = B.resize({
-                                            node: N,
-                                            start: p,
-                                            end: w,
-                                            duration: P.zoomDuration,
-                                            rate: P.zoomRate,
-                                            beforeBegin: !n ? this._zoomStartHandler : null,
-                                            onAnimate: this._zoomingHandler,
-                                            onEnd: this._zoomEndHandler
-                                        }).play(), this._fireOnScale(this.extent.getWidth() / a.getWidth(), N.anchor)) : (this._updateExtent(a, f), this._fireExtChg([this.extent, b, f, this.__LOD = h.lod]));
-                                    else if (!this.__panning)
+                                    console.log(f);
+                                    if (f){
+                                        console.log("in if");
+                                        V(this._layersDiv, {
+                                            left: "0px",
+                                            top: "0px"
+                                        });
+                                        b = new D(0, 0);
+                                        this.__visibleRect.x = this.__visibleRect.y = 0;
+                                        if(p && w){
+                                            this._delta = b;
+                                            N.id = "_zAD";
+                                            N.startingExtent = z;
+                                            N.extent = a;
+                                            N.levelChange = f;
+                                            N.newLod =h.lod;
+                                            if(c){
+                                                console.log("c exists",c)
+                                                N.anchor = c;
+                                            }else if(!q && n){
+                                                console.log("!q && n")
+                                                N.anchor = n.anchor;
+                                            }else{
+                                                console.log("anchor set to center")
+                                                N.anchor = Y(this.extent, this.width, this.height, q);
+                                            }
+                                            this._zoomAnim = B.resize({
+                                                node: N,
+                                                start: p,
+                                                end: w,
+                                                duration: P.zoomDuration,
+                                                rate: P.zoomRate,
+                                                beforeBegin: !n ? this._zoomStartHandler : null,
+                                                onAnimate: this._zoomingHandler,
+                                                onEnd: this._zoomEndHandler
+                                            }).play();
+                                            this._fireOnScale(this.extent.getWidth() / a.getWidth(), N.anchor);
+                                        }else{
+                                            this._updateExtent(a, f);
+                                            this._fireExtChg([this.extent, b, f, this.__LOD = h.lod]);
+                                        }
+                                    }else if (!this.__panning){
+                                        console.log("in else if")
                                         if (!1 === this.loaded || m) this._updateExtent(a, f), this._fireExtChg([this.extent,
                                             b, f, this.__LOD = h.lod
                                         ]);
-                                        else {
+                                        }else {
+                                            console.log("in else")
                                             this.__panning = !0;
                                             p = (new G(0, 0, this.width, this.height, this.spatialReference)).getCenter();
                                             p.x = d(p.x);
@@ -8106,13 +8135,13 @@ require({
                         },
                         __getExtentForLevel: function (a, b, c) {
                             //new level, center point, current extent
-                            console.log('gefl',a,b,c)
+                            console.log('get ex fl',a,b,c)
+                            var lev = a;
                             var e = this.__tileInfo,
                                 e = e && e.lods;
                             a = w.isDefined(a) ? a : 0;
                             c = c || this.extent;
                             b = b || c && c.getCenter();
-                   //         b = modulateExtentPoint(b);
                             if (e) {
                                 if (b) {
                                     c = this.getMinZoom();
@@ -8122,9 +8151,10 @@ require({
                                     a = e[a];
                                     e = this.width * a.resolution / 2;
                                     c = this.height * a.resolution / 2;
+                                    var ext = new E(b.x -
+                                            e, b.y - c, b.x + e, b.y + c, b.spatialReference)
                                     return {
-                                        extent: new E(b.x -
-                                            e, b.y - c, b.x + e, b.y + c, b.spatialReference),
+                                        extent: ext,
                                         lod: a
                                     }
                                 }
@@ -9557,13 +9587,21 @@ require({
                             if (this._params.drawMode && this._map && !this.suspended){
                                 var n = this._getSymbol(a)
                                   , q
+                                  , g = a.geometry.type
+                                  , dshape
                                   ;
-                                if(!n) return                                
-                                this._draw.cToInit ? this._draw.cToInit.graphic = a : (this._draw.cToInit = {graphic: a})
+                                if(!n) return;
+                                dshape = a.getDojoShape();
                                 this._draw.zeroArr?1:(this._draw.zeroArr=[0])
-                                q = this._drawShape(a, this._draw.zeroArr, this._div, a.getDojoShape());
-                                this._symbolizeShape(q, n, null,null);
-                                this._initNode(a, q, false, this._draw.cToInit, null);
+                                if ("point" === g){
+                                    q = this._drawPoint(this._div, a.geometry, n, dshape, this._draw.zeroArr,null, a);
+                                    this._symbolizePoint(q, n, null, a);
+                                }else{                                
+                                  this._draw.cToInit ? this._draw.cToInit.graphic = a : (this._draw.cToInit = {graphic: a})
+                                  q = this._drawShape(a, this._draw.zeroArr, this._div, dshape);
+                                  this._symbolizeShape(q, n, null,null);
+                                  this._initNode(a, q, false, this._draw.cToInit, null);
+                                }
                                 a._shape = q;
                             }
                         },

@@ -8,5 +8,5 @@ to esri/MouseEvents: return from _onMouseDragHandler
 structure of _onPanHandler in TiledMapServiceLayer
 
 
-
+resetTrans in _extentUtil for when an extent is passed
 

@@ -7950,6 +7950,7 @@ require({
 
                             var C = this._panAnim;
                             b = (a = this._stopAnim()) ? a.divExtent : this.extent;
+                            console.log("STOPANIM", a)
                             var y = this.__tileInfo,
                                 H = this._params;
 
@@ -8004,7 +8005,10 @@ require({
                                         r = this.spatialReference,
                                         g = n ? n.divExtent : this.extent,
                                         h = this._fixExtent(a, e || !1);
+                                    console.log("g (div extent",g)
+                                    console.log("a", a.xmin)
                                     a = h.extent;
+                                    console.log("a", a.xmin)
                                     var s = a.getWidth(),
                                         k = a.getHeight(),
                                         d = Math.round;
@@ -8040,6 +8044,7 @@ require({
 
                                     var N = this._zoomAnimDiv;
                                     console.log(f);
+                                    console.log("DURATION",P,P.zoomDuration)
                                     if (f){
                                         console.log("in if");
                                         V(this._layersDiv, {
@@ -8069,13 +8074,21 @@ require({
                                                 node: N,
                                                 start: p,
                                                 end: w,
-                                                duration: P.zoomDuration,
+                                                duration:P.zoomDuration,
                                                 rate: P.zoomRate,
                                                 beforeBegin: !n ? this._zoomStartHandler : null,
                                                 onAnimate: this._zoomingHandler,
                                                 onEnd: this._zoomEndHandler
                                             }).play();
                                             this._fireOnScale(this.extent.getWidth() / a.getWidth(), N.anchor);
+                                       //     this._zoomStartHandler();
+                                       //     this._fireOnScale(this.extent.getWidth() / a.getWidth(), N.anchor);
+                                      /*      var that = this;
+                                            if (window.zoomTimer)clearTimeout(window.zoomTimer);
+                                            window.zoomTimer = setTimeout(function(){
+                                                that._zoomEndHandler();
+                                            //    updateImages();
+                                            },250);*/
                                         }else{
                                             this._updateExtent(a, f);
                                             this._fireExtChg([this.extent, b, f, this.__LOD = h.lod]);
@@ -8108,12 +8121,15 @@ require({
                             }
                         },
                         _fireOnScale: function (a, b, c) {
+                            console.log("ABC",a,b,c)
                             if ("css-transforms" === this.navigationMode) {
                                 var e = this.__visibleDelta;
-                                this.onScale(s.scaleAt(a, {
+                                var mat = s.scaleAt(a, {
                                     x: -1 * (this.width / 2 - (b.x - e.x)),
                                     y: -1 * (this.height / 2 - (b.y - e.y))
-                                }), c)
+                                });
+                                adjustMatrix(mat, a);
+                                this.onScale(mat, c)
                             }
                         },
                         _stopAnim: function () {
@@ -8178,6 +8194,7 @@ require({
                             this[a] && this[a].apply(this, b)
                         },
                         _updateExtent: function (a, b) {
+                            console.log("updating extent",a,b);
                             this.extent = a;
                             b && this._setClipRect();
                             var c = this.spatialReference;
@@ -9587,6 +9604,7 @@ require({
                             angle: 0
                         },
                         _draw: function (a, b) {
+                            console.log("drawing")
                             if (this._params.drawMode && this._map && !this.suspended){
                                 var n = this._getSymbol(a)
                                   , q

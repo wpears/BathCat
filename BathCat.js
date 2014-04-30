@@ -137,6 +137,7 @@ function( BorderContainer
 
    	esri.config.defaults.io.corsDetection = false;
    	esri.config.defaults.io.corsEnabledServers.push("mrsbmapp00642");//enable cors for quicker queries
+   	esri.config.defaults.map.zoomDuration = 300;
    	esri.config.defaults.geometryService = new esri.tasks.GeometryService("http://sampleserver3.arcgisonline.com/arcgis/rest/services/Geometry/GeometryServer"); 	
 
    		var rasterUrl = "http://mrsbmapp00642/ArcGIS/rest/services/BATH/Web_Rr/MapServer" 
@@ -231,7 +232,7 @@ if(touch){
 		locY = e.pageY;
 	}
 
-	function updateImages(){
+	window.updateImages =function(){
 		topoMap._updateImages({
 				x:-transX,
 				y:-transY,
@@ -251,7 +252,7 @@ if(touch){
 	}
 
 	window.adjustExtent = function(ext,numLevels){
-		console.log("ADJUSTING")
+		console.log("ADJUSTING EXTENT");
 		var levelCorrection = numLevels*2;
 		if(numLevels < 0) levelCorrection = 2/levelCorrection;
 		var ratio = 1/map._ratioW/levelCorrection;
@@ -264,7 +265,15 @@ if(touch){
 		return ext;
 	}
 
+window.adjustMatrix = function(mat,factor){
+	console.log("ADJUSTING MATRIX")
+	if(factor < 1) factor *= -1;
+	mat.dx += transX*factor/2;
+	mat.dy += transY*factor/2;
+}
+
 	window.resetTrans = function(){
+		console.log("TRANS RESET")
 		transX = 0;
 		transY = 0;
 		locX = 0;

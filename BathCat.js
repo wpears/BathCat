@@ -186,6 +186,7 @@ window.map = map
 	var waiting = 0;
 	var panHandle
 	var layerNode;
+	var zoomedExtent;
 	
 
 	map.on("load",function(e){
@@ -198,9 +199,9 @@ window.map = map
 		dom.byId("mapDiv_graphics_layer").style.cssText = "-webkit-transform:translate3d("+svgWidth/2+"px,"+svgHeight/2+"px,0);";
 	})
 
-	map.on('zoom-end',function(){setTimeout(updateImages,0)})
+	map.on('zoom-end',function(){console.log("bathcat zoomend");setTimeout(updateImages,0)})
 	map.on('zoom-start',function(){
-		console.log("bc zoomstart")
+		console.log("bathcat zoomstart")
 	})
 if(touch){
 	on(mapContainer,"touchstart",panStart)
@@ -252,24 +253,39 @@ if(touch){
 	}
 
 	window.adjustExtent = function(ext,numLevels){
-		console.log("ADJUSTING EXTENT");
-		var levelCorrection = numLevels*2;
-		if(numLevels < 0) levelCorrection = 2/levelCorrection;
-		var ratio = 1/map._ratioW/levelCorrection;
+		console.log("ADJUSTING EXTENT",ext);
+		var factor = map.extent.getWidth()/ext.getWidth();
+		console.log("RAW FACTOR",factor)
+		if (factor>3) factor = 2;
+		if(factor<0.4) factor = 0.5;
+		if(factor<1)factor*=-2
+		var ratio = 1/map._ratioW/factor;
+		console.log("factor,ratioW,ratio",factor,map._ratioW,ratio)
 		var transXR = ratio*transX;
 		var transYR = ratio*transY;
+		console.log("trans",transXR,transYR)
 		ext.xmin-=transXR;
 		ext.xmax-=transXR;
 		ext.ymin+=transYR;
 		ext.ymax+=transYR;
-		return ext;
+		console.log("ADJUSTED",ext)
+		return zoomedExtent = ext;
 	}
 
 window.adjustMatrix = function(mat,factor){
-	console.log("ADJUSTING MATRIX")
-	if(factor < 1) factor *= -1;
+	console.log("ADJUSTING MATRIX",factor)
+	factor = 2*factor - 2;
+
 	mat.dx += transX*factor/2;
 	mat.dy += transY*factor/2;
+}
+
+window.patchDivExtent = function(a){
+	a.divExtent = zoomedExtent;
+}
+
+window.getZoomedExtent = function(){
+	return zoomedExtent;
 }
 
 	window.resetTrans = function(){
@@ -1610,7 +1626,7 @@ if(touch){
 																					//apply highlighting logic to an array
 		function redrawAllGraphics(){    
 			console.log("redrawing")
-				for(var i =1;i<featureCount;i++){
+				for(var i =1;i<featureCount+1;i++){
 					if(insideTimeBoundary[i]){
 						if(oidStore[i])
 							highlighter(i,"hi", 0);

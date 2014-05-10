@@ -7731,7 +7731,7 @@ require({
                                 n = a.newLod,
                                 m = a.levelChange;
                             a.extent = a.anchor = a.levelChange = a.startingExtent = a.newLod = this._delta = this._zoomAnim = null;
-                            console.log("z end.. modulate?",b,c,e,n,m)
+                            console.log("z end",b,c,e,n,m)
                          //   modulate(c)
                             //extent, zoom amount, screenpoint where mouse is, newlod, level is changing
                             this.__zoomEnd(b,
@@ -7919,7 +7919,8 @@ require({
                         },
                         _extentUtil: function (a, b, c, e, n) {
                             //object with level/center/scale, ?, new extent, ?, ?
-                            console.log("extentutil",a,b,c,e,n)
+                            console.log("\n\n\n\n\nIT BEGINS\n\n\n\n\nextentutil",a,b,c,e,n)
+                            console.log(a.mapAnchor)
                             var passingExtent = (a===null)
                             if(passingExtent)setTimeout(window.resetTrans,50)
                         //    debugger;
@@ -7949,7 +7950,12 @@ require({
                                 u = new t(u);
 
                             var C = this._panAnim;
-                            b = (a = this._stopAnim()) ? a.divExtent : this.extent;
+                            a = this._stopAnim();
+
+                            if(a){
+                              patchDivExtent(a);
+                              b = a.divExtent
+                            }else b = this.extent;
                             console.log("STOPANIM", a)
                             var y = this.__tileInfo,
                                 H = this._params;
@@ -7968,47 +7974,46 @@ require({
                                 m.resolve();
                                 return m
                             }
-                            
+
                             //reject if unconvertable
                             if (u && (u = this._convertGeometry(this, u), !u) || s && (s = this._convertGeometry(this, s), !s) || c && (c = this._convertGeometry(this, c), !c)) return m.reject(), m;
 
-
                             C && (s && d) && (s = X(this.extent, B, p, d));
                             a && (s && d) && (s = X(a.divExtent, B, p, d));
-                            console.log(s,"map anchor or nothing")
 
                             //don't allow zooming beyong max or min states
                             G && (y ? (f = this.getMinZoom(), G = this.getMaxZoom(), r < f ? r = f : r >
                                 G && (r = G), f = r - (a ? a.level : this.getLevel())) : (f = 0 < r ? -1 : 1, x = z ? r : null));
-                            console.log(c,"extent if called")
-                            console.log(g,"g=factor")
-                            console.log(f,y,a)
                             if (!c)
-                                if (w.isDefined(f)) 
-                                    y ? (B = a ? a.level : this.getLevel(), p = this.__getExtentForLevel(B + f, u, b).extent) : (p = (a ? a.end : this.extent).expand(x || (0 < f ? 0.5 * f : 2 * -f)), x && u && (p = p.centerAt(u))), p && (u ? c = p : (B = s || b.getCenter(), l = b.ymax - (p.getHeight() - b.getHeight()) * (B.y - b.ymax) / b.getHeight(), B = b.xmin - (p.getWidth() - b.getWidth()) * (B.x - b.xmin) / b.getWidth(), c = new E(B, l - p.getHeight(), B + p.getWidth(), l, this.spatialReference)));
-                                else if (A) c = F.getExtentForScale(this,
+                                if (w.isDefined(f)){ 
+                                    y ? (B = a ? a.level : this.getLevel(), p = this.__getExtentForLevel(B + f, u, b).extent) : (p = (a ? a.end : this.extent).expand(x || (0 < f ? 0.5 * f : 2 * -f)), x && u && (p = p.centerAt(u))), p && (u ? c = p : (B = s || b.getCenter(), l = b.ymax - (p.getHeight() - b.getHeight()) * (B.y - b.ymax) / b.getHeight(), B = b.xmin - (p.getWidth() - b.getWidth()) * (B.x - b.xmin) / b.getWidth(), console.log(b,l,p), c = new E(B, l - p.getHeight(), B + p.getWidth(), l, this.spatialReference)));
+                                    ;console.log("c needs to be adjusted",c)
+                                }else if (A) c = F.getExtentForScale(this,
                                 v, b);
                             else if (w.isDefined(g)) c = b.expand(g);
                             else if (l || q) a ? (c = a.end, s = c.getCenter(), x = Y(c, B, p, s), x.x += l, x.y += q, x = X(c, B, p, x), c = c.offset(x.x - s.x, x.y - s.y)) : (l = new D(B / 2 + l, p / 2 + q), q = X(b, B, p, l), p = b.getWidth(), l = b.getHeight(), B = q.x - p / 2, q = q.y - l / 2, c = new E(B, q, B + p, q + l, this.spatialReference));
-                            if(!passingExtent)c = adjustExtent(c,f);
+                            if(!passingExtent){
+                                c = adjustExtent(c,f);
+                           //     if(a)patchDivExtent(a);
+                            }
                             c || (u ? (b = a ? a.end : b, p = b.getWidth(), l = b.getHeight(), B = u.x - p / 2, q = u.y - l / 2, c = new E(B, q, B + p, q + l, this.spatialReference)) : a && (c = a.end));
                             c ? (this._extentDfd && -1 === this._extentDfd.fired && this._extentDfd.reject(), this._extentDfd = m, this.__setExtent(c,
                                 null, d, e, a, n)) : m.reject();
                             return m
                         },
                         __setExtent: function (a, b, c, e, n, m) {
-                            console.log('set extent',arguments)
+                            console.log('__setExtent',arguments)
                             try {
                                 if (this._firstLayerId) this.extent = a;
                                 else {
                                     var f = !0,
                                         r = this.spatialReference,
                                         g = n ? n.divExtent : this.extent,
-                                        h = this._fixExtent(a, e || !1);
-                                    console.log("g (div extent",g)
+                                        h = this._fixExtent(a, e || !1);    
+                                    console.log("g as div extent",g)
                                     console.log("a", a.xmin)
                                     a = h.extent;
-                                    console.log("a", a.xmin)
+                                    console.log("a after fixExtent", a.xmin)
                                     var s = a.getWidth(),
                                         k = a.getHeight(),
                                         d = Math.round;
@@ -8016,16 +8021,15 @@ require({
                                     v = d(1E6 * s), A = d(1E6 * g.getHeight()), l = d(1E6 * k), f = u !== v || A !== l;
                                     var q, w, p = n && n.rect,
                                         z = n && n.divExtent;
+                                        console.log("f", f)
                                     if (P.zoomDuration && f && g) {
                                         z = z || new E(g);
-                                        console.log("p",p)
                                         p = p || {
                                             left: g.xmin,
                                             top: g.ymax,
                                             width: g.getWidth(),
                                             height: g.getHeight()
                                         };
-                                        console.log(p,"p")
                                         w = {
                                             left: a.xmin,
                                             top: a.ymax,
@@ -8043,8 +8047,6 @@ require({
                                     this._ratioH = this.height / k;
 
                                     var N = this._zoomAnimDiv;
-                                    console.log(f);
-                                    console.log("DURATION",P,P.zoomDuration)
                                     if (f){
                                         console.log("in if");
                                         V(this._layersDiv, {
@@ -8121,7 +8123,7 @@ require({
                             }
                         },
                         _fireOnScale: function (a, b, c) {
-                            console.log("ABC",a,b,c)
+                            console.log("fireOnScale",a,b,c)
                             if ("css-transforms" === this.navigationMode) {
                                 var e = this.__visibleDelta;
                                 var mat = s.scaleAt(a, {
@@ -8141,6 +8143,7 @@ require({
                                     c = parseFloat(b.left),
                                     e = parseFloat(b.top),
                                     a = a.node;
+                                    console.log(c);
                                 return {
                                     anchor: a.anchor,
                                     start: a.startingExtent,
@@ -8154,7 +8157,7 @@ require({
                         },
                         __getExtentForLevel: function (a, b, c) {
                             //new level, center point, current extent
-                            console.log('get ex fl',a,b,c)
+                            console.log('get extent for level',a,b,c)
                             var lev = a;
                             var e = this.__tileInfo,
                                 e = e && e.lods;
@@ -8194,7 +8197,7 @@ require({
                             this[a] && this[a].apply(this, b)
                         },
                         _updateExtent: function (a, b) {
-                            console.log("updating extent",a,b);
+                            console.log("coremap, _updateExtent",a,b);
                             this.extent = a;
                             b && this._setClipRect();
                             var c = this.spatialReference;
@@ -9604,7 +9607,6 @@ require({
                             angle: 0
                         },
                         _draw: function (a, b) {
-                            console.log("drawing")
                             if (this._params.drawMode && this._map && !this.suspended){
                                 var n = this._getSymbol(a)
                                   , q

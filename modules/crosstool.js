@@ -25,6 +25,7 @@ define( ['modules/addsymbol.js'
         ,'esri/tasks/geometry'
         ,'esri/geometry/Polyline'
         ,'esri/geometry/Point'
+        ,'esri/geometry/ScreenPoint'
         ,'esri/symbols/SimpleLineSymbol'
         ,'esri/symbols/SimpleMarkerSymbol'
 
@@ -56,6 +57,7 @@ function( addSymbol
         , geo
         , Polyline
         , Point
+        , ScreenPoint
         , SimpleLine
         , SimpleMarker
 
@@ -72,6 +74,7 @@ function( addSymbol
         , chartNames = options.chartNames||null
         , chartDates = options.chartDates||null
         , tooltip = options.tooltip||null
+        , mapContainer = options.mapContainer||DOC.getElementsById("mapDiv_container")
         , identify = Identify(url, map, layerArray, rastersShowing)
         , canId = CanvasId(rasterLayer, map)
         , spatialRef = map.spatialReference
@@ -108,6 +111,13 @@ function( addSymbol
             ;
           return M.round(numb*offset)/offset;
       }
+
+      , addEventPoints = function(e){
+        var offset = DOC.body.clientWidth - mapContainer.clientWidth;
+        var screenPoint = new ScreenPoint (e.pageX-offset,e.pageY)
+        e.screenPoint = screenPoint;
+        return e.mapPoint=map.toMap(screenPoint)
+      }
       , update = function(p1, p2){
           lineGeometry = new Polyline(spatialRef);
           lineGeometry.addPath([p1, p2]);
@@ -115,10 +125,10 @@ function( addSymbol
           updateReady = 1;  
         }
 
-      , moveLine = function(p1, p2){
+      , moveLine = function(p1, e){
           if(updateReady){
             updateReady = 0;
-            update(p1, p2)
+            update(p1, addEventPoints(e))
           }
         }
 
@@ -148,9 +158,9 @@ function( addSymbol
       }
 
       , addFirstPoint = function(e1){
-        window.chartNames=chartNames;
-          var profile = new Profile(e1)
-            , mapPoint = e1.mapPoint
+        var mapPoint = addEventPoints(e1)
+          , profile = new Profile(e1)
+            
             ;
           profiles.push(profile);
 
@@ -164,11 +174,11 @@ function( addSymbol
           mouseLine = addSymbol(map, null, lineSymbol, profile.graphics);
 
           self.handlers[1].remove();
-          self.handlers[2] = map.on("mouse-move", function(e){
-            moveLine(mapPoint, e.mapPoint)
+          self.handlers[2] = on(mapContainer,"mousemove", function(e){
+            moveLine(mapPoint, e)
           });
 
-          self.handlers[3] = map.on("mouse-up", function(e2){
+          self.handlers[3] = on(mapContainer,"mouseup", function(e2){
             if(e2.pageX < mouseDownX+10&&e2.pageX > mouseDownX-10&&e2.pageY < mouseDownY+10&&e2.pageY > mouseDownY-10)
               addSecondPoint(e1, e2, profile);
           });
@@ -181,7 +191,7 @@ function( addSymbol
           self.handlers[3].remove();
           self.handlers[4].remove();
           self.handlers[5].remove();
-          self.handlers[1] = map.on("mouse-up", startNewLine);
+          self.handlers[1] = on(mapContainer,"mouseup", startNewLine);
         }
 
       , removeProfile = function (){
@@ -230,11 +240,11 @@ function( addSymbol
 
       , addSecondPoint = function(e1, e2, profile){
           var mp1 = e1.mapPoint
-            , mp2 = e2.mapPoint
+            , mp2 = addEventPoints(e2)
             ;
           profile.e2 = e2;
 
-          moveLine(mp1, mp2);
+          update(mp1, mp2);
           if(mp2.x === mp1.x&&mp2.y === mp1.y)return;
 
           addSymbol(map, mp2, dataPointSymbol, profile.graphics);
@@ -600,8 +610,9 @@ function( addSymbol
       },
       revive:function(){
         featureEvents.disable(eventFeatures)
-        self.handlers[0] = map.on("mouse-down", function(e){mouseDownX = e.pageX;mouseDownY = e.pageY;});
-        self.handlers[1] = map.on("mouse-up", addFirstPoint);
+        console.log("feat disabled")
+        self.handlers[0] = on(mapContainer,"mousedown", function(e){mouseDownX = e.pageX;mouseDownY = e.pageY;});
+        self.handlers[1] = on(mapContainer,"mouseup", addFirstPoint);
       },
       stop:function(){
         this.idle();

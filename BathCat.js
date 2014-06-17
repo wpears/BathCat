@@ -93,7 +93,6 @@ function( BorderContainer
 				){
 
 
-
   	var allowMM = 0;  // An absolutely obscene amount of event handlers. And TONS of triggered body/map mm events
 /*
   	(function(){ this patch breaks ie11. I'm omitting until I seem a need in chrome.
@@ -178,17 +177,32 @@ window.map = map
 
 	var transX=0;
 	var transY=0;
+
+
+//enhanced tile, feature and dynamic layers.
+//layers are API compatible. Internally require their requisite layers and create one, then patch it.
+
+
+
+
+
+
+
 (function(){
 	var updateX=0;
 	var updateY=0;
 	var locX=0;
 	var locY=0;
+	var panTransX = 0;
+	var panTransY = 0;
 	var waiting = 0;
+	var panExtent;
 	var panHandle
 	var layerNode;
 	var zoomedExtent;
+	var imageTimer;
 	
-
+window.transX = transX;
 	map.on("load",function(e){
 		layerNode = dom.byId("mapDiv_layers")
 		var svgStyle = layerNode.lastChild.style;
@@ -199,10 +213,13 @@ window.map = map
 		dom.byId("mapDiv_graphics_layer").style.cssText = "-webkit-transform:translate3d("+svgWidth/2+"px,"+svgHeight/2+"px,0);";
 	})
 
-	map.on('zoom-end',function(){console.log("bathcat zoomend");setTimeout(updateImages,0)})
-	map.on('zoom-start',function(){
-		console.log("bathcat zoomstart")
+	map.on('zoom-end',function(){
+		setTimeout(function(){
+			updateImages();
+			adjustExtentOnZoom(panExtent)
+		},0)
 	})
+
 if(touch){
 	on(mapContainer,"touchstart",panStart)
 	on(mapContainer,"touchmove", schedulePan)
@@ -213,6 +230,9 @@ if(touch){
 	})
 	on(W,"mouseup",function(){
 		panHandle&&panHandle.remove();
+		adjustExtentOnPan();
+		setPanTrans();
+		rasterLayer._onExtentChangeHandler(panExtent)
 	})
 }
 
@@ -221,6 +241,7 @@ if(touch){
 		if(waiting) return;
 		transX += e.pageX-locX;
 		transY += e.pageY-locY;
+		window.transX = transX;
 		locX = e.pageX;
 		locY = e.pageY;
 		requestAnimationFrame(pan);
@@ -229,6 +250,7 @@ if(touch){
 
 	function panStart(e){
 		e.preventDefault();
+		if(!panExtent) panExtent = new Extent(map.extent);
 		locX = e.pageX;
 		locY = e.pageY;
 	}
@@ -242,34 +264,52 @@ if(touch){
 			})
 	}
 
+
 	function pan(e){
 		layerNode.style.cssText = "-webkit-transform:translate3d("+transX+"px,"+transY+"px,0);";
 	//	if(Math.abs(transX-updateX)>100||Math.abs(transY-updateY)>100){
 		updateImages();
+	//	rasterLayer._onExtentChangeHandler(map.extent)
 		waiting = 0;
 		//	updateX = transX;
 	//		updateY = transY;
 	//	}
 	}
 
-	window.adjustExtent = function(ext,numLevels){
-		console.log("ADJUSTING EXTENT",ext);
+	function adjustExtent(extent,factor,offsetX,offsetY){
+		console.log(arguments)
+		var ratio = 1/factor/map._ratioW;
+		var x = ratio*offsetX;
+		var y = ratio*offsetY;
+		console.log("CHANGING BY",x,y)
+		console.log(extent.xmin,extent.xmin-x);
+		extent.xmin-=x;
+		extent.xmax-=x;
+		extent.ymin+=y;
+		extent.ymax+=y;
+		console.log(extent.xmin);
+		console.log("ADJUSTED",extent)
+		return extent;
+	}
+
+	window.adjustExtentOnZoom = function(ext){
+		console.log("ADJUSTING EXTENT ?On Zoom(from extentutil)?",ext);
 		var factor = map.extent.getWidth()/ext.getWidth();
-		console.log("RAW FACTOR",factor)
 		if (factor>3) factor = 2;
 		if(factor<0.4) factor = 0.5;
 		if(factor<1)factor*=-2
-		var ratio = 1/map._ratioW/factor;
-		console.log("factor,ratioW,ratio",factor,map._ratioW,ratio)
-		var transXR = ratio*transX;
-		var transYR = ratio*transY;
-		console.log("trans",transXR,transYR)
-		ext.xmin-=transXR;
-		ext.xmax-=transXR;
-		ext.ymin+=transYR;
-		ext.ymax+=transYR;
-		console.log("ADJUSTED",ext)
-		return zoomedExtent = ext;
+		return zoomedExtent = panExtent = adjustExtent(ext,factor,transX,transY);
+	}
+
+	function adjustExtentOnPan(){
+		console.log("adjusting on pan",panExtent)
+		panExtent = adjustExtent(panExtent,1,transX-panTransX,transY-panTransY)
+		console.log("PAN EXTENT",panExtent)
+	}
+
+	function setPanTrans(){
+		panTransX = transX;
+		panTransY = transY;
 	}
 
 window.adjustMatrix = function(mat,factor){
@@ -296,7 +336,7 @@ window.getZoomedExtent = function(){
 		locY = 0;
 		pan();
 	}
-
+/*
 	window.modulate = function(factor){
 		transX*=factor;
 		transY*=factor;
@@ -313,6 +353,7 @@ window.getZoomedExtent = function(){
 
 		return obj;
 	}
+	*/
 })();
 
 		rasterLayer.setVisibleLayers([-1]);
@@ -1398,6 +1439,7 @@ if(!touch){
 											, chartNames:names
 											, chartDates:formattedDates
 											, tooltip:tooltip
+											, mapContainer : mapContainer
 										  };
 				allowMM = 1;						  
 				crossTool = CrossTool(rasterLayer, Popup(), crossAnchor, rasterUrl, layerArray, options);
@@ -1413,7 +1455,7 @@ if(!touch){
 										 , names:names
 										 , dates:formattedDates
 										 , tooltip:tooltip
-									   };
+									   };			  
 				identTool = IdentTool(identAnchor, rasterUrl, layerArray, options); 
 				identTool.init(e);
 		}); 

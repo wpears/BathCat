@@ -103,7 +103,7 @@ body{
   margin-top:1px;
 }
 .atop{
-   position:absolute;
+  position:absolute;
   z-index:100;
 }
 .mov{
@@ -251,7 +251,6 @@ a{
   height:100%;
   transform:translate3d(0,0,0);
  -webkit-transform:translate3d(0,0,0);
-
 }
 #closeRp{
   z-index: 300;

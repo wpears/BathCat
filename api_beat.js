@@ -7920,7 +7920,6 @@ require({
                         _extentUtil: function (a, b, c, e, n) {
                             //object with level/center/scale, ?, new extent, ?, ?
                             console.log("\n\n\n\n\nIT BEGINS\n\n\n\n\nextentutil",a,b,c,e,n)
-                            console.log(a.mapAnchor)
                             var passingExtent = (a===null)
                             if(passingExtent)setTimeout(window.resetTrans,50)
                         //    debugger;
@@ -7993,8 +7992,7 @@ require({
                             else if (w.isDefined(g)) c = b.expand(g);
                             else if (l || q) a ? (c = a.end, s = c.getCenter(), x = Y(c, B, p, s), x.x += l, x.y += q, x = X(c, B, p, x), c = c.offset(x.x - s.x, x.y - s.y)) : (l = new D(B / 2 + l, p / 2 + q), q = X(b, B, p, l), p = b.getWidth(), l = b.getHeight(), B = q.x - p / 2, q = q.y - l / 2, c = new E(B, q, B + p, q + l, this.spatialReference));
                             if(!passingExtent){
-                                c = adjustExtent(c,f);
-                           //     if(a)patchDivExtent(a);
+                                c = adjustExtentOnZoom(c);
                             }
                             c || (u ? (b = a ? a.end : b, p = b.getWidth(), l = b.getHeight(), B = u.x - p / 2, q = u.y - l / 2, c = new E(B, q, B + p, q + l, this.spatialReference)) : a && (c = a.end));
                             c ? (this._extentDfd && -1 === this._extentDfd.fired && this._extentDfd.reject(), this._extentDfd = m, this.__setExtent(c,
@@ -8083,14 +8081,6 @@ require({
                                                 onEnd: this._zoomEndHandler
                                             }).play();
                                             this._fireOnScale(this.extent.getWidth() / a.getWidth(), N.anchor);
-                                       //     this._zoomStartHandler();
-                                       //     this._fireOnScale(this.extent.getWidth() / a.getWidth(), N.anchor);
-                                      /*      var that = this;
-                                            if (window.zoomTimer)clearTimeout(window.zoomTimer);
-                                            window.zoomTimer = setTimeout(function(){
-                                                that._zoomEndHandler();
-                                            //    updateImages();
-                                            },250);*/
                                         }else{
                                             this._updateExtent(a, f);
                                             this._fireExtChg([this.extent, b, f, this.__LOD = h.lod]);
@@ -9608,6 +9598,7 @@ require({
                         },
                         _draw: function (a, b) {
                             if (this._params.drawMode && this._map && !this.suspended){
+                                if(a.geometry === null) return;
                                 var n = this._getSymbol(a)
                                   , q
                                   , g = a.geometry.type
@@ -10452,13 +10443,15 @@ require({
                         c && (delete this._loadCallback, c(this))
                     },
                     getImageUrl: function (c, e, n, m) {
+                        console.log(c,e,n,m,"getimageurl, boundingbox herein")
+
                         var r = this._url.path + "/export?",
                             g = this._params,
                             t = c.spatialReference.wkid || q.toJson(c.spatialReference.toJson()),
                             h = this._errorHandler;
                         delete g._ts;
                         l.mixin(g, {
-                            bbox: c.xmin + "," + c.ymin + "," + c.xmax + "," + c.ymax,
+                            bbox: (c.xmin) + "," + c.ymin + "," + (c.xmax) + "," + c.ymax,
                             bboxSR: t,
                             imageSR: t,
                             size: e + "," + n
@@ -15699,6 +15692,7 @@ require({
                             }))
                         },
                         _onExtentChangeHandler: function (b, c, e) {
+                            console.log("on extent from rast",b,map.extent,getZoomedExtent())
                             if (!this.suspended) {
                                 clearTimeout(this._wakeTimer);
                                 this._wakeTimer = null;
@@ -15707,10 +15701,12 @@ require({
                                     d = this._img,
                                     r = d && d.style,
                                     k = this._dragOrigin;
+                                    console.log("1")
                                 if (c && !e && d && (c.x !== this._panDx || c.y !== this._panDy)) "css-transforms" === m.navigationMode ? (c = m.__visibleDelta, this._left = c.x, this._top = c.y, h.set(this._div, f._css.names.transform, f._css.translate(this._left, this._top))) : h.set(d, {
                                     left: k.x + c.x + "px",
                                     top: k.y + c.y + "px"
                                 });
+                                    console.log("2")
                                 d ? (k.x = parseInt(r.left, 10), k.y = parseInt(r.top, 10)) : k.x = k.y = 0;
                                 "css-transforms" === m.navigationMode && (e && d) && (h.set(d, f._css.names.transition, "none"), d._multiply = d._multiply ? g.multiply(d._matrix,
                                     d._multiply) : d._matrix);
@@ -15723,7 +15719,8 @@ require({
                                         this._jsonRequest = null
                                     }
                                 10 <= this.version && m.wrapAround180 && (b = b._normalize(!0));
-                                if (this.isPNG32) d = this._img_loading = q.create("div"), d.id = m.id + "_" + this.id + "_" + (new Date).getTime(), h.set(d, {
+                                console.log(b,"3")
+                                if (this.isPNG32){ d = this._img_loading = q.create("div"), d.id = m.id + "_" + this.id + "_" + (new Date).getTime(), h.set(d, {
                                     position: "absolute",
                                     left: "0px",
                                     top: "0px",
@@ -15734,7 +15731,9 @@ require({
                                     width: m.width + "px",
                                     height: m.height + "px"
                                 }), this.getImageUrl(b, m.width, m.height, this._divAlphaImageFunc);
-                                else {
+                                console.log("4 in if")
+                                }else {
+                                    console.log("4 in else");
                                     e = this._img_loading = q.create("img");
                                     c = f._css.names;
                                     var C = a("ie"),
@@ -15758,6 +15757,7 @@ require({
                                         height: d ? parseInt(r.height, 10) : m.height,
                                         zoom: r && r.zoom ? parseFloat(r.zoom) : 1
                                     };
+                                    console.log("getting image",b,m.width,m.height)
                                     this.getImageUrl(b, m.width, m.height, this._imgSrcFunc)
                                 }
                             }

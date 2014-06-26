@@ -1024,10 +1024,16 @@ console.log('post grid');
 		adjustOnZoom = function(zoomObj){	//logic on ZoomEnd	
 			var ext = zoomObj.extent
 				, lev = zoomObj.level
+				, redraw = 0;
 				;
 			if(lev > 17&&previousLevel<18&&topoOn) //extend topo to 18, 19 with satellite
 				showSat();
+			if(previousLevel > 12 && lev < 13||previousLevel < 13 && lev > 12)
+					redraw = 1;
 			previousLevel = lev;
+			if(redraw)
+				redrawAllGraphics(tiout.graphics);
+
 			//redrawAllGraphics(tiout.graphics);
 			//tiout.setMaxAllowableOffset(offs);
 			//tiout.refresh();
@@ -1489,7 +1495,7 @@ if(0&&touch){
 																//main highlighting logic, separated by year with different basemap
 
 		function highlighter(oid, hi, evt){
-			if(evt&&(hi&&hl[oid]||!hi&&!hl[oid])) return; //short circuit unless on a redraw (evt==0)
+			if(evt&&(hi&&hl[oid]||!hi&&!hl[oid])){return}//short circuit unless on a redraw (evt==0)
 			var symbo = topoOn?symbols:satSym
 				, date
 			  , graphic = oidToGraphic(oid)

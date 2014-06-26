@@ -25,13 +25,13 @@ if(!server) throw new Error("Must provide server name as first argument.");
 
 run(
     "http://"+server+"/ArcGIS/rest/services/BATH/data_out/MapServer/0/query?f=json&where=1%20%3D%201&returnGeometry=true&spatialRel=esriSpatialRelIntersects&outFields=*&outSR=102100"
-   ,"data_out.js"
+   ,"../static_data/data_out.js"
    ,"DATA_OUTLINES"
    );
 
 
 run(
     "http://"+server+"/ArcGIS/rest/services/BATH/s_ti/MapServer/0/query?f=json&where=1%3D1&returnGeometry=true&spatialRel=esriSpatialRelIntersects&maxAllowableOffset=15&outFields=OBJECTID&outSR=102100"
-   ,"s_ti.js"
+   ,"../static_data/s_ti.js"
    ,"TIGHT_OUTLINES"
    );

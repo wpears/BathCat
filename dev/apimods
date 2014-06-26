@@ -1,0 +1,4 @@
+to cdn copy:
+baseUrl: (location.protocol === 'file:' ? 'http:' : location.protocol) + "../api/js/dojo/dojo"
+Took unoptimized try/catch out of the _draw function of the graphiclayer
+!!? commented out event listeners in dojo touch !!?

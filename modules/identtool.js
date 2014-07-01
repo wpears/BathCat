@@ -86,7 +86,7 @@ function( addSymbol
           var label= "No Data";
         if(idArr){
           idArr.forEach(function(v, i){
-            var val = v.value;
+            var val = v.feature.attributes["Pixel Value"]
             var id = v.layerId;
             var name = names[id];
             var rnd;

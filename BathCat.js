@@ -107,6 +107,7 @@ function( BorderContainer
    ready(function(){ //wait for the dom
    	var W = window
    		, DOC = document
+   		, protocol = DOC.location.protocol
    		, touch = has("touch")
    		, ie9 =(document.all&&document.addEventListener&&!window.atob)?true:false
    		, innerHeight = W.innerHeight
@@ -134,11 +135,11 @@ function( BorderContainer
 
 
    	esri.config.defaults.io.corsDetection = false;
-   	esri.config.defaults.io.corsEnabledServers.push("mrsbmapp00642");//enable cors for quicker queries
-   	esri.config.defaults.geometryService = new esri.tasks.GeometryService("http://sampleserver3.arcgisonline.com/arcgis/rest/services/Geometry/GeometryServer"); 	
+   	esri.config.defaults.io.corsEnabledServers.push("gis.water.ca.gov");//enable cors for quicker queries
+   	esri.config.defaults.geometryService = new esri.tasks.GeometryService(protocol+"//sampleserver3.arcgisonline.com/arcgis/rest/services/Geometry/GeometryServer"); 	
 
-   		var rasterUrl = "http://mrsbmapp00642/ArcGIS/rest/services/BATH/Web_Rr/MapServer" 
-   		var topoUrl = "http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer";
+   		var rasterUrl = "https://gis.water.ca.gov/arcgis/rest/services/Public/bathymetry_rasters/MapServer" 
+   		var topoUrl = protocol+"//services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer";
 
 
    		var timeSlider;
@@ -245,7 +246,7 @@ tiout.on("graphic-node-add",function(e){
     map.addLayer(outlines);
 		eventFeatures.push(outlines);
 
-		satMap = new TiledLayer("http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer");
+		satMap = new TiledLayer(protocol+"//services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer");
 	  map.addLayer(satMap);
 	  satMap.hide();
 
@@ -486,7 +487,7 @@ window.oidStore = oidStore;
 
 
 		//*****initialize grid and attach all handlers*******\\
-console.log('grid')
+//console.log('grid')
 		gridObject =(function(){
 			var j = featureCount, gridCon, expandReady=1,toggleCount = 0,
 				intData, featureAttr, lastNodePos =new Array(gdata.length+1),nameSorted = 0, dateSorted = 1,
@@ -507,7 +508,6 @@ console.log('grid')
 
 			gdata.unshift({"__Date":1315008000000,Date:"Various",Project:"Soil Sedimentation",OBJECTID:gdata.length+1});
 			grid.renderArray(gdata);
-			console.log("OI")
 
 			gridHeader = dom.byId("gridNode-header").firstChild;
 			headerNodes = gridHeader.children;
@@ -723,13 +723,13 @@ console.log('grid')
 			function cellClick(e){	//grid click handler
 				var et = e.target, oid = getOIDFromGrid(e), attributes;
 				if(!oid)return;
+				if(!oidStore[oid]&&et.tagName=="INPUT"&&et.checked)return
 				highlighter(oid,"hi", 1);
 				if(et!== previousRecentTarget){ //prevent click before double click
 					window.clearTimeout(mouseDownTimeout);
 					previousRecentTarget = et;
 					mouseDownTimeout = W.setTimeout(nullPrevious, 400);
 					attributes = outlines.graphics[oid-1].attributes;
-
 					if(oidStore[oid]&&selectedGraphicsCount === 1){ //target is sole open
 						clearStoredOID(oid, 1, 1);
 						infoFunc(null);
@@ -929,7 +929,6 @@ console.log('grid')
 				     , sedToggle:sedToggle
 				     };
 		})();
-console.log('post grid');
 
 
 
@@ -983,7 +982,7 @@ console.log('post grid');
 
 
 		tiout.on("update-end", function(e, f, g, h){ // allows feature updating
-   		console.log("update-end");
+   		//console.log("update-end");
    		redrawAllGraphics(tiout.graphics);							
     });
 
@@ -1297,7 +1296,7 @@ if(0&&touch){
 	var outlayer = dom.byId("out_layer");
 	on(outlayer,"touchstart",function(e){
 		outlines.emit("mouse-over",e);
-		console.log("touchstart",e)})
+		})
 },500);
 	outlines.on("mouse-over", function(e) {
 		geoSearch(e, 1);
@@ -1482,7 +1481,7 @@ if(0&&touch){
 
 																					//apply highlighting logic to an array
 		function redrawAllGraphics(){    
-			console.log("redrawing")
+		//	console.log("redrawing")
 				for(var i =1;i<featureCount;i++){
 					if(insideTimeBoundary[i]){
 						if(oidStore[i])

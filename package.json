@@ -1,0 +1,23 @@
+{
+  "name": "bathcat",
+  "version": "1.0.0",
+  "description": "Interactive catalog of Bathymetery collected by the California Department of Water Resources",
+  "main": "BathCat.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/wpears/BathCat.git"
+  },
+  "author": "Wyatt Pearsall",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/wpears/BathCat/issues"
+  },
+  "homepage": "https://github.com/wpears/BathCat",
+  "devDependencies": {
+    "grunt": "~0.4.5",
+    "grunt-contrib-uglify": "~0.5.0"
+  }
+}

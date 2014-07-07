@@ -3,7 +3,6 @@ require(["dijit/layout/BorderContainer"
 
 				,"dgrid/Grid"
 				,"dgrid/editor"
-				,"dgrid/extensions/ColumnResizer"
 
 				,"dojo/_base/declare"
 				,"dojo/parser"
@@ -18,11 +17,13 @@ require(["dijit/layout/BorderContainer"
 				,"dojo/has"
 
 				,"esri/map"
+				,"esri/config"
 				,"esri/SpatialReference"
 				,"esri/geometry/Extent"
 				,"esri/layers/FeatureLayer"
 				,"esri/layers/ArcGISDynamicMapServiceLayer"
 				,"esri/layers/ArcGISTiledMapServiceLayer"
+				,"esri/tasks/GeometryService"
 				,"esri/tasks/geometry"
 				,"esri/dijit/TimeSlider"
 				,"esri/TimeExtent"
@@ -50,7 +51,6 @@ function( BorderContainer
 				, ContentPane
 				, Grid
 				, Editor
-				, ColumnResizer
 				, declare
 				, parser
 				, construct
@@ -62,12 +62,15 @@ function( BorderContainer
 				, aspect
 				, Color
 				, has
+
 				, Map
+				, Config
 				, SpatialReference
 				, Extent
 				, FeatureLayer
 				, DynamicLayer
 				, TiledLayer
+				, GeometryService
 				, esriGeom
 			  , TimeSlider
 			  , TimeExtent
@@ -108,8 +111,9 @@ function( BorderContainer
    	var W = window
    		, DOC = document
    		, protocol = DOC.location.protocol
+   		, origin = DOC.location.origin
    		, touch = has("touch")
-   		, ie9 =(document.all&&document.addEventListener&&!window.atob)?true:false
+   		, ie9 =(DOC.all&&DOC.addEventListener&&!W.atob)?true:false
    		, innerHeight = W.innerHeight
    		, innerWidth = W.innerWidth
    		, mainWindow = dom.byId("mainWindow")
@@ -133,12 +137,12 @@ function( BorderContainer
    	DOC.body.style.visibility = "visible"; //show the page on load.. no unstyled content
 
 
+   Config.defaults.io.corsDetection = false;
+   Config.defaults.io.corsEnabledServers.push(origin);//enable cors for quicker queries
+   Config.defaults.geometryService = new GeometryService(protocol+"//sampleserver3.arcgisonline.com/arcgis/rest/services/Geometry/GeometryServer"); 	
 
-   	esri.config.defaults.io.corsDetection = false;
-   	esri.config.defaults.io.corsEnabledServers.push("gis.water.ca.gov");//enable cors for quicker queries
-   	esri.config.defaults.geometryService = new esri.tasks.GeometryService(protocol+"//sampleserver3.arcgisonline.com/arcgis/rest/services/Geometry/GeometryServer"); 	
 
-   		var rasterUrl = "https://gis.water.ca.gov/arcgis/rest/services/Public/bathymetry_rasters/MapServer" 
+   		var rasterUrl = origin+"/arcgis/rest/services/Public/bathymetry_rasters/MapServer" 
    		var topoUrl = protocol+"//services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer";
 
 

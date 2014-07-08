@@ -840,15 +840,16 @@ window.oidStore = oidStore;
 
 
 			function setToolVisibility(visibleRasterOIDs){
-				if(visibleRasterOIDs.length>1){//working identify logic below
+				if(visibleRasterOIDs.length>1){
 					domClass.replace(identAnchor,"clickable","unclick");
 					domClass.replace(crossAnchor,"clickable","unclick");
 				}else{
+					if(identTool)tools.wipe(identTool,identAnchor,eventFeatures)
+					if(crossTool)tools.wipe(crossTool,crossAnchor,eventFeatures)
 					domClass.replace(identAnchor,"unclick","clickable");
 					domClass.replace(crossAnchor,"unclick","clickable");
 				}
 			}
-
 
 			function checkImageInputs(oidArr){
 				var curr;

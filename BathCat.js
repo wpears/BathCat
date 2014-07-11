@@ -509,7 +509,6 @@ window.oidStore = oidStore;
 							},
 							gridNode);
 
-
 			gdata.unshift({"__Date":1315008000000,Date:"Various",Project:"Soil Sedimentation",OBJECTID:gdata.length+1});
 			grid.renderArray(gdata);
 
@@ -1128,7 +1127,7 @@ window.oidStore = oidStore;
    	on(W, "resize", function(e){			//resize map on browser resize
 
 			var winHeight = innerHeight = W.innerHeight;
-
+			innerWidth = W.innerWidth;
 			setrPConHeight();
 
 			placeMap();
@@ -1947,6 +1946,7 @@ if(0&&touch){
 						mapDiv.style["-webkit-transform"] = "translate3d("+lPWidth+"px,0, 0)";
 						mapDiv.style["transform"] = "translate3d("+lPWidth+"px,0, 0)";
 					}
+
    			mapDiv.style.width = (innerWidth-lPWidth)+"px";
    	}
 

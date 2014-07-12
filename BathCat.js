@@ -1,3 +1,4 @@
+require(["dgrid/dgrid"],function(){
 require(["dijit/layout/BorderContainer"
 				,"dijit/layout/ContentPane"
 
@@ -106,7 +107,7 @@ function( BorderContainer
     			eael.apply(this, arguments);
 		}
 		}})();*/
-		
+
    ready(function(){ //wait for the dom
    	var W = window
    		, DOC = document
@@ -491,7 +492,7 @@ window.oidStore = oidStore;
 
 
 		//*****initialize grid and attach all handlers*******\\
-//console.log('grid')
+
 		gridObject =(function(){
 			var j = featureCount, gridCon, expandReady=1,toggleCount = 0,
 				intData, featureAttr, lastNodePos =new Array(gdata.length+1),nameSorted = 0, dateSorted = 1,
@@ -933,14 +934,6 @@ window.oidStore = oidStore;
 				     , sedToggle:sedToggle
 				     };
 		})();
-
-
-
-
-
-
-
-
 
 
 
@@ -2025,4 +2018,5 @@ if(0&&touch){
 //	});
 
 //return from the require
+});
 });

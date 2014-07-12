@@ -1,4 +1,4 @@
-define(["esri/symbols/TextSymbol","esri/symbols/Font"],function(TextSymbol,Font){
+define(["esri/graphic","esri/symbols/TextSymbol","esri/symbols/Font"],function(Graphic,TextSymbol,Font){
   function addTextSymbol(map, text, geom, ang, color, trackingArr, handlers){
     var txtsym=new TextSymbol(text)
       , gra
@@ -10,7 +10,7 @@ define(["esri/symbols/TextSymbol","esri/symbols/Font"],function(TextSymbol,Font)
       txtsym.setColor(color);
     txtsym.setOffset(x*offsetFactor, y*offsetFactor);
     txtsym.setFont=addTextSymbol.font;
-    gra=new esri.Graphic(geom, txtsym);
+    gra=new Graphic(geom, txtsym);
     map.graphics.add(gra);
     trackingArr.push(gra);
     handlers.push(map.on('zoom-end',function(zoomObj){

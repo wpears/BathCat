@@ -1,10 +1,11 @@
 define(['esri/dijit/Measurement'
+       ,'esri/Units'
        ,'dojo/aspect'
        ,'dojo/dom-class'
        ,'dojo/on'
        ,'modules/tools.js'
        ,'modules/featureevents.js'
-       ], function( Measurement, aspect, domClass, on, tools, featureEvents){
+       ], function( Measurement, Units, aspect, domClass, on, tools, featureEvents){
 
 return function(anchor, line, point, options){
   
@@ -25,8 +26,8 @@ return function(anchor, line, point, options){
           measure = new Measurement({ map:map
                                     , lineSymbol: line
                                     , pointSymbol: point
-                                    , defaultLengthUnit:esri.Units.FEET
-                                    , defaultAreaUnit:esri.Units.SQUARE_MILES
+                                    , defaultLengthUnit:Units.FEET
+                                    , defaultAreaUnit:Units.SQUARE_MILES
                                     }, container);
           measure.startup();
           container = DOC.getElementById("measur"); //retain reference

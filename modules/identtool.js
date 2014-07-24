@@ -171,9 +171,9 @@ function( addSymbol
         idle:function(){
           FeatureEvents.enable(eventFeatures)
           map.setMapCursor("default");
-          this.handlers[0].remove();
-          this.handlers[1].remove();
-          if(this.handlers[2]) this.handlers[2].remove();
+          for(var i = 0;i < self.handlers.length;i++){
+            self.handlers[i].remove();
+          }
           this.handlers.length = 0;
           identOff = 1;
         },

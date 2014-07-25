@@ -172,8 +172,8 @@ function( addSymbol
             if(e2.pageX < mouseDownX+10&&e2.pageX > mouseDownX-10&&e2.pageY < mouseDownY+10&&e2.pageY > mouseDownY-10)
               addSecondPoint(e1, e2, profile);
           });
-          self.handlers[4] = map.on("zoom-start",cancelProfile);
-          self.handlers[5] = map.on("pan-end", checkPan);
+          self.handlers[4] = map.on("zoom-start", cancelProfile);
+          self.handlers[5] = map.on("pan-start", cancelProfile);
         }
 
       , resetHandlers = function(){
@@ -190,13 +190,7 @@ function( addSymbol
         currentNumber--;
       }
 
-      , checkPan = function(e){
-          var delt = e.delta;
-          if(delt.x||delt.y) cancelProfile();
-      }
-
       , cancelProfile = function(){
-        console.log("cancelling");
         removeProfile();
         resetHandlers();
       }

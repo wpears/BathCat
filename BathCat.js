@@ -33,7 +33,6 @@ require(["dijit/layout/BorderContainer"
   			,"esri/geometry/Point"
 
 
-				,"modules/tools.js"
 				,"modules/popup.js"
 				,"modules/crosstool.js"
 				,"modules/identtool.js"
@@ -41,7 +40,8 @@ require(["dijit/layout/BorderContainer"
 				,"modules/clearnode.js"
 				,"modules/tooltip.js"
 				,"modules/getdate.js"
-				,"modules/gridcategory.js"
+				,"modules/gridconnector.js"
+				,"modules/splice.js"
 
 				,"require"
 				],
@@ -79,7 +79,6 @@ function( BorderContainer
 				, Point
 
 
-				, tools
 				, Popup
 				, CrossTool
 				, IdentTool
@@ -87,7 +86,8 @@ function( BorderContainer
 				, clearNode
 				, Tooltip
 				, getDate
-        , GridCategory
+				, GridConnector
+				, splice
 
 				, require
 				){
@@ -159,8 +159,14 @@ function( BorderContainer
      	var rasterLayer = new DynamicLayer(rasterUrl, {id:"raster"})
 			var topoOn = 1;
 			var satOn = 0;
-window.map = map
+
 			map.addLayer(topoMap);
+
+
+
+window.map = map
+
+
 
 		rasterLayer.setVisibleLayers([-1]);
 
@@ -215,10 +221,10 @@ window.map = map
 
 	var featureSet = window.DATA_OUTLINES,
 	  features = featureSet.features, featureCount=features.length, IE =!!document.all, fx,
-		outlines, grid, gridObject, outlineMouseMove, outlineTimeout, 
+		outlines, gridObject, outlineMouseMove, outlineTimeout, 
 		mouseDownTimeout, previousRecentTarget, justMousedUp = false,  outMoveTime = 0,
-	 	identifyUp, measure, tooltip, rPConHeight=setrPConHeight(), sedToggle, satMap, cursor = 1, scalebarNode,
-	 	crossTool, identTool, meaTool;
+	 	identifyUp, measure, tooltip, rPConHeight=setrPConHeight(), headerNodes, sedToggle, satMap, cursor = 1, scalebarNode,
+	 	phasingTools, crossTool, identTool, meaTool;
 
 		var geoArr, splitGeoArr, geoBins, selectedGraphics =[], selectedGraphicsCount = 0,
 		legend, eventFeatures= [],
@@ -255,8 +261,58 @@ window.map = map
 
 
 
+	  //Initialize all app-wide tracking arrays
+		(function(){
+			var att, pl, mi, ss="Soil Sed. ";
+			for(var i = 0; i<featureCount; i++){
+				att=features[i].attributes;
+				layerArray[i] = i;
+				oidArray[i] = pl=i+1;
+				oidStore[i] = 0;
+				hl[i] = 0;
+				insideTimeBoundary[i] = 1;
+				rastersShowing[pl] = 0;
+				formattedDates[i]= getDate(att.Date);
+				names[i] = (att.Project.length<6?ss + att.Project:att.Project);
+			}
+		})();
+		hl[featureCount] = 0;
+		oidStore[featureCount] = 0;
+		insideTimeBoundary[featureCount] = 1;
+
+		(function(){
+			for(var i = 0; i<featureCount; i++){
+				var intData ={};
+				var featureAttr = features[i].attributes;
+				intData.__Date = featureAttr.Date;
+				intData.Date = formattedDates[i];
+				intData.Project = names[i];
+				intData.OBJECTID = featureAttr.OBJECTID;
+				gridData[i]=intData;
+			}
+		})();
+
+		//Identify and profile tools don't make sense with no rasters on. Added here to pass around later
+		//for updating of the tools' visibility
+		phasingTools = [
+		  {tool:null,anchor:crossAnchor,eventFeatures:eventFeatures},
+		  {tool:null,anchor:identAnchor,eventFeatures:eventFeatures}
+		];
 
 
+    gridObject = GridConnector( gridData
+     													, gridNode
+     													, gridPane
+     													, spl
+     													, rasterLayer
+     													, insideTimeBoundary
+     													, rastersShowing
+     													, oidToGraphic
+     													, legend
+     													, phasingTools
+     													, placeMap
+     													, map)
+    headerNodes = dom.byId("gridNode-header").firstChild.children;
 
 
 
@@ -264,6 +320,13 @@ window.map = map
 		new ScaleBar({map:map});
 		scalebarNode = dquery(".esriScalebar")[0]
 
+		function doTimeUpdate(timeExtent){
+			var currentCount = selectedGraphicsCount;
+			gridObject.timeUpdate(timeExtent);
+			if(currentCount!== selectedGraphicsCount){
+        infoFunc(null)
+      }
+		}
 
 		var timeSlider
 		  , tCount
@@ -282,6 +345,7 @@ window.map = map
 		timeSlider.setThumbIndexes([0, tCount]);
 		timeSlider.setTickCount(Math.ceil(tCount/2));
 		timeSlider.startup();
+		timeSlider.on("time-extent-change", doTimeUpdate);
 		map.setTimeSlider(timeSlider);
 	
 
@@ -289,7 +353,6 @@ window.map = map
 		var endDate = timeSlider.fullTimeExtent.endTime.getFullYear() + 1;
 		var currNode;
 		var tsLinks = [];
-
 
 		labelCon.className = 'labelCon atop';
 
@@ -366,41 +429,6 @@ window.map = map
 
 
 
-//Initialize all app-wide tracking arrays
-
-
-		(function(){
-			var att, pl, mi, ss="Soil Sed. ";
-			for(var i = 0; i<featureCount; i++){
-				att=features[i].attributes;
-				layerArray[i] = i;
-				oidArray[i] = pl=i+1;
-				oidStore[i] = 0;
-				hl[i] = 0;
-				insideTimeBoundary[i] = 1;
-				rastersShowing[pl] = 0;
-				formattedDates[i]= getDate(att.Date);
-				names[i] = (att.Project.length<6?ss + att.Project:att.Project);
-			}
-		})();
-		hl[featureCount] = 0;
-		oidStore[featureCount] = 0;
-		insideTimeBoundary[featureCount] = 1;
-
-		(function(){
-			for(var i = 0; i<featureCount; i++){
-				var intData ={};
-				var featureAttr = features[i].attributes;
-				intData.__Date = featureAttr.Date;
-				intData.Date = formattedDates[i];
-				intData.Project = names[i];
-				intData.OBJECTID = featureAttr.OBJECTID;
-				gridData[i]=intData;
-			}
-		})();
-
-
-
 
 
 
@@ -438,10 +466,6 @@ window.map = map
   				}
   			}
   	})();
-
-
-
-
 
 //oidStore. Manages state of oids. Currently references peppered throughout almost everything
 //Might be worth splitting into its own module
@@ -533,9 +557,6 @@ window.map = map
    		redrawAllGraphics(tiout.graphics);							
     });
 
-    function setExtent(extent){
-    	map.setExtent(extent);
-    }
 
 		showSat = function(){										//turn on imagery
 		  satMap.show();
@@ -597,7 +618,7 @@ window.map = map
    		if(satOn) basemapOff();
    		else showSat();
    	});
-	
+
 
 (function(){
 	var helpText = "<strong id = 'infoPaneTitle'>Help</strong><p>Zoom in and out with the <b>Zoom buttons</b> or the mousewheel. Shift and drag on the map to zoom to a selected area.</p><p>Go to the full extent of the data with the <b>Globe</b>.</p><p>Select map or satellite view with the <b>Basemap buttons</b>.</p><p>Browse through projects in the table. Sort the table with the column headers and collapse it with the <b>Slider</b>.</p><p>Turn on a raster by double-clicking it in the table or map, or checking its checkbox in the table.</p><ul>When a raster is displayed:<br/><li>With the <b>Identify</b> tool, click to display NAVD88 elevation at any point.</li><li>Draw a cross-section graph with the <b>Profile tool</b>. Click the start and end points of the line to generate a graph in a draggable window. Hover over points to display elevation.</li></ul><p>Use the <b>Measure tool</b> to calculate distance, area, or geographic location.</p><p>Project information and Identify results are displayed in the right pane. Toggle this pane with the <b>Arrow button</b>.</p><p>Use the <b>Time slider</b> to filter the display of features by date. Drag the start and end thumbs or click a year to only display data from that year.</p>",
@@ -643,6 +664,7 @@ window.map = map
    				}
    			}
 		}
+
 		if(!touch){
    		on(infoPane, "mouseover", function(e){
    			toggleHelpGlow(e);
@@ -800,8 +822,9 @@ if(!touch){
 											, chartDates:formattedDates
 											, tooltip:tooltip
 										  };
-				allowMM = 1;						  
+				allowMM = 1;				  
 				crossTool = CrossTool(rasterLayer, Popup(), crossAnchor, rasterUrl, layerArray, options);
+				phasingTools[0].tool = crossTool;
 				crossTool.init(e);				
 		});
 
@@ -813,7 +836,8 @@ if(!touch){
 										 , dates:formattedDates
 										 , tooltip:tooltip
 									   };
-				identTool = IdentTool(identAnchor, rasterUrl, layerArray, options); 
+				identTool = IdentTool(identAnchor, rasterUrl, layerArray, options);
+				phasingTools[1].tool = identTool;
 				identTool.init(e);
 		}); 
 
@@ -831,9 +855,83 @@ if(!touch){
 
 
 
+/************* GRID MOUSE EVENTS ****************/
 
 
+    function cellClick(e){  //grid click handler
+      var et = e.target, oid = getOIDFromGrid(e), attributes;
+      if(!oid)return;
+      if(!oidStore[oid]&&et.tagName=="INPUT"&&et.checked)return
+      highlighter(oid,"hi", 1);
+      if(et!== previousRecentTarget){ //prevent click before double click
+        window.clearTimeout(mouseDownTimeout);
+        previousRecentTarget = et;
+        mouseDownTimeout = W.setTimeout(nullPrevious, 400);
+        attributes = outlines.graphics[oid-1].attributes;
+        if(oidStore[oid]&&selectedGraphicsCount === 1){ //target is sole open
+          clearStoredOID(oid, 1, 1);
+          infoFunc(null);
+        }else{
+          clearAndSetOID(oid);
+        }   
+      }
+    }
 
+
+    
+    function gridDbl(e){
+      var inputBox, oid = getOIDFromGrid(e);
+      if(oid){
+        var graphic = oidToGraphic(oid);
+        if(!graphic){
+          return;
+        }
+        if(e.target.localName!== "div"){
+          clearAndSetOID(oid)
+          inputBox = gridObject.getInputBox(oid);
+          map.setExtent(graphic._extent.expand(1.3));
+          if(!inputBox.checked){
+            inputBox.checked = true;
+            rastersShowing[oid] = 1;
+            gridObject.setVisibleRasters.reusableArray[0] = oid;
+            gridObject.setVisibleRasters(gridObject.setVisibleRasters.reusableArray, 0);
+          }
+        }
+      }
+    }
+
+    function sortAndScroll(fn){
+    	return function(e){
+    	  fn(e);
+    	  if(selectedGraphicsCount)gridObject.scrollToRow(selectedGraphics[0]);
+    	}
+    }
+
+   	gridObject.gridSorter.date();
+
+    if(touch){
+
+    }else{
+      gridObject.grid.on(".dgrid-cell:mousedown", cellClick);
+      gridObject.grid.on(".dgrid-cell:dblclick", gridDbl);
+
+      gridObject.grid.on(".dgrid-cell:mouseover", function(e){
+        var oid = getOIDFromGrid(e);
+        if(oid)highlighter(oid,"hi", 1);  
+      });
+
+      gridObject.grid.on(".dgrid-cell:mouseout", function(e){
+        var oid = getOIDFromGrid(e);
+        if(oidStore[oid])
+          return;
+        else
+          highlighter(oid,"", 1);
+      });
+
+      on(headerNodes[0], "mousedown", sortAndScroll(gridObject.gridSorter.name));
+      on(headerNodes[1], "mousedown", sortAndScroll(gridObject.gridSorter.date));
+
+}
 
 //FEATURE MOUSE EVENTS
 
@@ -886,7 +984,9 @@ if(0&&touch){
 					previousRecentTarget = oid;
 					mouseDownTimeout = W.setTimeout(nullPrevious, 400);
 					geoSearch(e, 1);
-					if(!gridObject.clickSort()) gridObject.scrollToRow(oid);
+					if (selectedGraphicsCount > 1)
+						gridSorter.ascendingName();
+					gridObject.scrollToRow(oid);
 				}
 			}
 		});
@@ -902,7 +1002,7 @@ if(0&&touch){
 			selected = geoSearch.prevArr;
 			if(selected.length){
 				if(map.getScale()>73000)
-					setExtent(oidToGraphic(selected[0])._extent.expand(1.3));
+					map.setExtent(oidToGraphic(selected[0])._extent.expand(1.3));
 				gridObject.setVisibleRasters(selected, 0);
 				gridObject.checkImageInputs(selected);
 			}
@@ -1089,9 +1189,6 @@ if(0&&touch){
 				return +etP.parentNode.children[2].innerHTML;
 		}
 
-		function getInputBox(oid){
-			return gridObject.oidToRow(oid).firstChild.firstChild.children[3].firstChild;
-		}
 
 
 
@@ -1537,20 +1634,6 @@ if(0&&touch){
 		function isNumber(n) {
   			return !isNaN(parseFloat(n)) && isFinite(n);
 		}
-
-//doesn't preserve order 
-		function splice(arr,index){
-			var newLen = arr.length-1;
-			arr[index] = arr[newLen];
-			arr.length = newLen;
-			return arr;
-		}
-			/*	function splice(arr, index){
-			for (var i = index, len = arr.length - 1; i < len; i++)
-        		arr[i] = arr[i + 1];
-			arr.length = len;
-			return arr;
-		}*/
 
 
 		function nullPrevious(){

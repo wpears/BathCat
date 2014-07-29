@@ -1,20 +1,54 @@
+//Instantiates grid and binds grid logic with map logic.
+//Has primary responsibility to managing the raster layer
+
 define( ["dgrid/Grid"
         ,"dgrid/editor"
+
         ,"dojo/query"
+        ,"dojo/dom-class"
+        ,"dojo/on"
+
+        ,"modules/gridcategory.js"
+        ,"modules/gridsorter.js"
+        ,"modules/splice.js"
+        ,"modules/settoolvisibility.js"
         ],
 function( Grid
         , Editor
+
         , dquery
+        , domClass
+        , on
+
+        , gridCategory
+        , GridSorter
+        , splice
+        , setToolVisibility
         ){
-  return function(gridData, gridNode, featureCount){
-    var headerNodes
+  return function( gridData
+                 , gridNode
+                 , gridPane
+                 , spl
+                 , rasterLayer
+                 , insideTimeBoundary
+                 , rastersShowing
+                 , oidToGraphic
+                 , legend
+                 , phasingTools
+                 , placeMap
+                 , map
+                 ){
+    var W = window
+      , headerNodes
       , gridContent
       , scroller
       , toggleCount = 0
-      , lastNodePos =new Array(gridData.length+1)
-      , nameSorted = 0
-      , dateSorted = 1
+      , gridLength = gridData.length + 1
+      , lastNodePos =new Array(gridLength)
+      , gridSorter
       ;
+
+
 
     grid = new Grid({bufferRows:Infinity,
         columns:{
@@ -29,12 +63,14 @@ function( Grid
       gridNode
     );
 
+
+
     //add collapsing row tab to data
     gridData.unshift({"__Date":1315008000000,Date:"Various",Project:"Soil Sedimentation",OBJECTID:gridData.length+1});
     
     grid.renderArray(gridData);
 
-    headerNodes = dom.byId("gridNode-header").firstChild.children;
+    headerNodes = document.getElementById("gridNode-header").firstChild.children;
     gridContent = dquery(".dgrid-content")[0];
     scroller = dquery(".dgrid-scroller")[0];
 
@@ -43,51 +79,27 @@ function( Grid
     headerNodes[3].title = "Turn images on or off";
     scroller.style.overflowY="scroll";
     
-    for(var i = 0, j = gridData.length;i<j;i++){
+
+
+    //lastNodePos tracks objectIds when sorting the grid
+    for(var i = 0, j = gridLength;i<j;i++){
       lastNodePos[i] = i+1;
     }
-    lastNodePos[gridData.length-1]=0;
+    lastNodePos[gridLength-1]=0;
 
-    sedToggle = GridCategory(grid, gridData, "Project","Soil Sed.", gridNode, lastNodePos);
+    // initialize collapsing row tab
+    sedToggle = gridCategory(grid, gridData, "Project","Soil Sed.", gridNode, lastNodePos);
     toggleCount++;
 
-    function dateSortSeq(a, b){
-      return a.__Date-b.__Date
-    }
-    function dateSortInv(a, b){
-      return b.__Date-a.__Date
-    }
-    function nameSortSeq(a, b){
-      if(a.Project===b.Project)return dateSortSeq(a,b);
-      return a.Project>b.Project?1:-1
-    }
-    function nameSortInv(a, b){
-      if(a.Project===b.Project)return dateSortSeq(a,b);
-      return a.Project>b.Project?-1:1
-    }
-    function renderSort(sorter, gridData, gCon){
-      var i = 0, j = gridData.length, newCon, currentNodes = gCon.children,
-        nodeIndex, node, frag = DOC.createDocumentFragment(), togId = sedToggle.getRow().id,
-      tog = gridData.shift();  
-      gridData.sort(sorter);
-      gridData.unshift(tog);
-      for(var i = 0, j = gridData.length;i<j;i++){
-        nodeIndex = gridData[i].OBJECTID-1;
-        node = currentNodes[lastNodePos[nodeIndex]].cloneNode(true);
-        frag.appendChild(node);
-        lastNodePos[nodeIndex] = i;
-      }
-      newCon = gCon.cloneNode(false);
-      newCon.appendChild(frag);
-      gCon.parentNode.replaceChild(newCon, gridContent);
-      gridContent = newCon;
-      frag = null;
-      sedToggle.setNode();
-    }
 
+    gridSorter = GridSorter(renderSort);
+
+    //O(1) object id lookup
     function oidToRow(oid){
       return gridContent.children[lastNodePos[oid-1]];
     }
+
+
 
     function scrollToRow(oid){
       var row = oidToRow(oid);
@@ -99,27 +111,66 @@ function( Grid
           scroller.scrollTop = offset-95;
     }
 
-    function timeUpdate(e){
-      var startTime = +e.startTime, endTime = +e.endTime, currentRasters = rasterLayer.visibleLayers,
-      currTime, currOID, rawGraphic, gridData = gridData, currentCount = selectedGraphicsCount,
-      currRow, toBeHidden = timeUpdate.toBeHidden, oidRasterIndex, shape,
-      rastersAsOIDs = timeUpdate.rastersAsOIDs;
-      for(var i = toggleCount, j = gridData.length;i<j;i++){
-        currOID = gridData[i].OBJECTID;
-        if(currOID === j) continue;
-        shape = oidToGraphic(currOID)._shape
+    function renderSort(sorter){
+      var currentNodes = gridContent.children
+        , nodeIndex
+        , newContent
+        , frag = document.createDocumentFragment()
+        , toggleRow = gridData.shift()
+        ; 
+         
+      gridData.sort(sorter);
+      gridData.unshift(toggleRow);
 
+      for(var i = 0; i<gridLength; i++){
+        nodeIndex = gridData[i].OBJECTID-1;
+        frag.appendChild(currentNodes[lastNodePos[nodeIndex]].cloneNode(true));
+        lastNodePos[nodeIndex] = i;
+      }
+      newContent = gridContent.cloneNode(false);
+      newContent.appendChild(frag);
+      gridContent.parentNode.replaceChild(newContent, gridContent);
+      gridContent = newContent;
+      frag = null;
+      sedToggle.setNode();
+    }
+
+
+
+    function timeUpdate(timeExtent){
+      var currOID
+        , shape
+        , rawGraphic
+        , currRow
+        , currTime
+        , startTime = +timeExtent.startTime
+        , endTime = +timeExtent.endTime
+        , currentRasters = rasterLayer.visibleLayers
+        , oidRasterIndex
+        , toBeHidden = timeUpdate.toBeHidden
+        , rastersAsOIDs = timeUpdate.rastersAsOIDs
+        ;
+
+      //Hide grid rows outside of the current time extent, propagate this change to the map layers
+      for(var i = toggleCount; i<gridLength; i++){
+        currOID = gridData[i].OBJECTID;
+        if(currOID === gridLength) continue;
+
+        shape = oidToGraphic(currOID)._shape;
         if(shape) rawGraphic = shape.rawNode;
+
         currRow = oidToRow(currOID);
-        currTime =+gridData[i].__Date
+        currTime =+gridData[i].__Date;
 
         if(currTime<startTime||currTime>endTime){
-      //    if(oidStore[currOID]) deselect a project if it outside the current time extent
-      //      clearStoredOID(currOID, 1, 1);
           domClass.add(currRow, "hiddenRow");
+          insideTimeBoundary[currOID] = 0;
+
           if(map.layerIds[2]){
             oidRasterIndex = currOID-1;
             toBeHidden.push(currOID);
+
+            //remove any rasters that are out of the current time extent
             for(var k = 1;k<currentRasters.length;k++){
               if(currentRasters[k] === oidRasterIndex){
                 splice(currentRasters, k);
@@ -127,7 +178,8 @@ function( Grid
               }
             }
           }
-          insideTimeBoundary[currOID] = 0;
+
+          //setting the class on the svg shape is much faster than redrawing with esri methods
           if(shape){
             rawGraphic.setAttribute("class","hiddenPath")
           }
@@ -140,6 +192,7 @@ function( Grid
           }
         }
       }
+
       if(map.layerIds[2]){
         uncheckImageInputs(toBeHidden);
         for(var i = 1;i<currentRasters.length;i++){
@@ -147,8 +200,7 @@ function( Grid
         }
         setVisibleRasters(rastersAsOIDs, 0);
       }
-      if(currentCount!== selectedGraphicsCount)//make rP reflect possible change
-        infoFunc(null)
+
       rastersAsOIDs.length = 0;
       toBeHidden.length = 0;
     }
@@ -156,55 +208,7 @@ function( Grid
     timeUpdate.rastersAsOIDs =[];
     timeUpdate.toBeHidden =[];
 
-    timeSlider.on("time-extent-change", timeUpdate);
 
-    renderSort(dateSortSeq, gridData, gridContent);
-    domClass.add(headerNodes[1], "sortTarget");
-
-    function nameSortEffects(){
-      dateSorted = 0;
-      domClass.add(headerNodes[0], "sortTarget");
-      domClass.remove(headerNodes[1], "sortTarget");
-      if(selectedGraphicsCount)scrollToRow(selectedGraphics[0])
-    }
-
-    function dateSortEffects(){
-      nameSorted = 0;
-      domClass.add(headerNodes[1], "sortTarget");
-      domClass.remove(headerNodes[0], "sortTarget");
-      if(selectedGraphicsCount)scrollToRow(selectedGraphics[0])
-    }
-    function clickSort(){
-      if(nameSorted === 0 && selectedGraphicsCount>1){
-        renderSort(nameSortSeq, gridData, gridContent);
-        nameSorted = 1;
-        nameSortEffects();
-        return true;
-      }
-      return false;
-    }
-
-    function runNameSort(){
-      if(nameSorted>0){
-        renderSort(nameSortInv, gridData, gridContent);
-        nameSorted = -1;
-      }else{
-        renderSort(nameSortSeq, gridData, gridContent);
-        nameSorted = 1;
-      }
-      nameSortEffects();
-    }
-
-    function runDateSort(){
-      if(dateSorted>0){
-        renderSort(dateSortInv, gridData, gridContent);
-        dateSorted = -1;
-      }else{
-        renderSort(dateSortSeq, gridData, gridContent);
-        dateSorted = 1;
-      }
-      dateSortEffects();
-    }
 
 
     function showAllImages(){                 //mass image display/clear
@@ -226,47 +230,6 @@ function( Grid
     }
 
 
-    function cellClick(e){  //grid click handler
-      var et = e.target, oid = getOIDFromGrid(e), attributes;
-      if(!oid)return;
-      if(!oidStore[oid]&&et.tagName=="INPUT"&&et.checked)return
-      highlighter(oid,"hi", 1);
-      if(et!== previousRecentTarget){ //prevent click before double click
-        window.clearTimeout(mouseDownTimeout);
-        previousRecentTarget = et;
-        mouseDownTimeout = W.setTimeout(nullPrevious, 400);
-        attributes = outlines.graphics[oid-1].attributes;
-        if(oidStore[oid]&&selectedGraphicsCount === 1){ //target is sole open
-          clearStoredOID(oid, 1, 1);
-          infoFunc(null);
-        }else{
-          clearAndSetOID(oid);
-        }   
-      }
-    }
-
-
-    
-    function gridDbl(e){
-      var inputBox, oid = getOIDFromGrid(e);
-      if(oid){
-        var graphic = oidToGraphic(oid);
-        if(!graphic){
-          return;
-        }
-        if(e.target.localName!== "div"){
-          clearAndSetOID(oid)
-          inputBox = getInputBox(oid);
-          setExtent(graphic._extent.expand(1.3));
-          if(!inputBox.checked){
-            inputBox.checked = true;
-            rastersShowing[oid] = 1;
-            setVisibleRasters.reusableArray[0] = oid;
-            setVisibleRasters(setVisibleRasters.reusableArray, 0);
-          }
-        }
-      }
-    }
 
     function makeViewable(oid, level, center){
       var mapX=center.x;
@@ -277,7 +240,7 @@ function( Grid
       
       var ex=ex1.expand(1.3);
       if(ex.xmax-ex.xmin > makeViewable.xcutoff || ex.ymax-ex.ymin > makeViewable.ycutoff){
-        setExtent(ex);
+        map.setExtent(ex);
       }else{
         map.setLevel(15);
         map.centerAt(ex1.getCenter());
@@ -337,20 +300,11 @@ function( Grid
         rL.suspend();
         if(!touch)legend.hide();
       }
-      setToolVisibility(visibleRasterOIDs);
+      setToolVisibility(phasingTools,visibleRasterOIDs.length <= 1);
     }
 
-
-    function setToolVisibility(visibleRasterOIDs){
-      if(visibleRasterOIDs.length>1){
-        domClass.replace(identAnchor,"clickable","unclick");
-        domClass.replace(crossAnchor,"clickable","unclick");
-      }else{
-        if(identTool)tools.wipe(identTool,identAnchor,eventFeatures)
-        if(crossTool)tools.wipe(crossTool,crossAnchor,eventFeatures)
-        domClass.replace(identAnchor,"unclick","clickable");
-        domClass.replace(crossAnchor,"unclick","clickable");
-      }
+    function getInputBox(oid){
+      return oidToRow(oid).firstChild.firstChild.children[3].firstChild;
     }
 
     function checkImageInputs(oidArr){
@@ -413,42 +367,26 @@ function( Grid
         setVisibleRasters(setVisibleRasters.reusableArray, 1);
     });
 
-    if(touch){
 
-    }else{
-      grid.on(".dgrid-cell:mousedown", cellClick);
-      grid.on(".dgrid-cell:dblclick", gridDbl);
-      grid.on(".dgrid-cell:mouseover", function(e){
-        var oid = getOIDFromGrid(e);
-        if(oid)highlighter(oid,"hi", 1);  
-      });
-      grid.on(".dgrid-cell:mouseout", function(e){
-        var oid = getOIDFromGrid(e);
-        if(oidStore[oid])
-          return;
-        else
-          highlighter(oid,"", 1);
-      });
+    on(headerNodes[3],"mousedown", showAllImages);
 
-      on(headerNodes[0], "mousedown", runNameSort);
-      on(headerNodes[1], "mousedown", runDateSort);
-      on(headerNodes[3],"mousedown", showAllImages);
-
-      on(spl, "mousedown", function(e){               //expand left pane
-        gridPane.style.minWidth = 0;
-        var mM = on(W, "mousemove", triggerExpand);
-        on.once(W,"mouseup", function(evt){
-          map.resize();
-          mM.remove();
-        });
+    on(spl, "mousedown", function(e){               //expand left pane
+      gridPane.style.minWidth = 0;
+      var mM = on(W, "mousemove", triggerExpand);
+      on.once(W,"mouseup", function(evt){
+        map.resize();
+        mM.remove();
       });
-    }
-    return { timeUpdate:timeUpdate
+    });
+
+    return { grid: grid
+           , gridSorter: gridSorter
+           , timeUpdate:timeUpdate
            , oidToRow:oidToRow
+           , getInputBox:getInputBox
            , scrollToRow:scrollToRow
            , setVisibleRasters:setVisibleRasters
            , checkImageInputs:checkImageInputs
-           , clickSort:clickSort
            , expand:triggerExpand
            , sedToggle:sedToggle
            };

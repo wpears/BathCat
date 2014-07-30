@@ -41,6 +41,7 @@ require(["dijit/layout/BorderContainer"
 				,"modules/tooltip.js"
 				,"modules/getdate.js"
 				,"modules/gridconnector.js"
+				,"modules/setvisiblerasters.js"
 				,"modules/splice.js"
 
 				,"require"
@@ -87,6 +88,7 @@ function( BorderContainer
 				, Tooltip
 				, getDate
 				, GridConnector
+				, SetVisibleRasters
 				, splice
 
 				, require
@@ -221,7 +223,7 @@ window.map = map
 
 	var featureSet = window.DATA_OUTLINES,
 	  features = featureSet.features, featureCount=features.length, IE =!!document.all, fx,
-		outlines, gridObject, outlineMouseMove, outlineTimeout, 
+		outlines, gridObject, outlineMouseMove, outlineTimeout, setVisibleRasters, 
 		mouseDownTimeout, previousRecentTarget, justMousedUp = false,  outMoveTime = 0,
 	 	identifyUp, measure, tooltip, rPConHeight=setrPConHeight(), headerNodes, sedToggle, satMap, cursor = 1, scalebarNode,
 	 	phasingTools, crossTool, identTool, meaTool;
@@ -234,7 +236,6 @@ window.map = map
 
 
 	var	layerArray = new Array(featureCount),
-		oidArray = new Array(featureCount),
 		oidStore = new Array(featureCount + 1),
 		hl = new Array(featureCount + 1),
 		gridData = new Array(featureCount),
@@ -263,15 +264,14 @@ window.map = map
 
 	  //Initialize all app-wide tracking arrays
 		(function(){
-			var att, pl, mi, ss="Soil Sed. ";
+			var att, mi, ss="Soil Sed. ";
 			for(var i = 0; i<featureCount; i++){
 				att=features[i].attributes;
 				layerArray[i] = i;
-				oidArray[i] = pl=i+1;
 				oidStore[i] = 0;
 				hl[i] = 0;
 				insideTimeBoundary[i] = 1;
-				rastersShowing[pl] = 0;
+				rastersShowing[i+1] = 0;
 				formattedDates[i]= getDate(att.Date);
 				names[i] = (att.Project.length<6?ss + att.Project:att.Project);
 			}
@@ -299,6 +299,37 @@ window.map = map
 		  {tool:null,anchor:identAnchor,eventFeatures:eventFeatures}
 		];
 
+		if(!touch){
+			legend = function(){
+				var leg = dom.byId("legend");
+
+				function showLegend(){
+					if(ie9){
+						fx.animateProperty({node:leg, duration:200, properties:{right:30}}).play();
+					}else
+					domClass.replace(leg,"movd","legend")
+				}
+				function hideLegend(){
+					if(ie9){
+						fx.animateProperty({node:leg, duration:200, properties:{right:-255}}).play();
+					}else
+					domClass.replace(leg,"legend","movd");
+				}
+				return{
+					node:leg,
+					show:showLegend,
+					hide:hideLegend
+				}
+			}();
+		}
+    
+    setVisibleRasters = SetVisibleRasters( map
+    	                                   , rasterLayer
+    	                                   , touch
+    	                                   , phasingTools
+    	                                   , legend
+    	                                   , insideTimeBoundary
+    	                                   )
 
     gridObject = GridConnector( gridData
      													, gridNode
@@ -308,8 +339,6 @@ window.map = map
      													, insideTimeBoundary
      													, rastersShowing
      													, oidToGraphic
-     													, legend
-     													, phasingTools
      													, placeMap
      													, map)
     headerNodes = dom.byId("gridNode-header").firstChild.children;
@@ -674,6 +703,7 @@ window.map = map
    			toggleHelpGlow(e);
    		});
    	}
+
    		on(dlLink,"mouseover", function(e){  //remove spatial reference info from files
    			var pro =(dataNode.firstChild.textContent).split(" ").join(""),
    				dat = new Date(dataNode.firstChild.nextElementSibling.textContent.slice(-11)),
@@ -771,29 +801,7 @@ window.map = map
    		setrPConHeight();
 		})();
 
-if(!touch){
-		legend = function(){
-			var leg = dom.byId("legend");
 
-		function showLegend(){
-			if(ie9){
-				fx.animateProperty({node:leg, duration:200, properties:{right:30}}).play();
-			}else
-			domClass.replace(leg,"movd","legend")
-		}
-		function hideLegend(){
-			if(ie9){
-				fx.animateProperty({node:leg, duration:200, properties:{right:-255}}).play();
-			}else
-			domClass.replace(leg,"legend","movd");
-		}
-		return{
-			node:leg,
-			show:showLegend,
-			hide:hideLegend
-		}
-	}();
-}
 		on(fex,"mousedown", function(e){                  //go to initial extent
 			map.centerAndZoom(centerPoint,zoomLevel)
 		});
@@ -893,8 +901,8 @@ if(!touch){
           if(!inputBox.checked){
             inputBox.checked = true;
             rastersShowing[oid] = 1;
-            gridObject.setVisibleRasters.reusableArray[0] = oid;
-            gridObject.setVisibleRasters(gridObject.setVisibleRasters.reusableArray, 0);
+            setVisibleRasters.add(oid);
+            setVisibleRasters.run(0);
           }
         }
       }
@@ -985,7 +993,7 @@ if(0&&touch){
 					mouseDownTimeout = W.setTimeout(nullPrevious, 400);
 					geoSearch(e, 1);
 					if (selectedGraphicsCount > 1)
-						gridSorter.ascendingName();
+						gridObject.gridSorter.ascendingName();
 					gridObject.scrollToRow(oid);
 				}
 			}
@@ -1003,7 +1011,7 @@ if(0&&touch){
 			if(selected.length){
 				if(map.getScale()>73000)
 					map.setExtent(oidToGraphic(selected[0])._extent.expand(1.3));
-				gridObject.setVisibleRasters(selected, 0);
+				setVisibleRasters(selected, 0);
 				gridObject.checkImageInputs(selected);
 			}
 		});

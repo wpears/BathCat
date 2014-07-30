@@ -1,5 +1,4 @@
 //Instantiates grid and binds grid logic with map logic.
-//Has primary responsibility to managing the raster layer
 
 define( ["dgrid/Grid"
         ,"dgrid/editor"
@@ -10,8 +9,8 @@ define( ["dgrid/Grid"
 
         ,"modules/gridcategory.js"
         ,"modules/gridsorter.js"
+        ,"modules/setvisiblerasters.js"
         ,"modules/splice.js"
-        ,"modules/settoolvisibility.js"
         ],
 function( Grid
         , Editor
@@ -22,8 +21,8 @@ function( Grid
 
         , gridCategory
         , GridSorter
+        , SetVisibleRasters
         , splice
-        , setToolVisibility
         ){
   return function( gridData
                  , gridNode
@@ -33,8 +32,6 @@ function( Grid
                  , insideTimeBoundary
                  , rastersShowing
                  , oidToGraphic
-                 , legend
-                 , phasingTools
                  , placeMap
                  , map
                  ){
@@ -45,7 +42,9 @@ function( Grid
       , toggleCount = 0
       , gridLength = gridData.length + 1
       , lastNodePos =new Array(gridLength)
+      , oidArray = new Array(gridLength - 1)
       , gridSorter
+      , setVisibleRasters
       ;
 
 
@@ -62,6 +61,7 @@ function( Grid
         },
       gridNode
     );
+
 
 
 
@@ -82,17 +82,27 @@ function( Grid
 
 
     //lastNodePos tracks objectIds when sorting the grid
-    for(var i = 0, j = gridLength;i<j;i++){
-      lastNodePos[i] = i+1;
+    //oidArray is simply an array of the objectIds
+    for(var i = 0, j=gridLength-1; i<j; i++){
+      var i1 = i+1;
+      lastNodePos[i] = i1;
+      oidArray[i] = i1;
     }
-    lastNodePos[gridLength-1]=0;
+    lastNodePos[j]=0;
 
-    // initialize collapsing row tab
+
+
+
+    // initialize other modules
     sedToggle = gridCategory(grid, gridData, "Project","Soil Sed.", gridNode, lastNodePos);
     toggleCount++;
 
-
     gridSorter = GridSorter(renderSort);
+    
+    //already passed arguments in BathCat.js, just get a reference to the function
+    setVisibleRasters = SetVisibleRasters();
+
+
 
     //O(1) object id lookup
     function oidToRow(oid){
@@ -100,7 +110,7 @@ function( Grid
     }
 
 
-
+    //Show appropriate row when a graphic is clicked on the map
     function scrollToRow(oid){
       var row = oidToRow(oid);
       var offset = row.offsetTop;
@@ -111,6 +121,10 @@ function( Grid
           scroller.scrollTop = offset-95;
     }
 
+
+
+    //Apply the sorting algorithm returned from the gridsorter to the grid.
+    //Mainly this is to allow for performance improvements and for the embedded tab toggle
     function renderSort(sorter){
       var currentNodes = gridContent.children
         , nodeIndex
@@ -137,6 +151,8 @@ function( Grid
 
 
 
+//Updates the map based on the time extent. This includes both grid and graphics
+//This might make more sense as its own module, but fits okay here as well
     function timeUpdate(timeExtent){
       var currOID
         , shape
@@ -210,18 +226,18 @@ function( Grid
 
 
 
-
-    function showAllImages(){                 //mass image display/clear
+//mass image display/clear when Image header is clicked
+    function showAllImages(){
       var someChecked = 0;
-      for(var i = 1, j = layerArray.length;i<=j;i++){
+      for(var i = 1; i<gridLength; i++){
         if(rastersShowing[i]){
           someChecked = 1;
           break;
         }
       }
       if(someChecked){
-        setVisibleRasters.reusableArray.length = 0;
-        setVisibleRasters(setVisibleRasters.reusableArray, 0);
+        setVisibleRasters.clear();
+        setVisibleRasters.run(0);
         clearImageInputs();
       }else{
         setVisibleRasters(oidArray, 0);
@@ -231,6 +247,7 @@ function( Grid
 
 
 
+  //Zooms to a graphic's extent, called when showing an image and not currently zoomed
     function makeViewable(oid, level, center){
       var mapX=center.x;
       var mapY=center.y;
@@ -250,62 +267,15 @@ function( Grid
     makeViewable.ycutoff=4500;
 
 
-    setVisibleRasters.reusableArray =[];
-    function setVisibleRasters(newOIDs, fromCheck){
-      if(!map.layerIds[2]){ //if the raster has not been added, add it.
-        map.addLayer(rasterLayer);
-        if(!touch){
-          legend.node.src = "images/leg.png";
-          legend.show();
-        }
-      }
-      var rL = rasterLayer,
-        visibleRasterOIDs = rL.visibleLayers,
-        i,
-        j = visibleRasterOIDs.length,
-        splicedIfPresent,
-        rasterIndex;
-      if(newOIDs.length>1){
-        (function(){
-          for(var i = 0, j = newOIDs.length;i<j;i++){
-            if(insideTimeBoundary[newOIDs[i]]&&visibleRasterOIDs.indexOf(newOIDs[i]-1)===-1)
-              visibleRasterOIDs.push(newOIDs[i]-1);
-          }
-        })();
-      }
-      if(newOIDs.length === 1&&newOIDs[0]!==-1){
-        rasterIndex = newOIDs[0]-1;
-        while(j--){
-          if(rasterIndex === visibleRasterOIDs[j]&&fromCheck){//splice this number out of visible layers if it is there
-            splicedIfPresent = visibleRasterOIDs.splice(j, 1)[0]; 
-            break;
-          }
-        }
-        if(rasterIndex!== splicedIfPresent)
-          visibleRasterOIDs.push(rasterIndex)
-      }
 
-      if(newOIDs.length === 0){
-        visibleRasterOIDs =[-1];
-      }
 
-      rL.setVisibleLayers(visibleRasterOIDs);
 
-      if(rL.suspended){                     
-        rL.resume();
-        if(!touch) legend.show();
-      }
-
-      if(visibleRasterOIDs.length === 1){
-        rL.suspend();
-        if(!touch)legend.hide();
-      }
-      setToolVisibility(phasingTools,visibleRasterOIDs.length <= 1);
-    }
 
     function getInputBox(oid){
       return oidToRow(oid).firstChild.firstChild.children[3].firstChild;
     }
+
+
 
     function checkImageInputs(oidArr){
       var curr;
@@ -319,6 +289,7 @@ function( Grid
     }
 
 
+
     function uncheckImageInputs(oidArr){
       var curr;
       for(var i = 0, j = oidArr.length;i<j;i++){
@@ -329,6 +300,7 @@ function( Grid
     }
 
 
+
     function clearImageInputs(){
       var inputArr = dquery(".dgrid-input", gridNode);
         for(var i = 0, j = inputArr.length;i<j;i++){
@@ -336,6 +308,8 @@ function( Grid
           rastersShowing[i+1] = 0;
         }
     }
+
+
 
     var triggerExpand = function(){
       var expandReady = 1;
@@ -355,6 +329,7 @@ function( Grid
     }()
 
 
+
     on(grid,".dgrid-input:change", function(e){
         var oid =+e.target.parentNode.parentNode.children[2].innerHTML;
         if(rastersShowing[oid]){
@@ -363,8 +338,8 @@ function( Grid
           rastersShowing[oid] = 1;
           makeViewable(oid,map.getLevel(),map.extent.getCenter());
         }       
-        setVisibleRasters.reusableArray[0] = oid;
-        setVisibleRasters(setVisibleRasters.reusableArray, 1);
+        setVisibleRasters.add(oid);
+        setVisibleRasters.run(1);
     });
 
 
@@ -385,7 +360,6 @@ function( Grid
            , oidToRow:oidToRow
            , getInputBox:getInputBox
            , scrollToRow:scrollToRow
-           , setVisibleRasters:setVisibleRasters
            , checkImageInputs:checkImageInputs
            , expand:triggerExpand
            , sedToggle:sedToggle

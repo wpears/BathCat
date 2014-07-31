@@ -32,7 +32,7 @@ require(["dijit/layout/BorderContainer"
   			,"esri/symbols/SimpleMarkerSymbol"
   			,"esri/geometry/Point"
 
-
+  			,"modules/symbols.js"
 				,"modules/popup.js"
 				,"modules/crosstool.js"
 				,"modules/identtool.js"
@@ -79,7 +79,7 @@ function( BorderContainer
 				, SimpleMarker
 				, Point
 
-
+        , symbols
 				, Popup
 				, CrossTool
 				, IdentTool
@@ -154,9 +154,10 @@ function( BorderContainer
 
       var map = new Map(mapDiv, {extent:intExt,center:centerPoint,zoom:zoomLevel})
       var tiout;
-      var solidLine = SimpleLine.STYLE_SOLID;
-			var solidFill = SimpleFill.STYLE_SOLID
-      var blank = new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([255, 255, 255, 0]), 1), new Color([0, 0, 0, 0.001]))
+
+      var blank = new SimpleFill(SimpleFill.STYLE_SOLID, new SimpleLine(SimpleLine.STYLE_SOLID, new Color([255, 255, 255, 0]), 1), new Color([0, 0, 0, 0]))
+
+
      	var topoMap = new TiledLayer(topoUrl);
      	var rasterLayer = new DynamicLayer(rasterUrl, {id:"raster"})
 			var topoOn = 1;
@@ -542,43 +543,6 @@ window.map = map
 
 
 
-		var DJblack = new Color([0, 0, 0, 0])
-			, symbols = {
-						grethin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([18, 160, 0]), 0.5), DJblack),
-						magthin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([221, 4, 178]), 0.5), DJblack),
-						bluthin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([50, 84, 255]), 0.5), DJblack),
-						redthin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([255, 0, 0]), 0.5), DJblack),
-						brothin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([112, 84, 59]), 0.5), DJblack),
-						gre: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([18, 160, 0]), 1.5), DJblack),
-						mag: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([221, 4, 178]), 1.5), DJblack),
-						blu: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([50, 84, 255]), 1.5), DJblack),
-						red: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([255, 0, 0]), 1.5), DJblack),
-						bro: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([112, 84, 59]), 1.5), DJblack),
-						grehi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([18, 160, 0]), 4), DJblack),
-						maghi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([221, 4, 178]), 4), DJblack),
-						bluhi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([50, 84, 255]), 4), DJblack),
-						redhi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([255, 0, 0]), 4), DJblack),
-						brohi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([112, 84, 59]), 4), DJblack)
-					}
-			, satSym ={
-					magthin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([252, 109, 224]), 1), DJblack),
-					bluthin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([119, 173, 255]), 1), DJblack),
-					redthin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([243, 63, 51]), 1), DJblack),
-					grethin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([24, 211, 48]), 1), DJblack),
-					brothin: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([169, 152, 137]), 1), DJblack),
-					mag: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([252, 109, 224]), 1.5), DJblack),
-					blu: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([119, 173, 255]), 1.5), DJblack),
-					red: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([243, 63, 51]), 1.5), DJblack),
-					gre: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([24, 211, 48]), 1.5), DJblack),
-					bro: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([169, 152, 137]), 1.5), DJblack),
-					maghi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([252, 109, 224]), 4), DJblack),
-					bluhi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([119, 173, 255]), 4), DJblack),
-					redhi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([243, 63, 51]), 4), DJblack),
-					grehi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([24, 211, 48]), 4), DJblack),
-					brohi: new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([169, 152, 137]), 4), DJblack)
-			};
-
-
 
 
 		tiout.on("update-end", function(e, f, g, h){ // allows feature updating
@@ -847,7 +811,7 @@ window.map = map
 		}); 
 
 		meaTool = MeasureTool( measureAnchor
-			                   , new SimpleLine(solidLine, new Color([0, 0, 0]), 2)
+			                   , new SimpleLine(SimpleLine.STYLE_SOLID, new Color([0, 0, 0]), 2)
 												 , new SimpleMarker({"size":6,"color":new Color([0, 0, 0])})
 												 , { map:map
 												 	 , eventFeatures:eventFeatures
@@ -1151,7 +1115,7 @@ if(0&&touch){
 
 		function highlighter(oid, hi, evt){
 			if(evt&&(hi&&hl[oid]||!hi&&!hl[oid])){return}//short circuit unless on a redraw (evt==0)
-			var symbo = topoOn?symbols:satSym
+			var symbolSet = topoOn?symbols.topo:symbols.sat
 				, date
 			  , graphic = oidToGraphic(oid)
 				,	row
@@ -1175,7 +1139,7 @@ if(0&&touch){
 				if (hi) hi="";
 				else color+="thin";
 			}
-			graphic.setSymbol(symbo[color+hi]);
+			graphic.setSymbol(symbolSet[color+hi]);
 		}
 
 		function getColor(date){

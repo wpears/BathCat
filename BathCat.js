@@ -121,7 +121,7 @@ function( BorderContainer
    		, dataPane, dataCon, dataNode, dlLink, downloadNode
    		, crossAnchor, identAnchor, measureAnchor, noClick
    		, zoomSlider, fex, topo, sat, timeDiv
-   		, infoFunc
+   		, showData
    		, introText = "<p>The <strong>Delta Bathymetry Catalog</strong> houses the complete set of multibeam bathymetric data collected by the Bathymetry and Technical Support section of the California Department of Water Resources.</p><p>Click on a feature in the map or table to bring up its <strong>description</strong>. Double-click to view the <strong>raster image</strong>.</p> <p><strong>Download</strong> data as text files from the descrption pane.</p> <p><strong>Measure</strong> distances, <strong>identify</strong> raster elevations, and draw <strong>profile graphs</strong> with the tools at the top-right.</p> <p>Change what displays by <strong>collection date</strong> with the slider at bottom-right. <strong>Sort</strong> by date and name with the table's column headers.</p> <p>See the <strong>help</strong> below for further information.</p>"
    		;
 
@@ -152,7 +152,7 @@ function( BorderContainer
    	  if (touch)centerPoint = new Point({x: -13528681.36062705, y: 4583780.268055417,spatialReference:spatialRef});
      	else centerPoint = new Point({x: -13523942.264873397, y: 4586455.564045421,spatialReference:spatialRef});
 
-      var map = new Map(mapDiv, {extent:intExt,center:centerPoint,zoom:zoomLevel/*,basemap:"topo"*/})
+      var map = new Map(mapDiv, {extent:intExt,center:centerPoint,zoom:zoomLevel})
       var tiout;
       var solidLine = SimpleLine.STYLE_SOLID;
 			var solidFill = SimpleFill.STYLE_SOLID
@@ -353,7 +353,7 @@ window.map = map
 			var currentCount = selectedGraphicsCount;
 			gridObject.timeUpdate(timeExtent);
 			if(currentCount!== selectedGraphicsCount){
-        infoFunc(null)
+        showData(null)
       }
 		}
 
@@ -536,7 +536,7 @@ window.map = map
 			geoSearch.prevArr.length = 1;
 			geoSearch.prevArr[0] = oid;
 			highlighter(oid,"hi", 1);
-			infoFunc(attributes);
+			showData(attributes);
 		}
 
 
@@ -811,10 +811,7 @@ window.map = map
 
 
 
-
-
 /************TOOLS***************/
-
 
 
 
@@ -866,6 +863,8 @@ window.map = map
 /************* GRID MOUSE EVENTS ****************/
 
 
+
+
     function cellClick(e){  //grid click handler
       var et = e.target, oid = getOIDFromGrid(e), attributes;
       if(!oid)return;
@@ -878,7 +877,7 @@ window.map = map
         attributes = outlines.graphics[oid-1].attributes;
         if(oidStore[oid]&&selectedGraphicsCount === 1){ //target is sole open
           clearStoredOID(oid, 1, 1);
-          infoFunc(null);
+          showData(null);
         }else{
           clearAndSetOID(oid);
         }   
@@ -938,10 +937,16 @@ window.map = map
 
       on(headerNodes[0], "mousedown", sortAndScroll(gridObject.gridSorter.name));
       on(headerNodes[1], "mousedown", sortAndScroll(gridObject.gridSorter.date));
+    }
 
-}
 
-//FEATURE MOUSE EVENTS
+
+
+
+/*******FEATURE MOUSE EVENTS*******/
+
+
+
 
 
 if(0&&touch){
@@ -1023,8 +1028,7 @@ if(0&&touch){
 
 
 
-//GEOSEARCH
-
+/************GEOSEARCH***********/
 
 
 
@@ -1037,7 +1041,6 @@ if(0&&touch){
 		geoSearch.lastClickBin =[];
 
 		function geoSearch(e, mouseDown){//think about using two sorted arrays, one mins one maxs
-		//	console.log("searching")
 			var timee=Date.now();
 			var i = 0, j = geoSearch.binLength-1, curr, oid, temp, binTemp, prevArr = geoSearch.prevArr,
 			currArr = geoSearch.currArr,mapX, mapY, breakMax, binArr, someTargeted = 0;
@@ -1107,18 +1110,17 @@ if(0&&touch){
 					temp.length = 0;
 					geoSearch.currArr = temp;
 				}
-				infoFunc(null);
+				showData(null);
 			}
 
 			if(!someTargeted&&mouseDown&&prevArr){ //rehighlight true selections when clicking on
-				for(var i = 0;i<prevArr.length;i++){ // TS hidden stuff
+				for(var i = 0;i<prevArr.length;i++){ // things hidden by the timeslider
 					highlighter(prevArr[i],"hi", 1);
 					if(!oidStore[prevArr[i]])
 						storeOID(prevArr[i]);
 				}
 			}
 			binArr = null;
-		//	console.log("done",Date.now()-timee);
 
 		}
 		
@@ -1127,7 +1129,7 @@ if(0&&touch){
 
 
 
-//DRAWING FUNCTIONS
+/*******DRAWING FUNCTIONS*********/
 
 
 
@@ -1203,46 +1205,13 @@ if(0&&touch){
 
 
 
-//DEFINE UI
+/************* INITIALIZE THE UI, FORKING FOR MOBILE *************/
 
 
 
 
-
-
-		function makeViews(){
-			gridPane = DOC.createElement('div');
-   		dataPane = DOC.createElement('div');
-
-
-			if(touch){
-				gridPane.id = "gridView";
-   			dataPane.id = "dataView";
-   			gridPane.innerHTML = '<div id="gridNode"></div>';
-   		}else{
-   			gridPane.id = "lP";
-   			dataPane.id = "rP";
-   			dataPane.className = "mov atop";
-   			gridPane.innerHTML = '<div id="gridNode"></div><div id="lPSplitter"><div class="splitterThumb"></div></div>';
-   		}
-   		dataPane.innerHTML='<div id="dataCon"><div id="dataNode"></div><div id="downloadNode"><strong id="dlTitle">Downloads:</strong><a class="lrp" href="zips/Metadata.zip" target="_self">Metadata</a><a class="lrp" id="dlLink" href="tryagain.zip" target="_self">Dataset</a></div></div><div id="infopane"></div><div id="foot" class="unselectable"><div class="footDiv">Help</div><div class="footDiv">Terms of Use</div><div class="footDiv">Contact</div></div>';
-
-   		mainWindow.appendChild(gridPane);
-   		mainWindow.appendChild(dataPane);
-
-
-   		defineDOMHandles();
-   		resizeRp();
-
-   		if(touch){
-   			attachMobileViews();
-   		}else{
-   			placeMap();
-   			attachPanes();
-   		}
-		}
-
-   	function makePeripherals(){
+		//Make important accessory layout features (tabs, legend, etc)
+    function makePeripherals(){
    		if(touch){
    			var dataTab = DOC.createElement('div');
    			var gridTab = DOC.createElement('div');
@@ -1278,8 +1247,50 @@ if(0&&touch){
 	   	}
    	}
 
-   	function attachHandlers(){
 
+
+
+    //Make and initialize grid and data containers. Afterwards get handles for important DOM nodes
+		function makeViews(){
+			gridPane = DOC.createElement('div');
+   		dataPane = DOC.createElement('div');
+
+
+			if(touch){
+				gridPane.id = "gridView";
+   			dataPane.id = "dataView";
+   			gridPane.innerHTML = '<div id="gridNode"></div>';
+   		}else{
+   			gridPane.id = "lP";
+   			dataPane.id = "rP";
+   			dataPane.className = "mov atop";
+   			gridPane.innerHTML = '<div id="gridNode"></div><div id="lPSplitter"><div class="splitterThumb"></div></div>';
+   		}
+
+
+   		dataPane.innerHTML='<div id="dataCon"><div id="dataNode"></div><div id="downloadNode"><strong id="dlTitle">Downloads:</strong><a class="lrp" href="zips/Metadata.zip" target="_self">Metadata</a><a class="lrp" id="dlLink" href="tryagain.zip" target="_self">Dataset</a></div></div><div id="infopane"></div><div id="foot" class="unselectable"><div class="footDiv">Help</div><div class="footDiv">Terms of Use</div><div class="footDiv">Contact</div></div>';
+
+   		mainWindow.appendChild(gridPane);
+   		mainWindow.appendChild(dataPane);
+
+   		defineDOMHandles();
+   		resizeRp();
+
+   		if(touch){
+   			attachMobileViews();
+   		}else{
+   			placeMap();
+   			attachPanes();
+   		}
+		}
+
+
+
+
+   	function attachHandlers(){
+      console.log("Move handlers into attach Handlers?")
+
+      //when multiple datasets are listed in the dataNode, make them act like links to their data
 			function oneFromMany(e){
    			var node = e.target;
    			if (node.tagName === "STRONG") node = node.parentNode;
@@ -1295,12 +1306,16 @@ if(0&&touch){
    		}
    	}
 
+
+
+//define functions that operate on the desktop layout. These are available to 
    	function attachPanes(){
    		var movers = dquery(".mov")
    			, closeButton = dom.byId('closeRp')
    		 	, arro = dom.byId("arro")
    			, showing = 0
    			;
+
 
    		function showPane(){
 				var i = 0, j = movers.length;
@@ -1317,6 +1332,7 @@ if(0&&touch){
 						domClass.add(movers[i],"movd");
 				}
 			}
+
 
 	    function hidePane(){
 				var i = 0, j = movers.length;
@@ -1335,10 +1351,12 @@ if(0&&touch){
 				}
 			}
 
+
 			function emptyPane(){
 				hidePane();
 				clearAllStoredOIDs();
 			}
+
 
 			function showIntro(){
 				dataNode.style.marginTop = 0;
@@ -1347,7 +1365,8 @@ if(0&&touch){
 				W.setTimeout(showPane, 0);
 			}
 
-			function prep(setData,attributes){
+
+			function showDataFunc(setData,attributes){
 				if(selectedGraphicsCount === 0){
 					emptyPane();
 					return;
@@ -1383,7 +1402,7 @@ if(0&&touch){
 			}
 
    		on(closeButton,"mousedown", closeToggle);
-   		infoFunc = makeInfoFunc(prep);
+   		showData = makeShowData(showDataFunc);
    		W.setTimeout(showIntro,300);
    	}
 
@@ -1430,7 +1449,7 @@ if(0&&touch){
 				dataNode.innerHTML = introText;
 			}
 
-   		function prep(setData, attr){
+   		function showDataFunc(setData, attr){
    			if(dataDisplayed&&selectedGraphicsCount === 0){
    				setIntro();
 					return hideView(dataPane);
@@ -1489,7 +1508,7 @@ if(0&&touch){
    		on(gridTab,"touchstart", gridToggle);
 
 
-   		infoFunc = makeInfoFunc(prep)
+   		showData = makeShowData(showDataFunc)
    		setIntro();
    	}
 
@@ -1499,12 +1518,10 @@ if(0&&touch){
 
 
 
-
-
-   function makeInfoFunc(prep){
+    function makeShowData(showDataFunc){
    	
-   	function infoFunc(attributes){
-   	 prep(setData,attributes);
+   	function showData(attributes){
+   	 showDataFunc(setData,attributes);
    	}
 
 		var ssMessage = "Data was collected to determine the sediment impacts of the agricultural barriers at Middle River, Grant Line Canal, and Old River near the Delta Mendota Canal. Measurements have been made since 1998 at nineteen stations. Multibeam/RTK bathymetry has been gathered since 2011. Four stations have monthly data, the rest are visited in the Fall and Spring.";
@@ -1560,8 +1577,12 @@ if(0&&touch){
 		}
 
 
-		return infoFunc;
-}
+		return showData;
+  }
+
+
+
+
 
 		function defineDOMHandles(){
 			 dataCon = dom.byId("dataCon")
@@ -1586,6 +1607,8 @@ if(0&&touch){
 		}
 
 
+
+
 		function placeMap(){
    	    var lPWidth = gridPane.clientWidth+6;
    	    if(ie9){
@@ -1599,6 +1622,8 @@ if(0&&touch){
    	}
 
 
+
+
    	function resizeRp(){
    		if(touch){
    			setdataConHeight(innerHeight/2 - 32);
@@ -1608,9 +1633,16 @@ if(0&&touch){
    		}
    	}
 
+
+
+
    	function setdataConHeight(height){
    		dataCon.style.height = height +"px";
    	}
+
+
+
+
 
    	function setHeader(){
 			var wid = innerWidth;
@@ -1625,6 +1657,10 @@ if(0&&touch){
 				setHeader.fullText = 1;
 			}
 		}
+
+
+
+
 
 		function setrPConHeight(){
 			if(touch) rPConHeight = innerHeight-32;

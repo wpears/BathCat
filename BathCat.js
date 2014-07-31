@@ -156,7 +156,7 @@ function( BorderContainer
       var tiout;
       var solidLine = SimpleLine.STYLE_SOLID;
 			var solidFill = SimpleFill.STYLE_SOLID
-      var blank = new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([255, 255, 255, 0.001]), 1), new Color([0, 0, 0, 0.001]))
+      var blank = new SimpleFill(solidFill, new SimpleLine(solidLine, new Color([255, 255, 255, 0]), 1), new Color([0, 0, 0, 0.001]))
      	var topoMap = new TiledLayer(topoUrl);
      	var rasterLayer = new DynamicLayer(rasterUrl, {id:"raster"})
 			var topoOn = 1;
@@ -758,7 +758,7 @@ window.map = map
    					fx.animateProperty({node:infoPane, duration:200, properties:{bottom:-210}}).play();
    					fx.animateProperty({node:dataCon, duration:200, properties:{height:rPConHeight}}).play();
    				}else{
-   					setdataConHeight(rPConHeight)
+   					setDataConHeight(rPConHeight)
    					infoPane.style["-webkit-transform"] = "translate3d(0,0,0)";
 						infoPane.style["transform"] = "translate3d(0,0,0)";
    				}
@@ -774,7 +774,7 @@ window.map = map
 			}else{
 				infoPane.style["-webkit-transform"] = "translate3d(0,-242px,0)";
 				infoPane.style["transform"] = "translate3d(0,-242px,0)";
-				setTimeout(function(){setdataConHeight(rPConHeight-242)},180)
+				setTimeout(function(){setDataConHeight(rPConHeight-242)},180)
 			}
 		}
 
@@ -1138,8 +1138,7 @@ if(0&&touch){
 
 																					//apply highlighting logic to an array
 		function redrawAllGraphics(){    
-		//	console.log("redrawing")
-				for(var i =1;i<featureCount;i++){
+				for(var i =1,j=featureCount+1;i<j;i++){
 					if(insideTimeBoundary[i]){
 						if(oidStore[i])
 							highlighter(i,"hi", 0);
@@ -1274,7 +1273,7 @@ if(0&&touch){
    		mainWindow.appendChild(dataPane);
 
    		defineDOMHandles();
-   		resizeRp();
+   		setDataPaneHeight();
 
    		if(touch){
    			attachMobileViews();
@@ -1308,7 +1307,14 @@ if(0&&touch){
 
 
 
-//define functions that operate on the desktop layout. These are available to 
+
+
+/********DESKTOP LAYOUT FUNCTIONS**********/
+
+
+
+
+
    	function attachPanes(){
    		var movers = dquery(".mov")
    			, closeButton = dom.byId('closeRp')
@@ -1409,7 +1415,11 @@ if(0&&touch){
 
 
 
-//VIEWS
+
+/************MOBILE LAYOUT FUNCTIONS************/
+
+
+
 
 
    	function attachMobileViews(){
@@ -1516,134 +1526,116 @@ if(0&&touch){
 
 
 
-
-
+		//Takes a showDataFunc which has access to private layout functions through a closure.
+		//Layout functions can be separated and private between desktop/mobile while calling code 
+		//only communicates through the common showData interface that makeShowData returns 
     function makeShowData(showDataFunc){
    	
-   	function showData(attributes){
-   	 showDataFunc(setData,attributes);
-   	}
+   	  function showData(attributes){
+   	    showDataFunc(setData,attributes);
+   	  }
 
-		var ssMessage = "Data was collected to determine the sediment impacts of the agricultural barriers at Middle River, Grant Line Canal, and Old River near the Delta Mendota Canal. Measurements have been made since 1998 at nineteen stations. Multibeam/RTK bathymetry has been gathered since 2011. Four stations have monthly data, the rest are visited in the Fall and Spring.";
+			var ssMessage = "Data was collected to determine the sediment impacts of the agricultural barriers at Middle River, Grant Line Canal, and Old River near the Delta Mendota Canal. Measurements have been made since 1998 at nineteen stations. Multibeam/RTK bathymetry has been gathered since 2011. Four stations have monthly data, the rest are visited in the Fall and Spring.";
 
 
-		function WWays(attr){
-			switch(attr.Project.slice(0, 2)){
-			   case "GL":
-					return "Grant Line Canal";
-				case "OR":
-					return "Old River";
-				case "DC":
-					return "Doughty Cut";
-			}
-		}	
-
-		 function setData (attr){
-			if(!attr){
-				if(selectedGraphicsCount === 1){
-					var oid = selectedGraphics[0];
-					parseAttributes(outlines.graphics[oid-1].attributes,oid-1);
-				}else{
-					var str ="<h2>"+selectedGraphicsCount+ " projects selected</h2><div id='multiSelectWrapper'>";
-					var count = 0;
-					var i = 0;
-					while (count < selectedGraphicsCount){
-						if (oidStore[i] === 1){
-							str+=("<span class='multiSelect' data-oid='"+i+"'><strong>"+names[i-1]+
-								": </strong>"+formattedDates[i-1]+"</span><br/>")
-							count++;
-						}
-						i++;
-					}
-					str+="</div>"
-					downloadNode.style.display = "none";
-					dataNode.style.marginTop = (rPConHeight/2-65)+"px";
-					dataNode.innerHTML = str;
+			function WWays(attr){
+				switch(attr.Project.slice(0, 2)){
+				   case "GL":
+						return "Grant Line Canal";
+					case "OR":
+						return "Old River";
+					case "DC":
+						return "Doughty Cut";
 				}
-			}else{
-				if(attr&&attr.Project)
-					parseAttributes(attr,attr.OBJECTID-1);	
+			}	
+
+		  function setData (attr){
+				if(!attr){
+					if(selectedGraphicsCount === 1){
+						var oid = selectedGraphics[0];
+						parseAttributes(outlines.graphics[oid-1].attributes,oid-1);
+					}else{
+						var str ="<h2>"+selectedGraphicsCount+ " projects selected</h2><div id='multiSelectWrapper'>";
+						var count = 0;
+						var i = 0;
+						while (count < selectedGraphicsCount){
+							if (oidStore[i] === 1){
+								str+=("<span class='multiSelect' data-oid='"+i+"'><strong>"+names[i-1]+
+									": </strong>"+formattedDates[i-1]+"</span><br/>")
+								count++;
+							}
+							i++;
+						}
+						str+="</div>"
+						downloadNode.style.display = "none";
+						dataNode.style.marginTop = (rPConHeight/2-65)+"px";
+						dataNode.innerHTML = str;
+					}
+				}else{
+					if(attr&&attr.Project)
+						parseAttributes(attr,attr.OBJECTID-1);	
+				}
 			}
-		}
 
-		function parseAttributes(attr,ind){
-			dataNode.style.marginTop = "0";	
-			dataNode.innerHTML = "<h2>"+names[ind]+"</h2>"+
-			"<span class = 'spirp'><strong>Collection Date: </strong>"+formattedDates[ind]+"</span>"+
-			"<span class = 'spirp'><strong>Client: </strong>"+(attr.Client||"Groundwater Supply Assessment Section, DWR")+"</span>"+
-			"<span class = 'spirp'><strong>Waterways Covered: </strong>"+(attr.Waterways||WWays(attr))+"</span>"+
-			"<span class = 'spirp'><strong>Purpose: </strong>"+(attr.Purpose||ssMessage)+"</span>";
-			downloadNode.style.display = "block";
-		}
+			function parseAttributes(attr,ind){
+				dataNode.style.marginTop = "0";	
+				dataNode.innerHTML = "<h2>"+names[ind]+"</h2>"+
+				"<span class = 'spirp'><strong>Collection Date: </strong>"+formattedDates[ind]+"</span>"+
+				"<span class = 'spirp'><strong>Client: </strong>"+(attr.Client||"Groundwater Supply Assessment Section, DWR")+"</span>"+
+				"<span class = 'spirp'><strong>Waterways Covered: </strong>"+(attr.Waterways||WWays(attr))+"</span>"+
+				"<span class = 'spirp'><strong>Purpose: </strong>"+(attr.Purpose||ssMessage)+"</span>";
+				downloadNode.style.display = "block";
+			}
 
 
-		return showData;
-  }
+			return showData;
+	  }
 
 
 
 
 
 		function defineDOMHandles(){
-			 dataCon = dom.byId("dataCon")
-			 dataNode = dom.byId("dataNode")
-			 downloadNode = dom.byId('downloadNode')
-			 dlLink = dom.byId("dlLink")
+			dataCon = dom.byId("dataCon")
+			dataNode = dom.byId("dataNode")
+			downloadNode = dom.byId('downloadNode')
+			dlLink = dom.byId("dlLink")
 
-			 gridNode = dom.byId("gridNode")
-			 spl = dom.byId("lPSplitter")
+			gridNode = dom.byId("gridNode")
+			spl = dom.byId("lPSplitter")
 
-			 crossAnchor = dom.byId("cros")
-			 identAnchor = dom.byId("ident")
-			 measureAnchor = dom.byId("mea")
-			 noClick = dom.byId("noClick")
+			crossAnchor = dom.byId("cros")
+			identAnchor = dom.byId("ident")
+			measureAnchor = dom.byId("mea")
+			noClick = dom.byId("noClick")
 
-			 zoomSlider =dom.byId("mapDiv_zoom_slider")
-			 fex = dom.byId("fex")
-			 topo = dom.byId("topo")
-			 sat = dom.byId("sat")
-			 timeDiv = dom.byId('timeDiv');
-
+			zoomSlider =dom.byId("mapDiv_zoom_slider")
+			fex = dom.byId("fex")
+			topo = dom.byId("topo")
+			sat = dom.byId("sat")
+			timeDiv = dom.byId('timeDiv');
 		}
 
 
 
 
+    //Allows proper map layout on load and resize
 		function placeMap(){
-   	    var lPWidth = gridPane.clientWidth+6;
-   	    if(ie9){
-						mapDiv.style.left = lPWidth+"px";
-					}else{
-						mapDiv.style["-webkit-transform"] = "translate3d("+lPWidth+"px,0, 0)";
-						mapDiv.style["transform"] = "translate3d("+lPWidth+"px,0, 0)";
-					}
+ 	    var lPWidth = gridPane.clientWidth+6;
+ 	    if(ie9){
+					mapDiv.style.left = lPWidth+"px";
+				}else{
+					mapDiv.style["-webkit-transform"] = "translate3d("+lPWidth+"px,0, 0)";
+					mapDiv.style["transform"] = "translate3d("+lPWidth+"px,0, 0)";
+				}
 
-   			mapDiv.style.width = (innerWidth-lPWidth)+"px";
+ 			mapDiv.style.width = (innerWidth-lPWidth)+"px";
    	}
 
 
 
 
-   	function resizeRp(){
-   		if(touch){
-   			setdataConHeight(innerHeight/2 - 32);
-   		}else{
-   		  dataPane.style.height = innerHeight-225+"px";
-   		  setdataConHeight(innerHeight-257);
-   		}
-   	}
-
-
-
-
-   	function setdataConHeight(height){
-   		dataCon.style.height = height +"px";
-   	}
-
-
-
-
-
+    //Change header name based on available screen space
    	function setHeader(){
 			var wid = innerWidth;
 			var appTitle = setHeader.appTitle = setHeader.appTitle?setHeader.appTitle:dom.byId("appTitle");
@@ -1661,6 +1653,19 @@ if(0&&touch){
 
 
 
+  //Datapane resizing  convenience functions
+    function setDataPaneHeight(){
+   		if(touch){
+   			setDataConHeight(innerHeight/2 - 32);
+   		}else{
+   		  dataPane.style.height = innerHeight-225+"px";
+   		  setDataConHeight(innerHeight-257);
+   		}
+   	}
+
+		function setDataConHeight(height){
+   		dataCon.style.height = height +"px";
+   	}
 
 		function setrPConHeight(){
 			if(touch) rPConHeight = innerHeight-32;
@@ -1674,7 +1679,6 @@ if(0&&touch){
 
 
 		//Convenience and shims
-
 		function isNumber(n) {
   			return !isNaN(parseFloat(n)) && isFinite(n);
 		}
@@ -1688,12 +1692,14 @@ if(0&&touch){
 			if(!W.requestAnimationFrame)(function(W){var eaf = 'equestAnimationFrame', raf = 'r'+eaf, Raf = 'R'+eaf;W[raf] = W['webkit'+Raf]||W['moz'+Raf]||W[raf]||(function(callback){setTimeout(callback, 16)})})(W);
 		})(W)
 
+
+
+
+
 	attachHandlers();
 	tiout.refresh() //ensure initial draw;
 	});
 
-//	});
-
-//return from the require
+//return from the requires
 });
 });

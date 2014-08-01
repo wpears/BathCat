@@ -95,18 +95,23 @@ function( BorderContainer
 				){
 
 
+/*	
+    NOTE: this patch breaks ie11. I'm omitting until I see a need in chrome.
 
-  	var allowMM = 0;  // An absolutely obscene amount of event handlers. And TONS of triggered body/map mm events
-/*
-  	(function(){ this patch breaks ie11. I'm omitting until I seem a need in chrome.
+  	//An absolutely obscene amount of event handlers from the API.
+  	//And TONS of triggered body/map mm events.
+  	//Monkey patch addEventListener to prevent mousemoves from being attached until I need them
+		var allowMM = 0;
+  	(function(){
 		var eael = HTMLElement.prototype.addEventListener;
 		HTMLElement.prototype.addEventListener = function(){
  			if(arguments[0]!== "mousemove"||allowMM){
     			eael.apply(this, arguments);
 		}
-		}})();*/
+		}})();
+*/
 
-   ready(function(){ //wait for the dom
+  ready(function(){ //wait for the dom
    	var W = window
    		, DOC = document
    		, protocol = DOC.location.protocol
@@ -115,13 +120,16 @@ function( BorderContainer
    		, ie9 =(DOC.all&&DOC.addEventListener&&!W.atob)?true:false
    		, innerHeight = W.innerHeight
    		, innerWidth = W.innerWidth
+   		, showData
+
+   		//DOM handles
    		, mainWindow = dom.byId("mainWindow")
    		, mapDiv = dom.byId("mapDiv")
    		, gridPane, gridNode, spl
    		, dataPane, dataCon, dataNode, dlLink, downloadNode
    		, crossAnchor, identAnchor, measureAnchor, noClick
    		, zoomSlider, fex, topo, sat, timeDiv
-   		, showData
+
    		, introText = "<p>The <strong>Delta Bathymetry Catalog</strong> houses the complete set of multibeam bathymetric data collected by the Bathymetry and Technical Support section of the California Department of Water Resources.</p><p>Click on a feature in the map or table to bring up its <strong>description</strong>. Double-click to view the <strong>raster image</strong>.</p> <p><strong>Download</strong> data as text files from the descrption pane.</p> <p><strong>Measure</strong> distances, <strong>identify</strong> raster elevations, and draw <strong>profile graphs</strong> with the tools at the top-right.</p> <p>Change what displays by <strong>collection date</strong> with the slider at bottom-right. <strong>Sort</strong> by date and name with the table's column headers.</p> <p>See the <strong>help</strong> below for further information.</p>"
    		;
 
@@ -129,41 +137,45 @@ function( BorderContainer
    	makeViews();
    	setHeader();
 
-
+   	//Show body once the DOM is ready and the panes are built to prevent FOUC
+   	DOC.body.style.visibility = "visible";
    	
+
 		if(ie9) fx = require("dojo/_base/fx", function(fx){return fx});
 
-   	DOC.body.style.visibility = "visible"; //show the page on load.. no unstyled content
+
+    Config.defaults.io.corsDetection = false;
+    Config.defaults.io.corsEnabledServers.push(origin);//enable cors for quicker queries
+    Config.defaults.geometryService = new GeometryService(protocol+"//sampleserver3.arcgisonline.com/arcgis/rest/services/Geometry/GeometryServer"); 	
 
 
-   Config.defaults.io.corsDetection = false;
-   Config.defaults.io.corsEnabledServers.push(origin);//enable cors for quicker queries
-   Config.defaults.geometryService = new GeometryService(protocol+"//sampleserver3.arcgisonline.com/arcgis/rest/services/Geometry/GeometryServer"); 	
+ 		var rasterUrl = origin+"/arcgis/rest/services/Public/bathymetry_rasters/MapServer" 
+ 		var topoUrl = protocol+"//services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer";
 
 
-   		var rasterUrl = origin+"/arcgis/rest/services/Public/bathymetry_rasters/MapServer" 
-   		var topoUrl = protocol+"//services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer";
+ 		var spatialRef = new SpatialReference(102100);
+ 		var initialExtent = new Extent(-13612000, 4519000,-13405000, 4662600,spatialRef);
+ 		var defaultZoomLevel = innerHeight > 940?11:innerHeight > 475?10:9;
 
 
-   		var spatialRef = new SpatialReference(102100);
-   		var intExt = new Extent(-13612000, 4519000,-13405000, 4662600,spatialRef);
-   		var centerPoint;
-   		var zoomLevel = innerHeight > 940?11:innerHeight > 475?10:9;
-   	  if (touch)centerPoint = new Point({x: -13528681.36062705, y: 4583780.268055417,spatialReference:spatialRef});
-     	else centerPoint = new Point({x: -13523942.264873397, y: 4586455.564045421,spatialReference:spatialRef});
-
-      var map = new Map(mapDiv, {extent:intExt,center:centerPoint,zoom:zoomLevel})
-      var tiout;
-
-      var blank = new SimpleFill(SimpleFill.STYLE_SOLID, new SimpleLine(SimpleLine.STYLE_SOLID, new Color([255, 255, 255, 0]), 1), new Color([0, 0, 0, 0]))
+ 		var centerPoint;
+ 	  if (touch)centerPoint = new Point({x: -13528681.36062705, y: 4583780.268055417,spatialReference:spatialRef});
+   	else centerPoint = new Point({x: -13523942.264873397, y: 4586455.564045421,spatialReference:spatialRef});
 
 
-     	var topoMap = new TiledLayer(topoUrl);
-     	var rasterLayer = new DynamicLayer(rasterUrl, {id:"raster"})
-			var topoOn = 1;
-			var satOn = 0;
+    var map = new Map(mapDiv, {extent:initialExtent,center:centerPoint,zoom:defaultZoomLevel})
+    var topoMap = new TiledLayer(topoUrl);
+    var satMap;
+    var rasterLayer = new DynamicLayer(rasterUrl, {id:"raster"})
+    var tiout;
+		var outlines;
 
-			map.addLayer(topoMap);
+
+		var featureSet = window.DATA_OUTLINES;
+    var blank = new SimpleFill(SimpleFill.STYLE_SOLID, new SimpleLine(SimpleLine.STYLE_SOLID, new Color([255, 255, 255, 0]), 1), new Color([0, 0, 0, 0]))
+
+
+		map.addLayer(topoMap);
 
 
 
@@ -196,47 +208,71 @@ window.map = map
 
 
 
-	tiout = new FeatureLayer({
-		featureSet:window.TIGHT_OUTLINES,
-			layerDefinition:{
-				"geometryType":"esriGeometryPolygon"
-			 ,"spatialReference":spatialRef
-			 ,"displayFieldName": "Shape_Length"
-			 , "fields" : [{
-				  "name" : "OBJECTID"
-				  ,"type" : "esriFieldTypeOID"
-			   }]
-			}
-	  },
-	  {id:"tiout"
-	  ,mode: FeatureLayer.MODE_SNAPSHOT
-	  }
-	);
-  tiout.setRenderer(new SimpleRenderer(blank));
-  map.addLayer(tiout);
+		tiout = new FeatureLayer({
+			featureSet:window.TIGHT_OUTLINES,
+				layerDefinition:{
+					"geometryType":"esriGeometryPolygon"
+				 ,"spatialReference":spatialRef
+				 ,"displayFieldName": "Shape_Length"
+				 , "fields" : [{
+					  "name" : "OBJECTID"
+					  ,"type" : "esriFieldTypeOID"
+				   }]
+				}
+		  },
+		  {id:"tiout"
+		  ,mode: FeatureLayer.MODE_SNAPSHOT
+		  }
+		);
 
-  tiout.on("graphic-node-add",function(e){
-	  if(insideTimeBoundary[e.graphic.attributes.OBJECTID]){
-		  return;
-    }
-	  e.node.setAttribute("class","hiddenPath")
-  })
+		outlines = new FeatureLayer({layerDefinition:layDef, featureSet:featureSet}, {
+	  	id:"out",
+     	 	mode: FeatureLayer.MODE_SNAPSHOT,
+     	 	outFields: ["*"]
+		});
 
-	var featureSet = window.DATA_OUTLINES,
-	  features = featureSet.features, featureCount=features.length, IE =!!document.all, fx,
-		outlines, gridObject, outlineMouseMove, outlineTimeout, setVisibleRasters, 
+    tiout.setRenderer(new SimpleRenderer(blank));
+		outlines.setRenderer(new SimpleRenderer(blank));
+
+    map.addLayer(tiout);
+    map.addLayer(outlines);
+
+
+  	tiout.on("graphic-node-add",function(e){
+	  	if(insideTimeBoundary[e.graphic.attributes.OBJECTID]){
+		  	return;
+    	}
+	 	  e.node.setAttribute("class","hiddenPath")
+    });
+
+    tiout.on("update-end", function(){
+   		redrawAllGraphics(tiout.graphics);							
+    });
+
+
+    satMap = new TiledLayer(protocol+"//services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer");
+	  map.addLayer(satMap);
+	  satMap.hide();
+
+
+
+
+	  var features = featureSet.features, featureCount=features.length, IE =!!document.all, fx,
+		 gridObject, outlineMouseMove, outlineTimeout, setVisibleRasters, 
 		mouseDownTimeout, previousRecentTarget, justMousedUp = false,  outMoveTime = 0,
-	 	identifyUp, measure, tooltip, rPConHeight=setrPConHeight(), headerNodes, sedToggle, satMap, cursor = 1, scalebarNode,
-	 	phasingTools, crossTool, identTool, meaTool;
+	 	identifyUp, measure, tooltip, rPConHeight=setrPConHeight(), headerNodes, sedToggle, cursor = 1, scalebarNode,
+	 	phasingTools, crossTool, identTool, meaTool, eventFeatures= [outlines];
 
 		var geoArr, splitGeoArr, geoBins, selectedGraphics =[], selectedGraphicsCount = 0,
-		legend, eventFeatures= [],
+		legend,
 		zoomEnd, adjustOnZoom, showSat, showTopo, previousLevel = 8,
 		processTimeUpdate,
 		mouseDownX = 0, mouseDownY = 0;
 
 
-	var	layerArray = new Array(featureCount),
+
+
+	  var	layerArray = new Array(featureCount),
 		oidStore = new Array(featureCount + 1),
 		hl = new Array(featureCount + 1),
 		gridData = new Array(featureCount),
@@ -246,19 +282,9 @@ window.map = map
 		rastersShowing = {};
 
 
-		outlines = new FeatureLayer({layerDefinition:layDef, featureSet:featureSet}, {
-		  	id:"out",
-       	 	mode: FeatureLayer.MODE_SNAPSHOT,
-       	 	outFields: ["*"]
-  		});
 
-		outlines.setRenderer(new SimpleRenderer(blank));
-    map.addLayer(outlines);
-		eventFeatures.push(outlines);
 
-		satMap = new TiledLayer(protocol+"//services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer");
-	  map.addLayer(satMap);
-	  satMap.hide();
+
 
 
 
@@ -545,11 +571,10 @@ window.map = map
 
 
 
-		tiout.on("update-end", function(e, f, g, h){ // allows feature updating
-   		//console.log("update-end");
-   		redrawAllGraphics(tiout.graphics);							
-    });
 
+
+		var topoOn = 1;
+		var satOn = 0;
 
 		showSat = function(){										//turn on imagery
 		  satMap.show();
@@ -611,6 +636,11 @@ window.map = map
    		if(satOn) basemapOff();
    		else showSat();
    	});
+
+
+
+
+
 
 
 (function(){
@@ -691,7 +721,7 @@ window.map = map
 
 			placeMap();
 			setHeader();
-			zoomLevel = winHeight > 940?11:winHeight > 475?10:9;
+			defaultZoomLevel = winHeight > 940?11:winHeight > 475?10:9;
 
 			if(+dataNode.style.marginTop.slice(0, 1)) dataNode.style.marginTop =(winHeight-257)/2-15+"px";
 
@@ -767,7 +797,7 @@ window.map = map
 
 
 		on(fex,"mousedown", function(e){                  //go to initial extent
-			map.centerAndZoom(centerPoint,zoomLevel)
+			map.centerAndZoom(centerPoint,defaultZoomLevel)
 		});
 
 
@@ -791,7 +821,7 @@ window.map = map
 											, chartDates:formattedDates
 											, tooltip:tooltip
 										  };
-				allowMM = 1;				  
+				/*allowMM = 1;*/				  
 				crossTool = CrossTool(rasterLayer, Popup(), crossAnchor, rasterUrl, layerArray, options);
 				phasingTools[0].tool = crossTool;
 				crossTool.init(e);				
@@ -818,7 +848,7 @@ window.map = map
 												 	 }
 												 );
 
-		on.once(measureAnchor,"mousedown", function(e){allowMM=1;meaTool.init(e)});
+		on.once(measureAnchor,"mousedown", function(e){/*allowMM=1;*/meaTool.init(e)});
 
 
 
@@ -1660,8 +1690,8 @@ if(0&&touch){
 
 
 
-	attachHandlers();
-	tiout.refresh() //ensure initial draw;
+		attachHandlers();
+		tiout.refresh() //ensure initial draw;
 	});
 
 //return from the requires

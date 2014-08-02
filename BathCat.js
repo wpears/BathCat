@@ -32,6 +32,7 @@ require(["dijit/layout/BorderContainer"
   			,"esri/symbols/SimpleMarkerSymbol"
   			,"esri/geometry/Point"
 
+  			,"modules/geosearch.js"
   			,"modules/symbols.js"
 				,"modules/popup.js"
 				,"modules/crosstool.js"
@@ -79,6 +80,7 @@ function( BorderContainer
 				, SimpleMarker
 				, Point
 
+				, GeoSearch
         , symbols
 				, Popup
 				, CrossTool
@@ -141,7 +143,7 @@ function( BorderContainer
    	DOC.body.style.visibility = "visible";
    	
 
-		if(ie9) fx = require("dojo/_base/fx", function(fx){return fx});
+		if(ie9) var fx = require("dojo/_base/fx", function(fx){return fx});
 
 
     Config.defaults.io.corsDetection = false;
@@ -238,18 +240,6 @@ window.map = map
     map.addLayer(outlines);
 
 
-  	tiout.on("graphic-node-add",function(e){
-	  	if(insideTimeBoundary[e.graphic.attributes.OBJECTID]){
-		  	return;
-    	}
-	 	  e.node.setAttribute("class","hiddenPath")
-    });
-
-    tiout.on("update-end", function(){
-   		redrawAllGraphics(tiout.graphics);							
-    });
-
-
     satMap = new TiledLayer(protocol+"//services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer");
 	  map.addLayer(satMap);
 	  satMap.hide();
@@ -257,15 +247,13 @@ window.map = map
 
 
 
-	  var features = featureSet.features, featureCount=features.length, IE =!!document.all, fx,
-		 gridObject, outlineMouseMove, outlineTimeout, setVisibleRasters, 
+	  var features = featureSet.features, featureCount=features.length,
+		 gridObject, geoSearch, outlineMouseMove, outlineTimeout, setVisibleRasters, getBasemap,
 		mouseDownTimeout, previousRecentTarget, justMousedUp = false,  outMoveTime = 0,
 	 	identifyUp, measure, tooltip, rPConHeight=setrPConHeight(), headerNodes, sedToggle, cursor = 1, scalebarNode,
 	 	phasingTools, crossTool, identTool, meaTool, eventFeatures= [outlines];
 
-		var geoArr, splitGeoArr, geoBins, selectedGraphics =[], selectedGraphicsCount = 0,
-		legend,
-		zoomEnd, adjustOnZoom, showSat, showTopo, previousLevel = 8,
+		var legend, adjustOnZoom, previousLevel = 8,
 		processTimeUpdate,
 		mouseDownX = 0, mouseDownY = 0;
 
@@ -273,7 +261,6 @@ window.map = map
 
 
 	  var	layerArray = new Array(featureCount),
-		oidStore = new Array(featureCount + 1),
 		hl = new Array(featureCount + 1),
 		gridData = new Array(featureCount),
 		formattedDates = new Array(featureCount),
@@ -284,18 +271,12 @@ window.map = map
 
 
 
-
-
-
-
-
 	  //Initialize all app-wide tracking arrays
 		(function(){
 			var att, mi, ss="Soil Sed. ";
 			for(var i = 0; i<featureCount; i++){
 				att=features[i].attributes;
 				layerArray[i] = i;
-				oidStore[i] = 0;
 				hl[i] = 0;
 				insideTimeBoundary[i] = 1;
 				rastersShowing[i+1] = 0;
@@ -304,7 +285,6 @@ window.map = map
 			}
 		})();
 		hl[featureCount] = 0;
-		oidStore[featureCount] = 0;
 		insideTimeBoundary[featureCount] = 1;
 
 		(function(){
@@ -319,12 +299,20 @@ window.map = map
 			}
 		})();
 
+
+
+
+		//selects map features and manages OIDs
+		geoSearch = GeoSearch(outlines, insideTimeBoundary, highlighter, showData);
+
+
 		//Identify and profile tools don't make sense with no rasters on. Added here to pass around later
 		//for updating of the tools' visibility
 		phasingTools = [
 		  {tool:null,anchor:crossAnchor,eventFeatures:eventFeatures},
 		  {tool:null,anchor:identAnchor,eventFeatures:eventFeatures}
 		];
+
 
 		if(!touch){
 			legend = function(){
@@ -349,7 +337,8 @@ window.map = map
 				}
 			}();
 		}
-    
+
+
     setVisibleRasters = SetVisibleRasters( map
     	                                   , rasterLayer
     	                                   , touch
@@ -372,14 +361,16 @@ window.map = map
 
 
 
+
+
 	var setTextColor = (function(){
 		new ScaleBar({map:map});
 		scalebarNode = dquery(".esriScalebar")[0]
 
 		function doTimeUpdate(timeExtent){
-			var currentCount = selectedGraphicsCount;
+			var currentCount = geoSearch.selected.length;
 			gridObject.timeUpdate(timeExtent);
-			if(currentCount!== selectedGraphicsCount){
+			if(currentCount!== geoSearch.selected.length){
         showData(null)
       }
 		}
@@ -470,7 +461,7 @@ window.map = map
 		}
 
 		function setTextColor(){
-			if(satOn){
+			if(getBasemap === 'sat'){
 				domClass.add(scalebarNode,"whiteScaleLabels");
 				domClass.add(labelCon,"satLabels")
 			}else{
@@ -487,156 +478,89 @@ window.map = map
 
 
 
-
-//Prep geoBins for GeoSearch
-
-
-
-  	(function(){
-  			var i = 0, outG = outlines.graphics, j = outG.length, curr, k, l, currGeo;
-  			geoArr = new Array(j);
-  			geoBins = new Array(Math.ceil(j/10));
-  			splitGeoArr = new Array(geoBins.length);
-  			for(;i<j;i++){
-  				curr = outG[i]._extent;
-  				geoArr[i] ={oid:outG[i].attributes.OBJECTID,
-  						   xmin:curr.xmin,
-  						   xmax:curr.xmax,
-  						   ymin:curr.ymin,
-  						   ymax:curr.ymax
-  						 }
-  			}
-  			geoArr.sort(function(a, b){return a.xmin-b.xmin})
-
-  			for(k = 0, l = geoBins.length-1;k<l;k++){
-  				geoBins[k] = geoArr[k*j/10>>0].xmin;
-  				splitGeoArr[k] =[];
-  			}
-  			geoBins[l] = geoArr[j-1].xmin;
-  			for(i = 0;i<j;i++){
-  				currGeo = geoArr[i];
-  				for(k = 0;k<l;k++){
-  					if(currGeo.xmin<= geoBins[k+1]&&currGeo.xmax>= geoBins[k])
-  						splitGeoArr[k].push(currGeo);
-
-  				}
-  			}
-  	})();
-
-//oidStore. Manages state of oids. Currently references peppered throughout almost everything
-//Might be worth splitting into its own module
+/**********BASEMAP LOGIC*************/
 
 
 
 
 
-		function clearStoredOID(oid, doSplice, fromGrid){
-			var oidIndex = geoSearch.prevArr.indexOf(oid);
-			highlighter(oid,"", 1);
-			if(oidStore[oid]){
-				oidStore[oid] = 0;
-				if(fromGrid&&oidIndex>-1)splice(geoSearch.prevArr, oidIndex);
-				selectedGraphicsCount--;
-				if(doSplice)
-					splice(selectedGraphics, selectedGraphics.indexOf(oid));
-			}else{console.log("NOT STORED")}
-		}
+    getBasemap = function(){
+			var topoOn = 1;
+			var satOn = 0;
+			var t = 'topo';
+			var s = 'sat';
 
-		function storeOID(oid){
-			if(!oidStore[oid]){
-				oidStore[oid] = 1;
-				selectedGraphics[selectedGraphicsCount] = oid;
-				selectedGraphicsCount++;
-			}
-		}
-
-		function clearAllStoredOIDs(){
-			for(var i = 0, j = selectedGraphicsCount;i<j;i++)
-					clearStoredOID(selectedGraphics[i], 0, 0);
-			selectedGraphics.length = 0;
-			geoSearch.prevArr.length = 0;
-		}
-
-		function clearAndSetOID(oid, attributes){
-			clearAllStoredOIDs();
-			storeOID(oid);
-			geoSearch.prevArr.length = 1;
-			geoSearch.prevArr[0] = oid;
-			highlighter(oid,"hi", 1);
-			showData(attributes);
-		}
-
-
-
-
-
-
-
-
-		var topoOn = 1;
-		var satOn = 0;
-
-		showSat = function(){										//turn on imagery
-		  satMap.show();
-		  topoMap.hide();
-			satOn=1;
-			topoOn=0;
-			domClass.remove(topo,"currentbmap");
-			domClass.add(sat,"currentbmap");
-			setTextColor();
-			redrawAllGraphics(tiout.graphics);
-		};
-		showTopo = function(){
-		  topoMap.show();
-		  satMap.hide();
-			satOn=0;
-			topoOn=1;
-			domClass.remove(sat,"currentbmap");
-			domClass.add(topo,"currentbmap");
-			setTextColor();
-			redrawAllGraphics(tiout.graphics);
-		};
-		basemapOff = function(){
-			satMap.hide();
-			topoMap.hide();
-			satOn=0;
-			topoOn=0;
-			domClass.remove(sat,"currentbmap");
-			domClass.remove(topo,"currentbmap");
-		};
-
-
-		adjustOnZoom = function(zoomObj){	//logic on ZoomEnd	
-			var ext = zoomObj.extent
-				, lev = zoomObj.level
-				, redraw = 0;
-				;
-			if(lev > 17&&previousLevel<18&&topoOn) //extend topo to 18, 19 with satellite
-				showSat();
-			if(previousLevel > 12 && lev < 13||previousLevel < 13 && lev > 12)
-					redraw = 1;
-			previousLevel = lev;
-			if(redraw)
+			function showSat (){
+			  satMap.show();
+			  topoMap.hide();
+				satOn=1;
+				topoOn=0;
+				domClass.remove(topo,"currentbmap");
+				domClass.add(sat,"currentbmap");
+				setTextColor();
 				redrawAllGraphics(tiout.graphics);
+			}
 
-			//redrawAllGraphics(tiout.graphics);
-			//tiout.setMaxAllowableOffset(offs);
-			//tiout.refresh();
-		};
+			function showTopo(){
+			  topoMap.show();
+			  satMap.hide();
+				satOn=0;
+				topoOn=1;
+				domClass.remove(sat,"currentbmap");
+				domClass.add(topo,"currentbmap");
+				setTextColor();
+				redrawAllGraphics(tiout.graphics);
+			}
 
-   	zoomEnd = map.on("zoom-end", adjustOnZoom);
+			function basemapOff(){
+				satMap.hide();
+				topoMap.hide();
+				satOn=0;
+				topoOn=0;
+				domClass.remove(sat,"currentbmap");
+				domClass.remove(topo,"currentbmap");
+			}
 
 
-   	on(topo, "mousedown", function(e){
-   		if(topoOn) basemapOff();
-   		else showTopo();
-   	});
+			function adjustOnZoom(zoomObj){	
+				var ext = zoomObj.extent
+					, lev = zoomObj.level
+					, redraw = 0
+					;
+				//extend topo to 18, 19 with satellite
+				if(lev > 17&&previousLevel<18&&topoOn)
+					showSat();
+				if(previousLevel > 12 && lev < 13||previousLevel < 13 && lev > 12)
+						redraw = 1;
+				previousLevel = lev;
+				if(redraw)
+					redrawAllGraphics(tiout.graphics);
+				//redrawAllGraphics(tiout.graphics);
+				//tiout.setMaxAllowableOffset(offs);
+				//tiout.refresh();
+			}
 
-   	on(sat, "mousedown", function(e){
-   		if(satOn) basemapOff();
-   		else showSat();
-   	});
 
+	  	map.on("zoom-end", adjustOnZoom);
+
+
+	   	on(topo, "mousedown", function(e){
+	   		if(topoOn) basemapOff();
+	   		else showTopo();
+	   	});
+
+
+	   	on(sat, "mousedown", function(e){
+	   		if(satOn) basemapOff();
+	   		else showSat();
+	   	});
+
+	   	return function (){
+	   		if(topoOn) return t;
+	   		return s;
+	   	}
+
+    }();
 
 
 
@@ -653,39 +577,39 @@ window.map = map
 
 		function toggleHelpGlow(e){
 			if(e.target.tagName === "B"){
-   				var key = e.target.textContent.slice(0, 3);
-   				switch (key){
-		   			case "Zoo":
-		   			  if (!zoomSlider)zoomSlider = dom.byId("mapDiv_zoom_slider")
-		   				domClass.toggle(zoomSlider,"helpglow");
-		   				break;
-		   			case "Glo":
-		   				domClass.toggle(dom.byId('fex'),"helpglow");
-		   				break;
-		   			case "Bas":
-		   				domClass.toggle(topo,"helpglow");
-		   				domClass.toggle(sat,"helpglow");
-		   				break;
-		   			case "Sli":
-		   				domClass.toggle(spl,"helpglow");
-		   				break;
-		   			case "Ide":
-		   				domClass.toggle(identAnchor,"helpglow");
-		   				break;
-		   			case "Pro":
-		   				domClass.toggle(crossAnchor,"helpglow");
-		   				break;
-		   			case "Mea":
-		   				domClass.toggle(measureAnchor,"helpglow");
-		   				break;
-		   	//		case "Arr":
-		   	//			domClass.toggle(shoP,"helpglow");
-		   //				break;
-		   			case "Tim":
-		   				domClass.toggle(dom.byId("timeSlider"),"helpglow");
-		   				break;
-   				}
-   			}
+ 				var key = e.target.textContent.slice(0, 3);
+ 				switch (key){
+	   			case "Zoo":
+	   			  if (!zoomSlider)zoomSlider = dom.byId("mapDiv_zoom_slider")
+	   				domClass.toggle(zoomSlider,"helpglow");
+	   				break;
+	   			case "Glo":
+	   				domClass.toggle(dom.byId('fex'),"helpglow");
+	   				break;
+	   			case "Bas":
+	   				domClass.toggle(topo,"helpglow");
+	   				domClass.toggle(sat,"helpglow");
+	   				break;
+	   			case "Sli":
+	   				domClass.toggle(spl,"helpglow");
+	   				break;
+	   			case "Ide":
+	   				domClass.toggle(identAnchor,"helpglow");
+	   				break;
+	   			case "Pro":
+	   				domClass.toggle(crossAnchor,"helpglow");
+	   				break;
+	   			case "Mea":
+	   				domClass.toggle(measureAnchor,"helpglow");
+	   				break;
+	   	//		case "Arr":
+	   	//			domClass.toggle(shoP,"helpglow");
+	   //				break;
+	   			case "Tim":
+	   				domClass.toggle(dom.byId("timeSlider"),"helpglow");
+	   				break;
+ 				}
+ 			}
 		}
 
 		if(!touch){
@@ -862,18 +786,18 @@ window.map = map
     function cellClick(e){  //grid click handler
       var et = e.target, oid = getOIDFromGrid(e), attributes;
       if(!oid)return;
-      if(!oidStore[oid]&&et.tagName=="INPUT"&&et.checked)return
+      if(!geoSearch.isStored(oid)&&et.tagName=="INPUT"&&et.checked)return
       highlighter(oid,"hi", 1);
       if(et!== previousRecentTarget){ //prevent click before double click
         window.clearTimeout(mouseDownTimeout);
         previousRecentTarget = et;
         mouseDownTimeout = W.setTimeout(nullPrevious, 400);
         attributes = outlines.graphics[oid-1].attributes;
-        if(oidStore[oid]&&selectedGraphicsCount === 1){ //target is sole open
-          clearStoredOID(oid, 1, 1);
+        if(geoSearch.isStored(oid)&&geoSearch.selected.length === 1){ //target is sole open
+          geoSearch.clear(oid, 1, 1);
           showData(null);
         }else{
-          clearAndSetOID(oid);
+          geoSearch.clearAndSet(oid);
         }   
       }
     }
@@ -888,7 +812,7 @@ window.map = map
           return;
         }
         if(e.target.localName!== "div"){
-          clearAndSetOID(oid)
+          geoSearch.clearAndSet(oid)
           inputBox = gridObject.getInputBox(oid);
           map.setExtent(graphic._extent.expand(1.3));
           if(!inputBox.checked){
@@ -904,7 +828,7 @@ window.map = map
     function sortAndScroll(fn){
     	return function(e){
     	  fn(e);
-    	  if(selectedGraphicsCount)gridObject.scrollToRow(selectedGraphics[0]);
+    	  if(geoSearch.selected.length)gridObject.scrollToRow(geoSearch.selected[0]);
     	}
     }
 
@@ -923,7 +847,7 @@ window.map = map
 
       gridObject.grid.on(".dgrid-cell:mouseout", function(e){
         var oid = getOIDFromGrid(e);
-        if(oidStore[oid])
+        if(geoSearch.isStored(oid))
           return;
         else
           highlighter(oid,"", 1);
@@ -943,21 +867,13 @@ window.map = map
 
 
 
-if(0&&touch){
-	W.setTimeout(function(){
-	var outlayer = dom.byId("out_layer");
-	on(outlayer,"touchstart",function(e){
-		outlines.emit("mouse-over",e);
-		})
-},500);
-	outlines.on("mouse-over", function(e) {
-		geoSearch(e, 1);
-	})
-}else{
-
 		outlines.on("mouse-over", function(e) {//map mouseover handler
 			if(outlineMouseMove) outlineMouseMove.remove();
-			outlineMouseMove = outlines.on("mouse-move", mmManager);    	
+			outlineMouseMove = outlines.on("mouse-move", mmManager);
+			if(cursor){
+        map.setMapCursor("pointer");
+        cursor = 0;
+      }
 		});
 
 		function mmManager(e){
@@ -973,10 +889,10 @@ if(0&&touch){
 
 
 		outlines.on("mouse-out", function(e){		//map mouseout handler
-				if(!cursor){map.setMapCursor("default"); cursor=1;}
-				outlineMouseMove.remove();
-				outlineMouseMove = null;
-				geoSearch(null, 0);
+			if(!cursor){map.setMapCursor("default"); cursor=1;}
+			outlineMouseMove.remove();
+			outlineMouseMove = null;
+			geoSearch(null, 0);
 
 		});
 
@@ -991,7 +907,7 @@ if(0&&touch){
 					previousRecentTarget = oid;
 					mouseDownTimeout = W.setTimeout(nullPrevious, 400);
 					geoSearch(e, 1);
-					if (selectedGraphicsCount > 1)
+					if (geoSearch.selected.length > 1)
 						gridObject.gridSorter.ascendingName();
 					gridObject.scrollToRow(oid);
 				}
@@ -999,129 +915,28 @@ if(0&&touch){
 		});
 
 		outlines.on("dbl-click", function(e){						//map dblclick handler
-			var selected,
-			oid = e.graphic.attributes.OBJECTID,
-			reSearch = selectedGraphics.indexOf(oid)===-1; //might need to copy, not assign
+			var oid = e.graphic.attributes.OBJECTID,
+
+			//If graphics were already on and accidentally cleared by doubleclick
+			reSearch = geoSearch.selected.indexOf(oid)===-1;
 			if(reSearch){
 				geoSearch(e, 1);
 				gridObject.scrollToRow(oid);
 			}
-			selected = geoSearch.prevArr;
-			if(selected.length){
+
+			if(geoSearch.selected.length){
 				if(map.getScale()>73000)
-					map.setExtent(oidToGraphic(selected[0])._extent.expand(1.3));
-				setVisibleRasters(selected, 0);
-				gridObject.checkImageInputs(selected);
+					map.setExtent(oidToGraphic(geoSearch.selected[0])._extent.expand(1.3));
+				setVisibleRasters(geoSearch.selected, 0);
+				gridObject.checkImageInputs(geoSearch.selected);
 			}
 		});
 
-}
 
 
 
 
-
-
-/************GEOSEARCH***********/
-
-
-
-
-
-
-		geoSearch.prevArr =[];
-		geoSearch.currArr =[];
-		geoSearch.binLength = geoBins.length;
-		geoSearch.lastClickBin =[];
-
-		function geoSearch(e, mouseDown){//think about using two sorted arrays, one mins one maxs
-			var timee=Date.now();
-			var i = 0, j = geoSearch.binLength-1, curr, oid, temp, binTemp, prevArr = geoSearch.prevArr,
-			currArr = geoSearch.currArr,mapX, mapY, breakMax, binArr, someTargeted = 0;
-
-			if(e === null) binArr = geoSearch.lastMouseBin;
-			else{
-				mapX = e.mapPoint.x;
-				mapY = e.mapPoint.y;
-				breakMax = mapX+1000;
-
-				for(;i<j;i++){ //find the right bin
-					if(mapX<geoBins[i+1])
-						break;
-				}
-				binArr = splitGeoArr[i]||splitGeoArr[i-1];
-				geoSearch.lastMouseBin = binArr;
-				i = 0;
-			}
-
-			if(mouseDown&&binArr!== geoSearch.lastClickBin){
-				clearAllStoredOIDs(); //clear other bin
-				geoSearch.lastClickBin = binArr;
-			}
-
-			if (binArr)
-				j = binArr.length;
-			else
-				j= 0;
-
-			for(;i<j;i++){
-				curr = binArr[i];
-				oid = curr.oid;
-				if(curr.xmin>breakMax&&!mouseDown){
-					break;
-				}
-				if(insideTimeBoundary[oid]){
-					if(curr.xmax>= mapX&&curr.xmin<= mapX&&curr.ymin<= mapY&&curr.ymax>= mapY){
-						someTargeted = 1;
-						highlighter(oid,"hi", 1);
-						if(cursor){
-							map.setMapCursor("pointer");
-							cursor = 0;
-						}
-						if(mouseDown){
-								currArr.push(oid);
-								if(!oidStore[oid])
-									storeOID(oid);
-						}
-					}else{
-						if(oidStore[oid]){
-							if(mouseDown)clearStoredOID(oid, 1, 0); //clear unclicked from this bin
-							continue;
-						}else{
-							highlighter(oid,"", 1);//clear mouseover highlight. Have to do whole bin since might be multiple hl
-						}
-					}
-				}
-			}
-			
-			if(mouseDown&&someTargeted){
-				if(prevArr.length===currArr.length&&W.JSON.stringify(prevArr)=== W.JSON.stringify(currArr)){
-					clearAllStoredOIDs();
-					geoSearch.currArr.length = 0;
-				}else{
-					temp = prevArr;
-					geoSearch.prevArr = currArr;
-					temp.length = 0;
-					geoSearch.currArr = temp;
-				}
-				showData(null);
-			}
-
-			if(!someTargeted&&mouseDown&&prevArr){ //rehighlight true selections when clicking on
-				for(var i = 0;i<prevArr.length;i++){ // things hidden by the timeslider
-					highlighter(prevArr[i],"hi", 1);
-					if(!oidStore[prevArr[i]])
-						storeOID(prevArr[i]);
-				}
-			}
-			binArr = null;
-
-		}
-		
-
-
-
-
+ 
 
 /*******DRAWING FUNCTIONS*********/
 
@@ -1132,20 +947,20 @@ if(0&&touch){
 
 																					//apply highlighting logic to an array
 		function redrawAllGraphics(){    
-				for(var i =1,j=featureCount+1;i<j;i++){
-					if(insideTimeBoundary[i]){
-						if(oidStore[i])
-							highlighter(i,"hi", 0);
-					else
-							highlighter(i,"", 0);
-					}
+			for(var i =1,j=featureCount+1;i<j;i++){
+				if(insideTimeBoundary[i]){
+					if(geoSearch.isStored(i))
+						highlighter(i,"hi", 0);
+				  else
+						highlighter(i,"", 0);
 				}
+			}
 		}
 																//main highlighting logic, separated by year with different basemap
 
 		function highlighter(oid, hi, evt){
 			if(evt&&(hi&&hl[oid]||!hi&&!hl[oid])){return}//short circuit unless on a redraw (evt==0)
-			var symbolSet = topoOn?symbols.topo:symbols.sat
+			var symbolSet = symbols[getBasemap()]
 				, date
 			  , graphic = oidToGraphic(oid)
 				,	row
@@ -1289,7 +1104,7 @@ if(0&&touch){
    			if (node.tagName === "STRONG") node = node.parentNode;
    			var oid = +node.getAttribute('data-oid');
    			node.style.cursor="default";
-   			clearAndSetOID(oid,outlines.graphics[oid-1].attributes);
+   			geoSearch.clearAndSet(oid,outlines.graphics[oid-1].attributes);
    		}
 
    		if(touch){
@@ -1297,6 +1112,18 @@ if(0&&touch){
    		}else{
    			on(dataNode,".multiSelect:mousedown",oneFromMany);
    		}
+
+   		tiout.on("graphic-node-add",function(e){
+	  	  if(insideTimeBoundary[e.graphic.attributes.OBJECTID]){
+		  	  return;
+    	  }
+	 	    e.node.setAttribute("class","hiddenPath")
+      });
+
+      tiout.on("update-end", function(){
+   		  redrawAllGraphics(tiout.graphics);							
+      });
+
    	}
 
 
@@ -1354,7 +1181,7 @@ if(0&&touch){
 
 			function emptyPane(){
 				hidePane();
-				clearAllStoredOIDs();
+				geoSearch.clearAll();
 			}
 
 
@@ -1367,7 +1194,7 @@ if(0&&touch){
 
 
 			function showDataFunc(setData,attributes){
-				if(selectedGraphicsCount === 0){
+				if(!geoSearch.selected.length){
 					emptyPane();
 					return;
 				}
@@ -1431,7 +1258,7 @@ if(0&&touch){
    		var currPane;
 
    		function addGlow(){
-   			if(selectedGraphicsCount === 0){
+   			if(!geoSearch.selected.length){
 					fade();
 					setIntro();
 					return;
@@ -1454,7 +1281,7 @@ if(0&&touch){
 			}
 
    		function showDataFunc(setData, attr){
-   			if(dataDisplayed&&selectedGraphicsCount === 0){
+   			if(dataDisplayed&&!geoSearch.selected.length){
    				setIntro();
 					return hideView(dataPane);
 				}
@@ -1544,21 +1371,18 @@ if(0&&touch){
 			}	
 
 		  function setData (attr){
+		  	var sgCount = geoSearch.selected.length;
+		  	var oid;
 				if(!attr){
-					if(selectedGraphicsCount === 1){
-						var oid = selectedGraphics[0];
+					if(sgCount === 1){
+						oid = geoSearch.selected[0];
 						parseAttributes(outlines.graphics[oid-1].attributes,oid-1);
 					}else{
-						var str ="<h2>"+selectedGraphicsCount+ " projects selected</h2><div id='multiSelectWrapper'>";
-						var count = 0;
-						var i = 0;
-						while (count < selectedGraphicsCount){
-							if (oidStore[i] === 1){
-								str+=("<span class='multiSelect' data-oid='"+i+"'><strong>"+names[i-1]+
-									": </strong>"+formattedDates[i-1]+"</span><br/>")
-								count++;
-							}
-							i++;
+						var str ="<h2>"+sgCount+ " projects selected</h2><div id='multiSelectWrapper'>";
+						for(var i=0; i<geoSearch.selected.length;i++){
+							oid = geoSearch.selected[i];
+							str+=("<span class='multiSelect' data-oid='"+oid+"'><strong>"+names[oid-1]+
+								": </strong>"+formattedDates[oid-1]+"</span><br/>")
 						}
 						str+="</div>"
 						downloadNode.style.display = "none";

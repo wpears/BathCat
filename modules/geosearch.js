@@ -159,7 +159,7 @@ function( splice
       }
       
       if(mouseDown&&someTargeted){
-        if(prevArr.length===currArr.length&&W.JSON.stringify(prevArr)=== W.JSON.stringify(currArr)){
+        if(prevArr.length===currArr.length&&JSON.stringify(prevArr)=== JSON.stringify(currArr)){
           clearAllStoredOIDs();
           currArr.length = 0;
         }else{

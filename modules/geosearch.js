@@ -114,7 +114,6 @@ function( splice
 /***********GEOSEARCH****************/
 
     function clearBin(bin,mouseDown){
-      console.log("clearing")
       for(i = 0; i<bin.length; i++){
         curr = bin[i];
         oid = curr.oid;

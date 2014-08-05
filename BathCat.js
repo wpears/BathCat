@@ -171,19 +171,15 @@ function( BorderContainer
 		var outlines;
 
 
-		var featureSet = window.DATA_OUTLINES;
-    var blank = new SimpleFill(SimpleFill.STYLE_SOLID, new SimpleLine(SimpleLine.STYLE_SOLID, new Color([255, 255, 255, 0]), 1), new Color([0, 0, 0, 0]))
-
-
 		map.addLayer(topoMap);
-
-
-
-window.map = map
-
-
-
 		rasterLayer.setVisibleLayers([-1]);
+
+		var outlinesFeatureSet = window.DATA_OUTLINES;
+		var features = outlinesFeatureSet.features;
+	  var featureCount = features.length;
+
+
+    var blank = new SimpleFill(SimpleFill.STYLE_SOLID, new SimpleLine(SimpleLine.STYLE_SOLID, new Color([255, 255, 255, 0]), 1), new Color([0, 0, 0, 0]))
 
 
 		var layDef ={"geometryType":"esriGeometryPolygon"
@@ -225,14 +221,17 @@ window.map = map
 		  }
 		);
 
-		outlines = new FeatureLayer({layerDefinition:layDef, featureSet:featureSet}, {
+
+		outlines = new FeatureLayer({layerDefinition:layDef, featureSet:outlinesFeatureSet}, {
 	  	id:"out",
      	 	mode: FeatureLayer.MODE_SNAPSHOT,
      	 	outFields: ["*"]
 		});
 
+
     tiout.setRenderer(new SimpleRenderer(blank));
 		outlines.setRenderer(new SimpleRenderer(blank));
+
 
     map.addLayer(tiout);
     map.addLayer(outlines);
@@ -244,27 +243,34 @@ window.map = map
 
 
 
+	  //varibles for modules to be instantiated
+	  var gridObject
+	  	, geoSearch
+	  	, setVisibleRasters
+	  	, getBasemap	  	
+	 		, tooltip
+	 		, phasingTools
+	 		, crossTool
+	 		, identTool
+	 		, meaTool
+	 		//needed by some tools
+	 		, eventFeatures= [outlines]
+	 		, legendObj
+	 		//needed globals
+	 		, previousLevel = 8
+	 		, rPConHeight=setrPConHeight()
+	 		;
 
-	  var features = featureSet.features, featureCount=features.length,
-		 gridObject, geoSearch, outlineMouseMove, outlineTimeout, setVisibleRasters, getBasemap,
-		mouseDownTimeout, previousRecentTarget, justMousedUp = false,  outMoveTime = 0,
-	 	identifyUp, measure, tooltip, rPConHeight=setrPConHeight(), headerNodes, sedToggle, cursor = 1, scalebarNode,
-	 	phasingTools, crossTool, identTool, meaTool, eventFeatures= [outlines];
-
-		var legend, adjustOnZoom, previousLevel = 8,
-		processTimeUpdate,
-		mouseDownX = 0, mouseDownY = 0;
 
 
-
-
-	  var	layerArray = new Array(featureCount),
-		hl = new Array(featureCount + 1),
-		gridData = new Array(featureCount),
-		formattedDates = new Array(featureCount),
-		names = new Array(featureCount),
-		insideTimeBoundary = new Array(featureCount + 1),
-		rastersShowing = {};
+	  var	layerArray = new Array(featureCount)
+	  	, hl = new Array(featureCount + 1)
+	  	, gridData = new Array(featureCount)
+			, formattedDates = new Array(featureCount)
+			, names = new Array(featureCount)
+			, insideTimeBoundary = new Array(featureCount + 1)
+			, rastersShowing = {}
+			;
 
 
 
@@ -313,7 +319,7 @@ window.map = map
 
 
 		if(!touch){
-			legend = function(){
+			legendObj = function(){
 				var leg = dom.byId("legend");
 
 				function showLegend(){
@@ -341,9 +347,9 @@ window.map = map
     	                                   , rasterLayer
     	                                   , touch
     	                                   , phasingTools
-    	                                   , legend
+    	                                   , legendObj
     	                                   , insideTimeBoundary
-    	                                   )
+    	                                   );
 
     gridObject = GridConnector( gridData
      													, gridNode
@@ -354,8 +360,7 @@ window.map = map
      													, rastersShowing
      													, oidToGraphic
      													, placeMap
-     													, map)
-    headerNodes = dom.byId("gridNode-header").firstChild.children;
+     													, map);
 
 
 
@@ -363,7 +368,7 @@ window.map = map
 
 	var setTextColor = (function(){
 		new ScaleBar({map:map});
-		scalebarNode = dquery(".esriScalebar")[0]
+		var scalebarNode = dquery(".esriScalebar")[0]
 
 		function doTimeUpdate(timeExtent){
 			var currentCount = geoSearch.selected.length;
@@ -776,160 +781,192 @@ window.map = map
 
 
 
-/************* GRID MOUSE EVENTS ****************/
+/************* MOUSE EVENTS ****************/
 
 
 
 
-    function cellClick(e){  //grid click handler
-      var et = e.target, oid = getOIDFromGrid(e), attributes;
-      if(!oid)return;
-      if(!geoSearch.isStored(oid)&&et.tagName=="INPUT"&&et.checked)return
-      highlighter(oid,"hi", 1);
-      if(et!== previousRecentTarget){ //prevent click before double click
-        window.clearTimeout(mouseDownTimeout);
-        previousRecentTarget = et;
-        mouseDownTimeout = W.setTimeout(nullPrevious, 400);
-        attributes = outlines.graphics[oid-1].attributes;
-        if(geoSearch.isStored(oid)&&geoSearch.selected.length === 1){ //target is sole open
-          geoSearch.clear(oid, 1, 1);
-          showData(null);
-        }else{
-          geoSearch.clearAndSet(oid);
-        }   
-      }
-    }
+		(function(){
+			var outlineMouseMove
+				, mouseDownTimeout
+				, previousRecentTarget
+				, justMousedUp = false
+				, outMoveTime = 0
+				, cursor = 1
+				, headerNodes = dom.byId("gridNode-header").firstChild.children
+				;
+		
 
-
-    
-    function gridDbl(e){
-      var inputBox, oid = getOIDFromGrid(e);
-      if(oid){
-        var graphic = oidToGraphic(oid);
-        if(!graphic){
-          return;
-        }
-        if(e.target.localName!== "div"){
-          geoSearch.clearAndSet(oid)
-          inputBox = gridObject.getInputBox(oid);
-          map.setExtent(graphic._extent.expand(1.3));
-          if(!inputBox.checked){
-            inputBox.checked = true;
-            rastersShowing[oid] = 1;
-            setVisibleRasters.add(oid);
-            setVisibleRasters.run(0);
-          }
-        }
-      }
-    }
-
-    function sortAndScroll(fn){
-    	return function(e){
-    	  fn(e);
-    	  if(geoSearch.selected.length)gridObject.scrollToRow(geoSearch.selected[0]);
-    	}
-    }
-
-   	gridObject.gridSorter.date();
-
-    if(touch){
-
-    }else{
-      gridObject.grid.on(".dgrid-cell:mousedown", cellClick);
-      gridObject.grid.on(".dgrid-cell:dblclick", gridDbl);
-
-      gridObject.grid.on(".dgrid-cell:mouseover", function(e){
-        var oid = getOIDFromGrid(e);
-        if(oid)highlighter(oid,"hi", 1);  
-      });
-
-      gridObject.grid.on(".dgrid-cell:mouseout", function(e){
-        var oid = getOIDFromGrid(e);
-        if(geoSearch.isStored(oid))
-          return;
-        else
-          highlighter(oid,"", 1);
-      });
-
-      on(headerNodes[0], "mousedown", sortAndScroll(gridObject.gridSorter.name));
-      on(headerNodes[1], "mousedown", sortAndScroll(gridObject.gridSorter.date));
-    }
-
-
-
-
-
-/*******FEATURE MOUSE EVENTS*******/
-
-
-
-
-
-		outlines.on("mouse-over", function(e) {//map mouseover handler
-			if(outlineMouseMove) outlineMouseMove.remove();
-			outlineMouseMove = outlines.on("mouse-move", mmManager);
-			if(cursor){
-        map.setMapCursor("pointer");
-        cursor = 0;
-      }
-		});
-
-		function mmManager(e){
-			if(Date.now()<outMoveTime+100)
-				return;
-			if(justMousedUp){
-				justMousedUp = false;
-				return;
-			}
-			geoSearch(e, 0);
-			outMoveTime = Date.now();
-		}
-
-
-		outlines.on("mouse-out", function(e){		//map mouseout handler
-			if(!cursor){map.setMapCursor("default"); cursor=1;}
-			outlineMouseMove.remove();
-			outlineMouseMove = null;
-			geoSearch(null, 0);
-
-		});
-
-		outlines.on("mouse-down", function(e){mouseDownX = e.pageX;mouseDownY = e.pageY;});
-
-		outlines.on("mouse-up", function(e){            //map click handler
-			if(e.pageX < mouseDownX+10&&e.pageX > mouseDownX-10&&e.pageY < mouseDownY+10&&e.pageY > mouseDownY-10){
-				justMousedUp = true;
-				var attributes = e.graphic.attributes, oid = attributes.OBJECTID;
-				if(oid!== previousRecentTarget){//prevent click before double click
-					W.clearTimeout(mouseDownTimeout);
-					previousRecentTarget = oid;
-					mouseDownTimeout = W.setTimeout(nullPrevious, 400);
-					geoSearch(e, 1);
-					if (geoSearch.selected.length > 1)
-						gridObject.gridSorter.ascendingName();
-					gridObject.scrollToRow(oid);
+				function nullPrevious(){
+					previousRecentTarget = null;
 				}
-			}
-		});
 
-		outlines.on("dbl-click", function(e){						//map dblclick handler
-			var oid = e.graphic.attributes.OBJECTID,
 
-			//If graphics were already on and accidentally cleared by doubleclick
-			reSearch = geoSearch.selected.indexOf(oid)===-1;
-			if(reSearch){
-				geoSearch(e, 1);
-				gridObject.scrollToRow(oid);
-			}
 
-			if(geoSearch.selected.length){
-				if(map.getScale()>73000)
-					map.setExtent(oidToGraphic(geoSearch.selected[0])._extent.expand(1.3));
-				setVisibleRasters(geoSearch.selected, 0);
-				gridObject.checkImageInputs(geoSearch.selected);
-			}
-		});
+		/************* GRID ****************/
 
+
+
+
+		    function cellClick(e){  //grid click handler
+		      var et = e.target, oid = getOIDFromGrid(e), attributes;
+		      if(!oid)return;
+		      if(!geoSearch.isStored(oid)&&et.tagName=="INPUT"&&et.checked)return
+		      highlighter(oid,"hi", 1);
+		      if(et!== previousRecentTarget){ //prevent click before double click
+		        window.clearTimeout(mouseDownTimeout);
+		        previousRecentTarget = et;
+		        mouseDownTimeout = W.setTimeout(nullPrevious, 400);
+		        attributes = outlines.graphics[oid-1].attributes;
+		        if(geoSearch.isStored(oid)&&geoSearch.selected.length === 1){ //target is sole open
+		          geoSearch.clear(oid, 1, 1);
+		          showData(null);
+		        }else{
+		          geoSearch.clearAndSet(oid);
+		        }   
+		      }
+		    }
+
+
+		    
+		    function gridDbl(e){
+		      var inputBox, oid = getOIDFromGrid(e);
+		      if(oid){
+		        var graphic = oidToGraphic(oid);
+		        if(!graphic){
+		          return;
+		        }
+		        if(e.target.localName!== "div"){
+		          geoSearch.clearAndSet(oid)
+		          inputBox = gridObject.getInputBox(oid);
+		          map.setExtent(graphic._extent.expand(1.3));
+		          if(!inputBox.checked){
+		            inputBox.checked = true;
+		            rastersShowing[oid] = 1;
+		            setVisibleRasters.add(oid);
+		            setVisibleRasters.run(0);
+		          }
+		        }
+		      }
+		    }
+
+
+		    function sortAndScroll(fn){
+		    	return function(e){
+		    	  fn(e);
+		    	  if(geoSearch.selected.length)gridObject.scrollToRow(geoSearch.selected[0]);
+		    	}
+		    }
+
+
+		   	gridObject.gridSorter.date();
+
+		    if(touch){
+		    }else{
+		      gridObject.grid.on(".dgrid-cell:mousedown", cellClick);
+
+
+		      gridObject.grid.on(".dgrid-cell:dblclick", gridDbl);
+
+
+		      gridObject.grid.on(".dgrid-cell:mouseover", function(e){
+		        var oid = getOIDFromGrid(e);
+		        if(oid)highlighter(oid,"hi", 1);  
+		      });
+
+
+		      gridObject.grid.on(".dgrid-cell:mouseout", function(e){
+		        var oid = getOIDFromGrid(e);
+		        if(geoSearch.isStored(oid))
+		          return;
+		        else
+		          highlighter(oid,"", 1);
+		      });
+
+
+		      on(headerNodes[0], "mousedown", sortAndScroll(gridObject.gridSorter.name));
+
+
+		      on(headerNodes[1], "mousedown", sortAndScroll(gridObject.gridSorter.date));
+		    }
+
+
+
+
+		/*********** FEATURES ************/
+
+
+
+
+				outlines.on("mouse-over", function(e) {//map mouseover handler
+					if(outlineMouseMove) outlineMouseMove.remove();
+					outlineMouseMove = outlines.on("mouse-move", mmManager);
+					if(cursor){
+		        map.setMapCursor("pointer");
+		        cursor = 0;
+		      }
+				});
+
+
+				function mmManager(e){
+					if(Date.now()<outMoveTime+100)
+						return;
+					if(justMousedUp){
+						justMousedUp = false;
+						return;
+					}
+					geoSearch(e, 0);
+					outMoveTime = Date.now();
+				}
+
+
+				outlines.on("mouse-out", function(e){		//map mouseout handler
+					if(!cursor){map.setMapCursor("default"); cursor=1;}
+					outlineMouseMove.remove();
+					outlineMouseMove = null;
+					geoSearch(null, 0);
+				});
+
+
+				outlines.on("mouse-down", function(e){mouseDownX = e.pageX;mouseDownY = e.pageY;});
+
+
+				outlines.on("mouse-up", function(e){            //map click handler
+					if(e.pageX < mouseDownX+10&&e.pageX > mouseDownX-10&&e.pageY < mouseDownY+10&&e.pageY > mouseDownY-10){
+						justMousedUp = true;
+						var attributes = e.graphic.attributes, oid = attributes.OBJECTID;
+						if(oid!== previousRecentTarget){//prevent click before double click
+							W.clearTimeout(mouseDownTimeout);
+							previousRecentTarget = oid;
+							mouseDownTimeout = W.setTimeout(nullPrevious, 400);
+							geoSearch(e, 1);
+							if (geoSearch.selected.length > 1)
+								gridObject.gridSorter.ascendingName();
+							gridObject.scrollToRow(oid);
+						}
+					}
+				});
+
+
+				outlines.on("dbl-click", function(e){						//map dblclick handler
+					var oid = e.graphic.attributes.OBJECTID,
+
+					//If graphics were already on and accidentally cleared by doubleclick
+					reSearch = geoSearch.selected.indexOf(oid)===-1;
+					if(reSearch){
+						geoSearch(e, 1);
+						gridObject.scrollToRow(oid);
+					}
+
+					if(geoSearch.selected.length){
+						if(map.getScale()>73000)
+							map.setExtent(oidToGraphic(geoSearch.selected[0])._extent.expand(1.3));
+						setVisibleRasters(geoSearch.selected, 0);
+						gridObject.checkImageInputs(geoSearch.selected);
+					}
+				});
+
+		})();
 
 
 
@@ -1497,11 +1534,6 @@ window.map = map
 		//Convenience and shims
 		function isNumber(n) {
   			return !isNaN(parseFloat(n)) && isFinite(n);
-		}
-
-
-		function nullPrevious(){
-			previousRecentTarget = null;
 		}
 
 		(function checkRAF(W){

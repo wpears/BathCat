@@ -43,7 +43,6 @@ require(["dijit/layout/BorderContainer"
 				,"modules/getdate.js"
 				,"modules/gridconnector.js"
 				,"modules/setvisiblerasters.js"
-				,"modules/splice.js"
 
 				,"require"
 				],
@@ -91,7 +90,6 @@ function( BorderContainer
 				, getDate
 				, GridConnector
 				, SetVisibleRasters
-				, splice
 
 				, require
 				){
@@ -958,8 +956,8 @@ window.map = map
 		}
 																//main highlighting logic, separated by year with different basemap
 
-		function highlighter(oid, hi, evt){
-			if(evt&&(hi&&hl[oid]||!hi&&!hl[oid])){return}//short circuit unless on a redraw (evt==0)
+		function highlighter(oid, hi, fromEvent){
+			if(fromEvent&&(hi&&hl[oid]||!hi&&!hl[oid])){return}//short circuit unless on a redraw (fromEvent==0)
 			var symbolSet = symbols[getBasemap()]
 				, date
 			  , graphic = oidToGraphic(oid)
@@ -970,7 +968,7 @@ window.map = map
 
 			date = features[oid-1].attributes.Date;
 			color = getColor(date);
-			if(evt){
+			if(fromEvent){
 				row = gridObject.oidToRow(oid);
 				if (hi!== ""){
 					domClass.add(row,"highl"+color);

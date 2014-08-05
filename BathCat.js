@@ -43,6 +43,8 @@ require(["dijit/layout/BorderContainer"
 				,"modules/getdate.js"
 				,"modules/gridconnector.js"
 				,"modules/setvisiblerasters.js"
+				,"modules/basemap.js"
+				,"modules/zoomlevel.js"
 
 				,"require"
 				],
@@ -90,6 +92,8 @@ function( BorderContainer
 				, getDate
 				, GridConnector
 				, SetVisibleRasters
+				, GetBasemap
+				, zoomLevel
 
 				, require
 				){
@@ -256,8 +260,7 @@ function( BorderContainer
 	 		//needed by some tools
 	 		, eventFeatures= [outlines]
 	 		, legendObj
-	 		//needed globals
-	 		, previousLevel = 8
+	 		//needed global
 	 		, rPConHeight=setrPConHeight()
 	 		;
 
@@ -363,9 +366,6 @@ function( BorderContainer
      													, map);
 
 
-
-
-
 	var setTextColor = (function(){
 		new ScaleBar({map:map});
 		var scalebarNode = dquery(".esriScalebar")[0]
@@ -464,7 +464,7 @@ function( BorderContainer
 		}
 
 		function setTextColor(){
-			if(getBasemap === 'sat'){
+			if(getBasemap() === 'sat'){
 				domClass.add(scalebarNode,"whiteScaleLabels");
 				domClass.add(labelCon,"satLabels")
 			}else{
@@ -472,12 +472,20 @@ function( BorderContainer
 				domClass.remove(labelCon,"satLabels")
 			}
 		}
-		setTextColor();
 		return setTextColor;
 	})();
 
 
-
+  getBasemap = GetBasemap([{name:"topo",layer:topoMap,anchor:topo}
+										 ,{name:"sat",layer:satMap,anchor:sat}
+										 ]
+										 , map
+										 , function(){
+										 		setTextColor();
+  											redrawAllGraphics(tiout.graphics);
+  										 }
+  									);
+  setTextColor();
 
 
 
@@ -485,85 +493,6 @@ function( BorderContainer
 
 
 
-
-
-    getBasemap = function(){
-			var topoOn = 1;
-			var satOn = 0;
-			var t = 'topo';
-			var s = 'sat';
-
-			function showSat (){
-			  satMap.show();
-			  topoMap.hide();
-				satOn=1;
-				topoOn=0;
-				domClass.remove(topo,"currentbmap");
-				domClass.add(sat,"currentbmap");
-				setTextColor();
-				redrawAllGraphics(tiout.graphics);
-			}
-
-			function showTopo(){
-			  topoMap.show();
-			  satMap.hide();
-				satOn=0;
-				topoOn=1;
-				domClass.remove(sat,"currentbmap");
-				domClass.add(topo,"currentbmap");
-				setTextColor();
-				redrawAllGraphics(tiout.graphics);
-			}
-
-			function basemapOff(){
-				satMap.hide();
-				topoMap.hide();
-				satOn=0;
-				topoOn=0;
-				domClass.remove(sat,"currentbmap");
-				domClass.remove(topo,"currentbmap");
-			}
-
-
-			function adjustOnZoom(zoomObj){	
-				var ext = zoomObj.extent
-					, lev = zoomObj.level
-					, redraw = 0
-					;
-				//extend topo to 18, 19 with satellite
-				if(lev > 17&&previousLevel<18&&topoOn)
-					showSat();
-				if(previousLevel > 12 && lev < 13||previousLevel < 13 && lev > 12)
-						redraw = 1;
-				previousLevel = lev;
-				if(redraw)
-					redrawAllGraphics(tiout.graphics);
-				//redrawAllGraphics(tiout.graphics);
-				//tiout.setMaxAllowableOffset(offs);
-				//tiout.refresh();
-			}
-
-
-	  	map.on("zoom-end", adjustOnZoom);
-
-
-	   	on(topo, "mousedown", function(e){
-	   		if(topoOn) basemapOff();
-	   		else showTopo();
-	   	});
-
-
-	   	on(sat, "mousedown", function(e){
-	   		if(satOn) basemapOff();
-	   		else showSat();
-	   	});
-
-	   	return function (){
-	   		if(topoOn) return t;
-	   		return s;
-	   	}
-
-    }();
 
 
 
@@ -1015,7 +944,7 @@ function( BorderContainer
 					hl[oid]=0;
 				}
 			}
-			if(previousLevel > 12){
+			if(zoomLevel.get() > 12){
 				if (hi) hi="";
 				else color+="thin";
 			}

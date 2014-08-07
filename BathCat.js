@@ -99,22 +99,6 @@ function( BorderContainer
 				){
 
 
-/*	
-    NOTE: this patch breaks ie11. I'm omitting until I see a need in chrome.
-
-  	//An absolutely obscene amount of event handlers from the API.
-  	//And TONS of triggered body/map mm events.
-  	//Monkey patch addEventListener to prevent mousemoves from being attached until I need them
-		var allowMM = 0;
-  	(function(){
-		var eael = HTMLElement.prototype.addEventListener;
-		HTMLElement.prototype.addEventListener = function(){
- 			if(arguments[0]!== "mousemove"||allowMM){
-    			eael.apply(this, arguments);
-		}
-		}})();
-*/
-
   ready(function(){ //wait for the dom
    	var W = window
    		, DOC = document
@@ -562,8 +546,7 @@ function( BorderContainer
 											, chartNames:names
 											, chartDates:formattedDates
 											, tooltip:tooltip
-										  };
-				/*allowMM = 1;*/				  
+										  };						  	  
 				crossTool = CrossTool(rasterLayer, Popup(), crossAnchor, rasterUrl, layerArray, options);
 				phasingTools[0].tool = crossTool;
 				crossTool.init(e);				
@@ -590,7 +573,7 @@ function( BorderContainer
 												 	 }
 												 );
 
-		on.once(measureAnchor,"mousedown", function(e){/*allowMM=1;*/meaTool.init(e)});
+		on.once(measureAnchor,"mousedown", function(e){meaTool.init(e)});
 
 
 

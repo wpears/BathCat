@@ -315,12 +315,35 @@ function( BorderContainer
 		geoSearch = GeoSearch(outlines, insideTimeBoundary, highlighter, showData);
 
 
-		//Identify and profile tools don't make sense with no rasters on. Added here to pass around later
+
+
+
+	/************UI WIDGETS AND MODULES***************/
+
+
+
+
+
+    gridObject = GridConnector( gridData
+     													, gridNode
+     													, gridPane
+     													, spl
+     													, rasterLayer
+     													, insideTimeBoundary
+     													, rastersShowing
+     													, oidToGraphic
+     													, placeMap
+     													, map);
+
+
+
+    //Identify and profile tools don't make sense without rasters on. Added here to pass around later
 		//for updating of the tools' visibility
 		phasingTools = [
 		  {tool:null,anchor:crossAnchor,eventFeatures:eventFeatures},
 		  {tool:null,anchor:identAnchor,eventFeatures:eventFeatures}
 		];
+
 
 
 		if(!touch){
@@ -348,6 +371,7 @@ function( BorderContainer
 		}
 
 
+
     setVisibleRasters = SetVisibleRasters( map
     	                                   , rasterLayer
     	                                   , touch
@@ -356,137 +380,157 @@ function( BorderContainer
     	                                   , insideTimeBoundary
     	                                   );
 
-    gridObject = GridConnector( gridData
-     													, gridNode
-     													, gridPane
-     													, spl
-     													, rasterLayer
-     													, insideTimeBoundary
-     													, rastersShowing
-     													, oidToGraphic
-     													, placeMap
-     													, map);
 
 
-	var setTextColor = (function(){
-		new ScaleBar({map:map});
-		var scalebarNode = dquery(".esriScalebar")[0]
+		(function(){
 
-		function doTimeUpdate(timeExtent){
-			var currentCount = geoSearch.selected.length;
-			gridObject.timeUpdate(timeExtent);
-			if(currentCount!== geoSearch.selected.length){
-        showData(null)
-      }
-		}
+			//Scalebar instantiation
+			new ScaleBar({map:map});
+			var scalebarNode = dquery(".esriScalebar")[0]
 
-		var timeSlider
-		  , tCount
-			, timeExtent = new TimeExtent(new Date("01/01/2010 UTC"), new Date("12/31/2014 UTC"))
-			;
-		map.setTimeExtent(timeExtent);
-		timeSlider = new TimeSlider({                                            //create TimeSlider
-			style:"width:300px;",
-			id: "timeSlider",
-			intermediateChanges: true},
-			construct.create("div", null, timeDiv)
-			);
-		timeSlider.setThumbCount(2);
-		timeSlider.createTimeStopsByTimeInterval(timeExtent, 2, "esriTimeUnitsMonths");
-		tCount = timeSlider.timeStops.length;
-		timeSlider.setThumbIndexes([0, tCount]);
-		timeSlider.setTickCount(Math.ceil(tCount/2));
-		timeSlider.startup();
-		timeSlider.on("time-extent-change", doTimeUpdate);
-		map.setTimeSlider(timeSlider);
-	
 
-		labelCon = DOC.createElement('div');
-		var endDate = timeSlider.fullTimeExtent.endTime.getFullYear() + 1;
-		var currNode;
-		var tsLinks = [];
 
-		labelCon.className = 'labelCon atop';
+			//Basemap instantiation
+		  getBasemap = GetBasemap([{name:"topo",layer:topoMap,anchor:topo}
+						 ,{name:"sat",layer:satMap,anchor:sat}
+						 ]
+						 , map
+						 , function(){
+						 		setTextColor();
+								redrawAllGraphics(tiout.graphics);
+							 }
+						);
 
-		if (touch){
-			labelCon.className += ' labelTouch';
-			timeDiv.style.display="none";
-		}
 
-		for(var startDate = 2010;startDate<=endDate;startDate++){
-			var elem = DOC.createElement('div');
-			tsLinks.push(elem);
-			elem.className = "tsLabel";
-			if(startDate === endDate){
-				elem.innerText = "All";
-				currNode = elem;
+
+		  //Connect initial extent button
+		  on(fex,"mousedown", function(e){
+				map.centerAndZoom(centerPoint,defaultZoomLevel)
+			});
+
+
+
+			//TimeSlider instantiation
+			var timeSlider
+			  , tCount
+				, timeExtent = new TimeExtent(new Date("01/01/2010 UTC"), new Date("12/31/2014 UTC"))
+				;
+			map.setTimeExtent(timeExtent);
+			timeSlider = new TimeSlider({                                            //create TimeSlider
+				style:"width:300px;",
+				id: "timeSlider",
+				intermediateChanges: true},
+				construct.create("div", null, timeDiv)
+				);
+			timeSlider.setThumbCount(2);
+			timeSlider.createTimeStopsByTimeInterval(timeExtent, 2, "esriTimeUnitsMonths");
+			tCount = timeSlider.timeStops.length;
+			timeSlider.setThumbIndexes([0, tCount]);
+			timeSlider.setTickCount(Math.ceil(tCount/2));
+			timeSlider.startup();
+			timeSlider.on("time-extent-change", doTimeUpdate);
+			map.setTimeSlider(timeSlider);
+
+		
+
+			//TimeSlider labels
+			var labelCon = DOC.createElement('div');
+			var endDate = timeSlider.fullTimeExtent.endTime.getFullYear() + 1;
+			var currNode;
+			var tsLinks = [];
+
+			labelCon.className = 'labelCon atop';
+
+			if (touch){
+				labelCon.className += ' labelTouch';
+				timeDiv.style.display="none";
 			}
-			else elem.innerText = startDate;
-			labelCon.appendChild(elem);
-		}
-		mapDiv.appendChild(labelCon);
 
-		highlightLabel(currNode);
+			for(var startDate = 2010;startDate<=endDate;startDate++){
+				var elem = DOC.createElement('div');
+				tsLinks.push(elem);
+				elem.className = "tsLabel";
+				if(startDate === endDate){
+					elem.innerText = "All";
+					currNode = elem;
+				}
+				else elem.innerText = startDate;
+				labelCon.appendChild(elem);
+			}
+			mapDiv.appendChild(labelCon);
 
-		function highlightLabel(node){
-			domClass.add(node,"tsHighlight")
-		}
+			highlightLabel(currNode);
 
-		function clearHighlight(node) {
-			domClass.remove(node,"tsHighlight")
-		}
 
-		function setTime(e){  //timeslider quicklinks handler
-			var yr = e.target.innerHTML;
-			if(yr.charAt(0)=== "A")
-				timeSlider.setThumbIndexes([0, timeSlider.timeStops.length]);
-			else
-				timeSlider.setThumbIndexes([6*(yr-2010), 6*(yr-2010)+6]);
-		}
 
-		if(touch){
-			on(labelCon,".tsLabel:touchstart",function(e){
-				clearHighlight(currNode);
-				currNode=e.target
-				highlightLabel(currNode);
-				setTimeout(function(){setTime(e)},0);
-			})
-		}else{
-			on(labelCon, ".tsLabel:mouseover", function(e){
-				if(e.target!==currNode)highlightLabel(e.target);
-			});
-			on(labelCon, ".tsLabel:mouseout", function(e){
-				if(e.target!==currNode)clearHighlight(e.target);
-			});
-			on(labelCon, ".tsLabel:mousedown", function(e){
-				clearHighlight(currNode);
-				currNode = e.target;
-				setTime(e)
-			});
-		}
-
-		function setTextColor(){
-			if(getBasemap() === 'sat'){
-				domClass.add(scalebarNode,"whiteScaleLabels");
-				domClass.add(labelCon,"satLabels")
+			//TimeSlider eventhandlers
+			if(touch){
+				on(labelCon,".tsLabel:touchstart",function(e){
+					clearHighlight(currNode);
+					currNode=e.target
+					highlightLabel(currNode);
+					setTimeout(function(){setTime(e)},0);
+				})
 			}else{
-				domClass.remove(scalebarNode,"whiteScaleLabels");
-				domClass.remove(labelCon,"satLabels")
+				on(labelCon, ".tsLabel:mouseover", function(e){
+					if(e.target!==currNode)highlightLabel(e.target);
+				});
+				on(labelCon, ".tsLabel:mouseout", function(e){
+					if(e.target!==currNode)clearHighlight(e.target);
+				});
+				on(labelCon, ".tsLabel:mousedown", function(e){
+					clearHighlight(currNode);
+					currNode = e.target;
+					setTime(e)
+				});
 			}
-		}
-		return setTextColor;
-	})();
 
 
-  getBasemap = GetBasemap([{name:"topo",layer:topoMap,anchor:topo}
-										 ,{name:"sat",layer:satMap,anchor:sat}
-										 ]
-										 , map
-										 , function(){
-										 		setTextColor();
-  											redrawAllGraphics(tiout.graphics);
-  										 }
-  									);
+
+			function doTimeUpdate(timeExtent){
+				var currentCount = geoSearch.selected.length;
+				gridObject.timeUpdate(timeExtent);
+				if(currentCount!== geoSearch.selected.length){
+	        showData(null)
+	      }
+			}
+
+
+			function setTime(e){  //timeslider quicklinks handler
+				var yr = e.target.innerHTML;
+				if(yr.charAt(0)=== "A")
+					timeSlider.setThumbIndexes([0, timeSlider.timeStops.length]);
+				else
+					timeSlider.setThumbIndexes([6*(yr-2010), 6*(yr-2010)+6]);
+			}
+
+
+			function highlightLabel(node){
+				domClass.add(node,"tsHighlight")
+			}
+
+
+			function clearHighlight(node) {
+				domClass.remove(node,"tsHighlight")
+			}
+
+
+			//basemap labeling
+			function setTextColor(){
+				if(getBasemap() === 'sat'){
+					domClass.add(scalebarNode,"whiteScaleLabels");
+					domClass.add(labelCon,"satLabels")
+				}else{
+					domClass.remove(scalebarNode,"whiteScaleLabels");
+					domClass.remove(labelCon,"satLabels")
+				}
+			}
+
+			//set initial labels
+		  setTextColor();
+		})();
+
+
 
 
 
@@ -646,10 +690,6 @@ function( BorderContainer
    		setrPConHeight();
 		})();
 
-
-		on(fex,"mousedown", function(e){                  //go to initial extent
-			map.centerAndZoom(centerPoint,defaultZoomLevel)
-		});
 
 
   
@@ -1469,7 +1509,6 @@ function( BorderContainer
 
 
 		attachHandlers();
-		setTextColor();
 		tiout.refresh() //ensure initial draw;
 	});
 

@@ -121,7 +121,8 @@ function( BorderContainer
    		, protocol = DOC.location.protocol
    		, origin = DOC.location.origin
    		, touch = has("touch")
-   		, ie9 =(DOC.all&&DOC.addEventListener&&!W.atob)?true:false
+   		, ie9 = (DOC.all&&DOC.addEventListener&&!W.atob) ? true : false
+   		, fx = ie9 ? require("dojo/_base/fx", function(fx){return fx}) : null
    		, innerHeight = W.innerHeight
    		, innerWidth = W.innerWidth
    		, showData
@@ -137,17 +138,17 @@ function( BorderContainer
    		, introText = "<p>The <strong>Delta Bathymetry Catalog</strong> houses the complete set of multibeam bathymetric data collected by the Bathymetry and Technical Support section of the California Department of Water Resources.</p><p>Click on a feature in the map or table to bring up its <strong>description</strong>. Double-click to view the <strong>raster image</strong>.</p> <p><strong>Download</strong> data as text files from the descrption pane.</p> <p><strong>Measure</strong> distances, <strong>identify</strong> raster elevations, and draw <strong>profile graphs</strong> with the tools at the top-right.</p> <p>Change what displays by <strong>collection date</strong> with the slider at bottom-right. <strong>Sort</strong> by date and name with the table's column headers.</p> <p>See the <strong>help</strong> below for further information.</p>"
    		;
 
+   	//UI split between desktop and mobile
    	makePeripherals();
    	makeViews();
    	setHeader();
 
+
    	//Show body once the DOM is ready and the panes are built to prevent FOUC
    	DOC.body.style.visibility = "visible";
-   	
-
-		if(ie9) var fx = require("dojo/_base/fx", function(fx){return fx});
 
 
+   	//API tweaks
     Config.defaults.io.corsDetection = false;
     Config.defaults.io.corsEnabledServers.push(origin);//enable cors for quicker queries
     Config.defaults.geometryService = new GeometryService(protocol+"//sampleserver3.arcgisonline.com/arcgis/rest/services/Geometry/GeometryServer"); 	
@@ -178,6 +179,7 @@ function( BorderContainer
 		map.addLayer(topoMap);
 		rasterLayer.setVisibleLayers([-1]);
 
+		//outlines are included in separate files, loaded before the module loader is even in place
 		var outlinesFeatureSet = window.DATA_OUTLINES;
 		var features = outlinesFeatureSet.features;
 	  var featureCount = features.length;
@@ -260,12 +262,12 @@ function( BorderContainer
 	 		//needed by some tools
 	 		, eventFeatures= [outlines]
 	 		, legendObj
-	 		//needed global
+	 		//needed semi-global
 	 		, rPConHeight=setrPConHeight()
 	 		;
 
 
-
+	 	//tracking arrays, used to speed up some functions ( O(n) -> O(1) )
 	  var	layerArray = new Array(featureCount)
 	  	, hl = new Array(featureCount + 1)
 	  	, gridData = new Array(featureCount)
@@ -485,15 +487,6 @@ function( BorderContainer
   											redrawAllGraphics(tiout.graphics);
   										 }
   									);
-  setTextColor();
-
-
-
-/**********BASEMAP LOGIC*************/
-
-
-
-
 
 
 
@@ -534,9 +527,11 @@ function( BorderContainer
 	   			case "Mea":
 	   				domClass.toggle(measureAnchor,"helpglow");
 	   				break;
-	   	//		case "Arr":
-	   	//			domClass.toggle(shoP,"helpglow");
-	   //				break;
+	   			case "Arr":
+	   				var closeButton = dom.byId("closeRp");
+	   				if(closeButton)
+	   					domClass.toggle(closeButton,"helpglow");
+	   				break;
 	   			case "Tim":
 	   				domClass.toggle(dom.byId("timeSlider"),"helpglow");
 	   				break;
@@ -1474,6 +1469,7 @@ function( BorderContainer
 
 
 		attachHandlers();
+		setTextColor();
 		tiout.refresh() //ensure initial draw;
 	});
 

@@ -32,7 +32,7 @@ function( domClass
         , redraw = 0
         , previousLevel = zoomLevel.get()
         ;
-        console.log(lev,previousLevel)
+
       //extend topo to 18, 19 with satellite
       if(lev > 17 && previousLevel<18 &&activeMap !== 'sat'){
         activeMap = 'sat';

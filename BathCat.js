@@ -243,6 +243,18 @@ function( BorderContainer
     map.addLayer(outlines);
 
 
+   	tiout.on("graphic-node-add",function(e){
+	  	if(insideTimeBoundary[e.graphic.attributes.OBJECTID]){
+  	  	return;
+	  	}
+	    e.node.setAttribute("class","hiddenPath")
+    });
+
+    tiout.on("update-end", function(){
+ 		  redrawAllGraphics(tiout.graphics);							
+    });
+
+
     satMap = new TiledLayer(protocol+"//services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer");
 	  map.addLayer(satMap);
 	  satMap.hide();
@@ -529,167 +541,6 @@ function( BorderContainer
 			//set initial labels
 		  setTextColor();
 		})();
-
-
-
-
-
-
-
-(function(){
-	var helpText = "<strong id = 'infoPaneTitle'>Help</strong><p>Zoom in and out with the <b>Zoom buttons</b> or the mousewheel. Shift and drag on the map to zoom to a selected area.</p><p>Go to the full extent of the data with the <b>Globe</b>.</p><p>Select map or satellite view with the <b>Basemap buttons</b>.</p><p>Browse through projects in the table. Sort the table with the column headers and collapse it with the <b>Slider</b>.</p><p>Turn on a raster by double-clicking it in the table or map, or checking its checkbox in the table.</p><ul>When a raster is displayed:<br/><li>With the <b>Identify</b> tool, click to display NAVD88 elevation at any point.</li><li>Draw a cross-section graph with the <b>Profile tool</b>. Click the start and end points of the line to generate a graph in a draggable window. Hover over points to display elevation.</li></ul><p>Use the <b>Measure tool</b> to calculate distance, area, or geographic location.</p><p>Project information and Identify results are displayed in the right pane. Toggle this pane with the <b>Arrow button</b>.</p><p>Use the <b>Time slider</b> to filter the display of features by date. Drag the start and end thumbs or click a year to only display data from that year.</p>",
-		termText = "<strong id = 'infoPaneTitle'>Terms of Use</strong><p>The data displayed in this application is for qualitative purposes only. Do not use the data as displayed in rigorous analyses. If downloading the data, familiarize yourself with the metadata before use. Not for use as a navigation aid. The data reflects measurements taken at specific time periods and the Department of Water Resources makes no claim as to the current state of these channels, nor to the accuracy of the data as displayed. Do not share or publish this data without including proper attribution.</p>",
-		conText = "<strong id = 'infoPaneTitle'>Contact</strong><p>For information on scheduling new bathymetric surveys, contact  <a href = 'mailto:shawn.mayr@water.ca.gov?subject = Bathymetric Survey'>Shawn Mayr</a>, (916) 376-9664.</p><p>For information on this application or the data contained herein, contact  <a href = 'mailto:wyatt.pearsall@water.ca.gov?subject = Bathymetry Catalog'>Wyatt Pearsall</a>, (916) 376-9643.</p>",
-		infoPane = dom.byId("infopane"), foot = dom.byId("foot"), infoPaneOpen = 0, timeout, lastButt;
-
-
-
-		function toggleHelpGlow(e){
-			if(e.target.tagName === "B"){
- 				var key = e.target.textContent.slice(0, 3);
- 				switch (key){
-	   			case "Zoo":
-	   			  if (!zoomSlider)zoomSlider = dom.byId("mapDiv_zoom_slider")
-	   				domClass.toggle(zoomSlider,"helpglow");
-	   				break;
-	   			case "Glo":
-	   				domClass.toggle(dom.byId('fex'),"helpglow");
-	   				break;
-	   			case "Bas":
-	   				domClass.toggle(topo,"helpglow");
-	   				domClass.toggle(sat,"helpglow");
-	   				break;
-	   			case "Sli":
-	   				domClass.toggle(spl,"helpglow");
-	   				break;
-	   			case "Ide":
-	   				domClass.toggle(identAnchor,"helpglow");
-	   				break;
-	   			case "Pro":
-	   				domClass.toggle(crossAnchor,"helpglow");
-	   				break;
-	   			case "Mea":
-	   				domClass.toggle(measureAnchor,"helpglow");
-	   				break;
-	   			case "Arr":
-	   				var closeButton = dom.byId("closeRp");
-	   				if(closeButton)
-	   					domClass.toggle(closeButton,"helpglow");
-	   				break;
-	   			case "Tim":
-	   				domClass.toggle(dom.byId("timeSlider"),"helpglow");
-	   				break;
- 				}
- 			}
-		}
-
-		if(!touch){
-   		on(infoPane, "mouseover", function(e){
-   			toggleHelpGlow(e);
-   		});
-
-   		on(infoPane, "mouseout", function(e){
-   			toggleHelpGlow(e);
-   		});
-   	}
-
-   		on(dlLink,"mouseover", function(e){  //remove spatial reference info from files
-   			var pro =(dataNode.firstChild.textContent).split(" ").join(""),
-   				dat = new Date(dataNode.firstChild.nextElementSibling.textContent.slice(-11)),
-   				yea = dat.getFullYear(),
-   				mo = dat.getUTCMonth()+1,
-   				dayy = dat.getUTCDate();
-   				mo = mo+'';
-   				dayy = dayy+'';
-   				mo = (mo.length === 1?"0"+mo:mo);
-   				dayy = (dayy.length === 1?"0"+dayy:dayy);
-   				dlLink.href = "zips/"+pro+"_"+yea+"_"+mo+"_"+dayy+".zip";
-   		});
-
-   		on(foot, "mousedown", setHelp);
-
-   	on(W, "resize", function(e){			//resize map on browser resize
-
-			var winHeight = innerHeight = W.innerHeight;
-			innerWidth = W.innerWidth;
-			setrPConHeight();
-
-			placeMap();
-			setHeader();
-			defaultZoomLevel = winHeight > 940?11:winHeight > 475?10:9;
-
-			if(+dataNode.style.marginTop.slice(0, 1)) dataNode.style.marginTop =(winHeight-257)/2-15+"px";
-
-			if(ie9){
-				fx.animateProperty({node:dataPane, duration:300, properties:{height:winHeight-225}}).play();
-				if(infoPaneOpen)
-					fx.animateProperty({node:dataCon, duration:300, properties:{height:winHeight-507}}).play();
-				else fx.animateProperty({node:dataCon, duration:300, properties:{height:winHeight-257}}).play();
-			}else{
-				dataPane.style.height = winHeight-225+"px";
-				if(infoPaneOpen)
-					dataCon.style.height = winHeight-507+"px";
-				else dataCon.style.height = winHeight-257+"px";
-			}
-		});
-
-		function clearHelp(){
-			timeout = 0;
-   		clearNode(infoPane);
-  		infoPaneOpen = 0;
-   		infoPane.style.borderTop = "none";
-   	}
-
-
-		function hideInfoPane(){
-			timeout = W.setTimeout(clearHelp, 205);
-			if(ie9){
-   					fx.animateProperty({node:infoPane, duration:200, properties:{bottom:-210}}).play();
-   					fx.animateProperty({node:dataCon, duration:200, properties:{height:rPConHeight}}).play();
-   				}else{
-   					setDataConHeight(rPConHeight)
-   					infoPane.style["-webkit-transform"] = "translate3d(0,0,0)";
-						infoPane.style["transform"] = "translate3d(0,0,0)";
-   				}
-		}
-
-		function showInfoPane(){
-		  infoPaneOpen = 1;
-			infoPane.style.borderTop = "2px solid #99ceff";
-			if(ie9){
-				infoPane.style.width=dataCon.offsetWidth+16+"px";
-				fx.animateProperty({node:infoPane, duration:200, properties:{bottom:0}}).play();
-				fx.animateProperty({node:dataCon, duration:200, properties:{height:rPConHeight-210}}).play();
-			}else{
-				infoPane.style["-webkit-transform"] = "translate3d(0,-242px,0)";
-				infoPane.style["transform"] = "translate3d(0,-242px,0)";
-				setTimeout(function(){setDataConHeight(rPConHeight-242)},180)
-			}
-		}
-
-
-
-   		function setHelp(e){
-   			if(timeout)clearTimeout(timeout);
-   			if(lastButt)
-   					domClass.remove(lastButt,"activeFoot");
-   			else{
-   				showInfoPane();
-   			}
-
-   			if(lastButt === e.target){
-   				hideInfoPane();
-   				lastButt = null;
-   				return;
-   			}
-   			lastButt = e.target;
-   			var whichButt = lastButt.innerHTML.slice(0, 1);
-   			whichButt === "H"?infoPane.innerHTML = helpText:whichButt === "T"?infoPane.innerHTML = termText:infoPane.innerHTML = conText;
-   			domClass.add(lastButt,"activeFoot");
-   		}
-   		setrPConHeight();
-		})();
-
 
 
   
@@ -1093,11 +944,124 @@ function( BorderContainer
 
 
 
+		//call to wire up datapane functionality
+   	function attachDataPaneHandlers(){
+		  var helpText = "<strong id = 'infoPaneTitle'>Help</strong><p>Zoom in and out with the <b>Zoom buttons</b> or the mousewheel. Shift and drag on the map to zoom to a selected area.</p><p>Go to the full extent of the data with the <b>Globe</b>.</p><p>Select map or satellite view with the <b>Basemap buttons</b>.</p><p>Browse through projects in the table. Sort the table with the column headers and collapse it with the <b>Slider</b>.</p><p>Turn on a raster by double-clicking it in the table or map, or checking its checkbox in the table.</p><ul>When a raster is displayed:<br/><li>With the <b>Identify</b> tool, click to display NAVD88 elevation at any point.</li><li>Draw a cross-section graph with the <b>Profile tool</b>. Click the start and end points of the line to generate a graph in a draggable window. Hover over points to display elevation.</li></ul><p>Use the <b>Measure tool</b> to calculate distance, area, or geographic location.</p><p>Project information and Identify results are displayed in the right pane. Toggle this pane with the <b>Arrow button</b>.</p><p>Use the <b>Time slider</b> to filter the display of features by date. Drag the start and end thumbs or click a year to only display data from that year.</p>"
+			, termText = "<strong id = 'infoPaneTitle'>Terms of Use</strong><p>The data displayed in this application is for qualitative purposes only. Do not use the data as displayed in rigorous analyses. If downloading the data, familiarize yourself with the metadata before use. Not for use as a navigation aid. The data reflects measurements taken at specific time periods and the Department of Water Resources makes no claim as to the current state of these channels, nor to the accuracy of the data as displayed. Do not share or publish this data without including proper attribution.</p>"
+			,	conText = "<strong id = 'infoPaneTitle'>Contact</strong><p>For information on scheduling new bathymetric surveys, contact  <a href = 'mailto:shawn.mayr@water.ca.gov?subject = Bathymetric Survey'>Shawn Mayr</a>, (916) 376-9664.</p><p>For information on this application or the data contained herein, contact  <a href = 'mailto:wyatt.pearsall@water.ca.gov?subject = Bathymetry Catalog'>Wyatt Pearsall</a>, (916) 376-9643.</p>"
+			,	infoPane = dom.byId("infopane")
+			, foot = dom.byId("foot")
+			, infoPaneOpen = 0
+			, timeout
+			, lastButt
+			;
 
-   	function attachHandlers(){
-      console.log("Move handlers into attach Handlers?")
 
-      //when multiple datasets are listed in the dataNode, make them act like links to their data
+			//Allow easy exploration of the widgets by highlighting them when describing their function
+			function toggleHelpGlow(e){
+				if(e.target.tagName === "B"){
+	 				var key = e.target.textContent.slice(0, 3);
+	 				switch (key){
+		   			case "Zoo":
+		   			  if (!zoomSlider)zoomSlider = dom.byId("mapDiv_zoom_slider")
+		   				domClass.toggle(zoomSlider,"helpglow");
+		   				break;
+		   			case "Glo":
+		   				domClass.toggle(dom.byId('fex'),"helpglow");
+		   				break;
+		   			case "Bas":
+		   				domClass.toggle(topo,"helpglow");
+		   				domClass.toggle(sat,"helpglow");
+		   				break;
+		   			case "Sli":
+		   				domClass.toggle(spl,"helpglow");
+		   				break;
+		   			case "Ide":
+		   				domClass.toggle(identAnchor,"helpglow");
+		   				break;
+		   			case "Pro":
+		   				domClass.toggle(crossAnchor,"helpglow");
+		   				break;
+		   			case "Mea":
+		   				domClass.toggle(measureAnchor,"helpglow");
+		   				break;
+		   			case "Arr":
+		   				var closeButton = dom.byId("closeRp");
+		   				if(closeButton)
+		   					domClass.toggle(closeButton,"helpglow");
+		   				break;
+		   			case "Tim":
+		   				domClass.toggle(dom.byId("timeSlider"),"helpglow");
+		   				break;
+	 				}
+	 			}
+			}
+
+
+			//Populate and possibly trigger the display of the info pane, controlled by the datapane buttons
+			function setInfo(e){
+   			if(timeout)clearTimeout(timeout);
+   			if(lastButt)
+   					domClass.remove(lastButt,"activeFoot");
+   			else{
+   				showInfoPane();
+   			}
+
+   			if(lastButt === e.target){
+   				hideInfoPane();
+   				lastButt = null;
+   				return;
+   			}
+   			lastButt = e.target;
+   			var whichButt = lastButt.innerHTML.slice(0, 1);
+   			infoPane.innerHTML = whichButt === "H"
+   												 ? helpText
+   												 : whichButt === "T"
+   												 		 ? termText
+   												 		 : conText
+   												 		 ;
+   			domClass.add(lastButt,"activeFoot");
+   		}
+	   
+
+			function clearInfo(){
+				timeout = 0;
+	   		clearNode(infoPane);
+	  		infoPaneOpen = 0;
+	   		infoPane.style.borderTop = "none";
+	   	}
+
+
+	   	//infopane display logic
+	   	function showInfoPane(){
+			  infoPaneOpen = 1;
+				infoPane.style.borderTop = "2px solid #99ceff";
+				if(ie9){
+					infoPane.style.width=dataCon.offsetWidth+16+"px";
+					fx.animateProperty({node:infoPane, duration:200, properties:{bottom:0}}).play();
+					fx.animateProperty({node:dataCon, duration:200, properties:{height:rPConHeight-210}}).play();
+				}else{
+					infoPane.style["-webkit-transform"] = "translate3d(0,-242px,0)";
+					infoPane.style["transform"] = "translate3d(0,-242px,0)";
+					setTimeout(function(){setDataConHeight(rPConHeight-242)},180)
+				}
+			}
+
+
+			function hideInfoPane(){
+				timeout = W.setTimeout(clearInfo, 205);
+				if(ie9){
+	   					fx.animateProperty({node:infoPane, duration:200, properties:{bottom:-210}}).play();
+	   					fx.animateProperty({node:dataCon, duration:200, properties:{height:rPConHeight}}).play();
+	   		}else{
+	   			setDataConHeight(rPConHeight)
+	   			infoPane.style["-webkit-transform"] = "translate3d(0,0,0)";
+					infoPane.style["transform"] = "translate3d(0,0,0)";
+	   		}
+			}
+
+
+   		//when multiple datasets are listed in the dataNode, make them act like links to their data
 			function oneFromMany(e){
    			var node = e.target;
    			if (node.tagName === "STRONG") node = node.parentNode;
@@ -1106,23 +1070,46 @@ function( BorderContainer
    			geoSearch.clearAndSet(oid,outlines.graphics[oid-1].attributes);
    		}
 
-   		if(touch){
-   			on(dataNode,".multiSelect:touchstart",oneFromMany);
-   		}else{
-   			on(dataNode,".multiSelect:mousedown",oneFromMany);
+
+   		//assign the download dataset link to the proper file
+   		function makeDownloadLink(e){
+	   		var project =(dataNode.firstChild.textContent).split(" ").join("")
+	   		, dat = new Date(dataNode.firstChild.nextElementSibling.textContent.slice(-11))
+	   		, year = dat.getFullYear()
+	   		, month = dat.getUTCMonth()+1
+	   		, day = dat.getUTCDate()
+	   		;
+ 				month = month+'';
+ 				day = day+'';
+ 				month = (month.length === 1?"0"+month:month);
+ 				day = (day.length === 1?"0"+day:day);
+ 				dlLink.href = "zips/"+project+"_"+year+"_"+month+"_"+day+".zip";
    		}
 
-   		tiout.on("graphic-node-add",function(e){
-	  	  if(insideTimeBoundary[e.graphic.attributes.OBJECTID]){
-		  	  return;
-    	  }
-	 	    e.node.setAttribute("class","hiddenPath")
-      });
 
-      tiout.on("update-end", function(){
-   		  redrawAllGraphics(tiout.graphics);							
-      });
+   		/***HANDLERS***/
 
+	   	on(foot, "mousedown", setInfo);
+
+	   	on(dlLink,"mouseover", makeDownloadLink);
+
+
+   		if(touch){
+
+   			on(dataNode,".multiSelect:touchstart",oneFromMany);
+
+   		}else{
+
+   			on(dataNode,".multiSelect:mousedown",oneFromMany);
+
+   			on(infoPane, "mouseover", toggleHelpGlow);
+
+	   		on(infoPane, "mouseout", toggleHelpGlow);
+
+   		}
+
+
+      setrPConHeight();
    	}
 
 
@@ -1508,7 +1495,33 @@ function( BorderContainer
 
 
 
-		attachHandlers();
+
+		//global resizer
+		on(W, "resize", function(e){
+			var winHeight = innerHeight = W.innerHeight;
+			innerWidth = W.innerWidth;
+			setrPConHeight();
+
+			placeMap();
+			setHeader();
+			defaultZoomLevel = winHeight > 940?11:winHeight > 475?10:9;
+
+			if(+dataNode.style.marginTop.slice(0, 1)) dataNode.style.marginTop =(winHeight-257)/2-15+"px";
+
+			if(ie9){
+				fx.animateProperty({node:dataPane, duration:300, properties:{height:winHeight-225}}).play();
+				fx.animateProperty({node:dataCon, duration:300, properties:{height:winHeight-257}}).play();
+			}else{
+				dataPane.style.height = winHeight-225+"px";
+				dataCon.style.height = winHeight-257+"px";
+			}
+		});
+
+
+
+
+
+		attachDataPaneHandlers();
 		tiout.refresh() //ensure initial draw;
 	});
 

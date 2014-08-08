@@ -153,6 +153,7 @@ function( BorderContainer
 
 
     var map = new Map(mapDiv, {extent:initialExtent,center:centerPoint,zoom:defaultZoomLevel})
+    window.map = map;
     var topoMap = new TiledLayer(topoUrl);
     var satMap;
     var rasterLayer = new DynamicLayer(rasterUrl, {id:"raster"})

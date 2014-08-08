@@ -23,6 +23,7 @@ define( ['modules/addsymbol.js'
         ,'dojox/charting/widget/SelectableLegend'
 
         ,'esri/tasks/geometry'
+        ,'esri/geometry/Polygon'
         ,'esri/geometry/Polyline'
         ,'esri/geometry/Point'
         ,'esri/symbols/SimpleLineSymbol'
@@ -54,6 +55,7 @@ function( addSymbol
         , Legend
 
         , geo
+        , Polygon
         , Polyline
         , Point
         , SimpleLine
@@ -198,9 +200,11 @@ function( addSymbol
 
       , findLayerIds = function(mapPoint,profile){
           var def = new Deferred()
+            , geoPoly = new Polygon(spatialRef)
+            , ring = []
             , mapX = mapPoint.x
             , mapY = mapPoint.y
-            , sr = mapPoint.spatialReference
+            , d = 400
             , ids = []
             , idObj = {}
             , count=0
@@ -217,13 +221,18 @@ function( addSymbol
             }
           }
 
-          for(var x=-40;x<80;x+=40){
-            for(var y=-40;y<80;y+=40){
-              var pnt = new Point({x:mapX+x, y:mapY+y, spatialReference:sr});
-              identify(pnt).then(parseId);
-            }
-          }
 
+          ring.push(new Point({x:mapX-d, y:mapY-d, spatialReference:spatialRef}));
+          ring.push(new Point({x:mapX-d, y:mapY+d, spatialReference:spatialRef}));
+          ring.push(new Point({x:mapX+d, y:mapY+d, spatialReference:spatialRef}));
+          ring.push(new Point({x:mapX+d, y:mapY-d, spatialReference:spatialRef}));
+          ring.push(new Point({x:mapX-d, y:mapY-d, spatialReference:spatialRef}));
+
+          geoPoly.addRing(ring)
+          console.log(JSON.stringify(geoPoly.toJson()))
+          console.log(JSON.stringify(map.extent))
+          addSymbol(map,geoPoly,lineSymbol,[])
+          identify(geoPoly).then(function(e){console.log(e)})
           return def;
       }  
 

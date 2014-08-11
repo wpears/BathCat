@@ -81,15 +81,14 @@ body{
 #appTitle{
   color: #99ceff;
   padding:10px 3px;
-  border-radius: 4px;
   text-shadow:1px 1px 1px #007FDE;
   text-decoration:none;
   font-family:Harabara;
-  width:380px;
+  width:388px;
   font-size:35px; 
   font-style:italic;
   top:-2px;
-  right:5px;
+  right:0;
   letter-spacing: 1px;
 }
 

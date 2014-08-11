@@ -75,6 +75,7 @@ function( splice
 
 
     (function(){
+
       for(var i=0; i<featureCount; i++){
         var currExtent = graphics[i]._extent;
 
@@ -107,6 +108,7 @@ function( splice
             geoBins[k].push(currGeo);
         }
       }
+      
     })();
 
 

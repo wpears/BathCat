@@ -197,25 +197,22 @@ function( addSymbol
             , mapY = mapPoint.y
             , d = 50
             , ids = []
-            , testQueries = []
             , idObj = {}
             ;
 
 
           for(var x=-d; x<=d; x+=d){
             for(var y=-d; y<=d; y+=d){
+              
               var pnt = new Point({x:mapX+x, y:mapY+y, spatialReference:spatialRef});
-              addSymbol(map, pnt, dataPointSymbol, profile.graphics);
-              testQueries.push(geoSearch({mapPoint:pnt},0,1));
+              var result = geoSearch({mapPoint:pnt},0,1)
+
+              for(var j=0; j<result.length;j++){
+                idObj[result[j]] = 1;
+              }
             }
           }
-          for(var i= 0; i < testQueries.length; i++){
-            var result = testQueries[i];
-            for(var j=0; j<result.length;j++){
-              idObj[result[j]] = 1;
-            }
-          }
-          console.log(testQueries)
+
           for(var item in idObj){
             if(!rastersShowing||rastersShowing[item])
               ids.push(+item - 1);

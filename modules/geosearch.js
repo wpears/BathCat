@@ -15,6 +15,7 @@ function( splice
       , currArr = []
       , binLength = geoBreaks.length
       , lastClickBin = []
+      , queriedLayers = []
       , lastBin = null
       , lastIndex
       ;
@@ -112,6 +113,10 @@ function( splice
 
 
 /***********GEOSEARCH****************/
+//n.b. that this could be modularized to be more generally useful, q.v. the repeated code in 
+//clearBin and syntheticQuery. However, currently organized for raw speed (no function call overhead)
+//where possible
+
 
     function clearBin(bin,mouseDown){
       for(i = 0; i<bin.length; i++){
@@ -133,10 +138,40 @@ function( splice
     }
 
 
-    function geoSearch(e, mouseDown){//think about using two sorted arrays, one mins one maxs
-      var t = performance.now();
+    function syntheticQuery(mapX, mapY, bin){
+      queriedLayers.length = 0;
+      if(!bin) return queriedLayers;
+
+      var curr
+        , oid
+        ;
+
+      for(var i = 0, j = bin.length; i<j; i++){
+        curr = bin[i];
+        oid = curr.oid;
+
+        //break once we have reached outside useful area of interest
+        if(curr.xmin>mapX){
+          break;
+        }
+
+        //leave hidden things alone
+        if(insideTimeBoundary[oid]){
+          //if point is within extent
+          if(curr.xmax>= mapX&&curr.xmin<= mapX&&curr.ymin<= mapY&&curr.ymax>= mapY){
+            queriedLayers.push(oid)
+          }
+        }
+      }
+      return queriedLayers;
+    }
+
+
+
+
+    function geoSearch(e, mouseDown, synthetic){//think about using two sorted arrays, one mins one maxs
       var i, j, curr, oid, temp, binTemp,
-      mapX, mapY, breakMax, binArr, someTargeted = 0;
+      mapX, mapY, binArr, someTargeted = 0;
 
       //null is passed as the first argument on mouseout
       //otherwise, the event could actually happen on the wrong bin
@@ -145,7 +180,6 @@ function( splice
       }else{
         mapX = e.mapPoint.x;
         mapY = e.mapPoint.y;
-        breakMax = mapX+1000;
 
         //search for the right bin by comparing around geobreaks and assign to this bin
         for(i = 0, j = binLength-1; i<j; i++){
@@ -178,13 +212,16 @@ function( splice
       else
         j = 0;
 
+      if(synthetic){
+        return syntheticQuery(mapX,mapY,binArr)
+      }
 
       for(i = 0; i<j; i++){
         curr = binArr[i];
         oid = curr.oid;
 
         //break once we have reached outside useful area of interest
-        if(curr.xmin>breakMax&&!mouseDown){
+        if(curr.xmin>mapX&&!mouseDown){
           break;
         }
 

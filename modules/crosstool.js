@@ -1,6 +1,5 @@
 define( ['modules/addsymbol.js'
         ,'modules/addtextsymbol.js'
-        ,'modules/identify.js'
         ,'modules/tools.js'
         ,'modules/clearnode.js'
         ,'modules/cleargraphics.js'
@@ -12,7 +11,6 @@ define( ['modules/addsymbol.js'
         ,'dojo/dom-class'
         ,'dojo/dom-construct'
         ,'dojo/_base/Color'
-        ,'dojo/Deferred'
 
         ,'dojox/charting/Chart'
         ,'dojox/charting/themes/PurpleRain'
@@ -23,7 +21,6 @@ define( ['modules/addsymbol.js'
         ,'dojox/charting/widget/SelectableLegend'
 
         ,'esri/tasks/geometry'
-        ,'esri/geometry/Polygon'
         ,'esri/geometry/Polyline'
         ,'esri/geometry/Point'
         ,'esri/symbols/SimpleLineSymbol'
@@ -32,7 +29,6 @@ define( ['modules/addsymbol.js'
         ],
 function( addSymbol
         , addTextSymbol
-        , Identify
         , tools
         , clearNode
         , clearGraphics
@@ -44,7 +40,6 @@ function( addSymbol
         , domClass
         , construct
         , Color
-        , Deferred
 
         , Chart
         , chartTheme
@@ -55,14 +50,13 @@ function( addSymbol
         , Legend
 
         , geo
-        , Polygon
         , Polyline
         , Point
         , SimpleLine
         , SimpleMarker
 
         ){  
-  return function ( rasterLayer, container, anchor, url, layerArray, options) {
+  return function ( rasterLayer, container, anchor, geoSearch, options) {
       options=options?options:{};
       var crossTool
         , self
@@ -74,7 +68,6 @@ function( addSymbol
         , chartNames = options.chartNames||null
         , chartDates = options.chartDates||null
         , tooltip = options.tooltip||null
-        , identify = Identify(url, map, layerArray, rastersShowing)
         , canId = CanvasId(rasterLayer, map)
         , spatialRef = map.spatialReference
         , mapGfx = map.graphics
@@ -153,14 +146,9 @@ function( addSymbol
         window.chartNames=chartNames;
           var profile = new Profile(e1)
             , mapPoint = e1.mapPoint
+            , idArray
             ;
           profiles.push(profile);
-
-          findLayerIds(mapPoint,profile).then(function(idArr){
-            profile.task.prepare(idArr);
-            profile.chartName = chartNames[idArr[0]];
-            profile.prepared = idArr;
-          });
 
           addSymbol(map, mapPoint, dataPointSymbol, profile.graphics);
           mouseLine = addSymbol(map, null, lineSymbol, profile.graphics);
@@ -176,6 +164,12 @@ function( addSymbol
           });
           self.handlers[4] = map.on("zoom-start", cancelProfile);
           self.handlers[5] = map.on("pan-start", cancelProfile);
+
+          idArray = findLayerIds(mapPoint,profile);
+          profile.task.prepare(idArray);
+          profile.chartName = chartNames[idArray[0]];
+          profile.prepared = idArray;
+
         }
 
       , resetHandlers = function(){
@@ -199,41 +193,35 @@ function( addSymbol
 
 
       , findLayerIds = function(mapPoint,profile){
-          var def = new Deferred()
-            , geoPoly = new Polygon(spatialRef)
-            , ring = []
-            , mapX = mapPoint.x
+          var mapX = mapPoint.x
             , mapY = mapPoint.y
-            , d = 400
+            , d = 50
             , ids = []
+            , testQueries = []
             , idObj = {}
-            , count=0
             ;
 
-          function parseId(v){
-            for(var i=0; i < v.length; i++){
-              if(!idObj[v[i].layerId]) idObj[v[i].layerId]=1;
-            }
-            if(++count === 9){
-              for(var item in idObj)
-                ids[ids.length]=+item;
-              def.resolve(ids)
+
+          for(var x=-d; x<=d; x+=d){
+            for(var y=-d; y<=d; y+=d){
+              var pnt = new Point({x:mapX+x, y:mapY+y, spatialReference:spatialRef});
+              addSymbol(map, pnt, dataPointSymbol, profile.graphics);
+              testQueries.push(geoSearch({mapPoint:pnt},0,1));
             }
           }
+          for(var i= 0; i < testQueries.length; i++){
+            var result = testQueries[i];
+            for(var j=0; j<result.length;j++){
+              idObj[result[j]] = 1;
+            }
+          }
+          console.log(testQueries)
+          for(var item in idObj){
+            if(!rastersShowing||rastersShowing[item])
+              ids.push(+item - 1);
+          }
 
-
-          ring.push(new Point({x:mapX-d, y:mapY-d, spatialReference:spatialRef}));
-          ring.push(new Point({x:mapX-d, y:mapY+d, spatialReference:spatialRef}));
-          ring.push(new Point({x:mapX+d, y:mapY+d, spatialReference:spatialRef}));
-          ring.push(new Point({x:mapX+d, y:mapY-d, spatialReference:spatialRef}));
-          ring.push(new Point({x:mapX-d, y:mapY-d, spatialReference:spatialRef}));
-
-          geoPoly.addRing(ring)
-          console.log(JSON.stringify(geoPoly.toJson()))
-          console.log(JSON.stringify(map.extent))
-          addSymbol(map,geoPoly,lineSymbol,[])
-          identify(geoPoly).then(function(e){console.log(e)})
-          return def;
+          return ids
       }  
 
 

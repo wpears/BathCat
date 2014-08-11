@@ -548,7 +548,7 @@ function( BorderContainer
 											, chartDates:formattedDates
 											, tooltip:tooltip
 										  };						  	  
-				crossTool = CrossTool(rasterLayer, Popup(), crossAnchor, rasterUrl, layerArray, options);
+				crossTool = CrossTool(rasterLayer, Popup(), crossAnchor, geoSearch, options);
 				phasingTools[0].tool = crossTool;
 				crossTool.init(e);				
 		});
@@ -714,7 +714,7 @@ function( BorderContainer
 						justMousedUp = false;
 						return;
 					}
-					geoSearch(e, 0);
+					geoSearch(e, 0, 0);
 					outMoveTime = Date.now();
 				}
 
@@ -723,7 +723,7 @@ function( BorderContainer
 					if(!cursor){map.setMapCursor("default"); cursor=1;}
 					outlineMouseMove.remove();
 					outlineMouseMove = null;
-					geoSearch(null, 0);
+					geoSearch(null, 0, 0);
 				});
 
 
@@ -738,7 +738,7 @@ function( BorderContainer
 							W.clearTimeout(mouseDownTimeout);
 							previousRecentTarget = oid;
 							mouseDownTimeout = W.setTimeout(nullPrevious, 400);
-							geoSearch(e, 1);
+							geoSearch(e, 1, 0);
 							if (geoSearch.selected.length > 1)
 								gridObject.gridSorter.ascendingName();
 							gridObject.scrollToRow(oid);
@@ -753,7 +753,7 @@ function( BorderContainer
 					//If graphics were already on and accidentally cleared by doubleclick
 					reSearch = geoSearch.selected.indexOf(oid)===-1;
 					if(reSearch){
-						geoSearch(e, 1);
+						geoSearch(e, 1, 0);
 						gridObject.scrollToRow(oid);
 					}
 

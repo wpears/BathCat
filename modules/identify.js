@@ -18,7 +18,6 @@ function( ident
     idP.returnGeometry = false;
     
     function parsePromise(v){
-      console.log(v)
       var output = processId.output;
       output.length = 0;
       if(v.length>0){
@@ -40,7 +39,6 @@ function( ident
 
     return function(geom){
       idP.geometry = geom;
-      idP.geometryType = geom.type;
       idP.mapExtent=map.extent;
       idP.height=map.height;
       idP.width=map.width;

@@ -117,7 +117,7 @@ function( BorderContainer
    		, gridPane, gridNode, spl
    		, dataPane, dataCon, dataNode, dlLink, downloadNode
    		, crossAnchor, identAnchor, measureAnchor, noClick
-   		, zoomSlider, fex, topo, sat, timeDiv
+   		, zoomSlider, fullExtentButton, topo, sat, timeDiv
 
    		, introText = "<p>The <strong>Delta Bathymetry Catalog</strong> houses the complete set of multibeam bathymetric data collected by the Bathymetry and Technical Support section of the California Department of Water Resources.</p><p>Click on a feature in the map or table to bring up its <strong>description</strong>. Double-click to view the <strong>raster image</strong>.</p> <p><strong>Download</strong> data as text files from the descrption pane.</p> <p><strong>Measure</strong> distances, <strong>identify</strong> raster elevations, and draw <strong>profile graphs</strong> with the tools at the top-right.</p> <p>Change what displays by <strong>collection date</strong> with the slider at bottom-right. <strong>Sort</strong> by date and name with the table's column headers.</p> <p>See the <strong>help</strong> below for further information.</p>"
    		;
@@ -401,7 +401,7 @@ function( BorderContainer
 
 
 		  //Connect initial extent button
-		  on(fex,"mousedown", function(e){
+		  on(fullExtentButton,"mousedown", function(e){
 				map.centerAndZoom(centerPoint,defaultZoomLevel)
 			});
 
@@ -951,7 +951,7 @@ function( BorderContainer
 		   				domClass.toggle(zoomSlider,"helpglow");
 		   				break;
 		   			case "Glo":
-		   				domClass.toggle(dom.byId('fex'),"helpglow");
+		   				domClass.toggle(dom.byId('fullExtentButton'),"helpglow");
 		   				break;
 		   			case "Bas":
 		   				domClass.toggle(topo,"helpglow");
@@ -1398,7 +1398,7 @@ function( BorderContainer
 			noClick = dom.byId("noClick")
 
 			zoomSlider =dom.byId("mapDiv_zoom_slider")
-			fex = dom.byId("fex")
+			fullExtentButton = dom.byId("fullExtentButton")
 			topo = dom.byId("topo")
 			sat = dom.byId("sat")
 			timeDiv = dom.byId('timeDiv');

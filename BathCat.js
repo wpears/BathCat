@@ -1368,10 +1368,10 @@ function( BorderContainer
 			function parseAttributes(attr,ind){
 				dataNode.style.marginTop = "0";	
 				dataNode.innerHTML = "<h2>"+names[ind]+"</h2>"+
-				"<span class = 'spirp'><strong>Collection Date: </strong>"+formattedDates[ind]+"</span>"+
-				"<span class = 'spirp'><strong>Client: </strong>"+(attr.Client||"Groundwater Supply Assessment Section, DWR")+"</span>"+
-				"<span class = 'spirp'><strong>Waterways Covered: </strong>"+(attr.Waterways||WWays(attr))+"</span>"+
-				"<span class = 'spirp'><strong>Purpose: </strong>"+(attr.Purpose||ssMessage)+"</span>";
+				"<span class = 'projectinfo'><strong>Collection Date: </strong>"+formattedDates[ind]+"</span>"+
+				"<span class = 'projectinfo'><strong>Client: </strong>"+(attr.Client||"Groundwater Supply Assessment Section, DWR")+"</span>"+
+				"<span class = 'projectinfo'><strong>Waterways Covered: </strong>"+(attr.Waterways||WWays(attr))+"</span>"+
+				"<span class = 'projectinfo'><strong>Purpose: </strong>"+(attr.Purpose||ssMessage)+"</span>";
 				downloadNode.style.display = "block";
 			}
 

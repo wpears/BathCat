@@ -660,7 +660,10 @@ b{
 
 
 
-/**Grid**/
+/**Grid Pane**/
+
+
+
 #gridNode{
   height:100%;
   width:100%;
@@ -858,6 +861,33 @@ th:active{
   margin-bottom:10px;
 }
 
+
+#multiSelectWrapper{
+    width:80%;
+    margin:0 auto;
+}
+
+
+.multiSelect{
+  display:inline-block;
+  padding-left:10px;
+  text-indent:-10px;
+  margin-bottom:1px;
+  cursor:pointer;
+ }
+
+
+.multiSelect:hover{
+  border-bottom: 1px solid #a5b6e0;
+  margin-bottom:0;
+}
+
+
+.multiSelect:active{
+  margin:1px 0 -1px 0;
+}
+
+
 #downloadNode{
   display: none;
   padding:0 23px 5px 0;
@@ -867,6 +897,7 @@ th:active{
  -o-transition:      opacity 0.25s ease;
 }
 
+
 .downloadlink{
   margin-top:4px;
   float:right;
@@ -875,26 +906,58 @@ th:active{
   padding:0 1px 0 1px;
 }
 
+
 .downloadlink:hover{
   color:#fff;
   background-color:#5ADE6B;
 }
 
+
 .downloadlink:active{
   margin-top:5px;
 }
 
+
 #dlLink{
   margin-right:10px;
 }
+
+
 #dlTitle{
   margin-left:27px;
 }
 
-#foot{
+
+#infopane{
+ -moz-box-sizing:border-box;
+  box-sizing:border-box;
+  background:url(images/bg.png);
+  overflow-y:scroll;
+  padding:3px 5px 0 25px;
+  margin-top:3px;
+  position:absolute;
+  height:242px;
+  width:100%;
+  bottom:-210px;
+ -webkit-transform:translate3d(0,0,0);
   transform:translate3d(0,0,0);
+ -webkit-transition: -webkit-transform 0.15s ease;
+ -moz-transition:    transform 0.15s ease;
+  transition:        transform 0.15s ease;
+ -o-transition:      transform 0.15s ease;
+}
+
+
+#infoPaneTitle{
+  font-size:1.5em;
+  margin-bottom:0;
+}
+
+
+#foot{
  -webkit-transform:translate3d(0,0,0);
  -moz-box-sizing:border-box;
+  transform:translate3d(0,0,0);
   box-sizing:border-box;
   margin:0;
   position:absolute;
@@ -906,6 +969,8 @@ th:active{
   white-space:nowrap;
   overflow:visible;
 }
+
+
 .footDiv{
  -moz-box-sizing:border-box;
   box-sizing:border-box;
@@ -921,12 +986,16 @@ th:active{
   background-image:-moz-linear-gradient(top, rgba(243,243,243,0.8), rgba(210,225,249,0.8));
   cursor:default;
 }
+
+
 .footDiv:hover{
   cursor:pointer;
   background-image:-webkit-linear-gradient(top, #e1ebfb, #b4cdf5);
   background-image:-moz-linear-gradient(top, #e1ebfb, #b4cdf5);
   background-color:#b4cdf5;
 }
+
+
 .footDiv:active{
   background-color:rgba(243,243,243,1);
   background-image:-webkit-linear-gradient(top,#a0bce5,#f0f5fd);
@@ -934,28 +1003,6 @@ th:active{
   padding-top:4px;
 }
 
-#infopane{
-  -moz-box-sizing:border-box;
-  box-sizing:border-box;
-  background:url(images/bg.png);
-  overflow-y:scroll;
-  padding:3px 5px 0 25px;
-  margin-top:3px;
-  position:absolute;
-  height:242px;
-  width:100%;
-  bottom:-210px;
-  transform:translate3d(0,0,0);
- -webkit-transform:translate3d(0,0,0);
- -webkit-transition: -webkit-transform 0.15s ease;
- -moz-transition:    transform 0.15s ease;
-  transition:        transform 0.15s ease;
- -o-transition:      transform 0.15s ease;
-}
-#infoPaneTitle{
-  font-size:1.5em;
-  margin-bottom:0;
-}
 
 .activeFoot,.activeFoot:hover{
   background-color:rgba(243,243,243,1);
@@ -968,28 +1015,6 @@ th:active{
   box-shadow:0 0 16px 6px #5ADE6B !important;
   background-color:#5ADE6B;             
 }
-
-
-#multiSelectWrapper{
-    width:80%;
-    margin:0 auto;
-}
- .multiSelect{
-  display:inline-block;
-  padding-left:10px;
-  text-indent:-10px;
-  margin-bottom:1px;
-  cursor:pointer;
- }
-
- .multiSelect:hover{
-  border-bottom: 1px solid #a5b6e0;
-  margin-bottom:0;
- }
- .multiSelect:active{
-  margin:1px 0 -1px 0;
- }
-
 
 
 
@@ -1112,6 +1137,32 @@ th:active{
 .dijitInline.dijitReset.dijitButtonText:after{
   content:"  \25BC";
   color:#555a6e;
+}
+
+
+
+/*Crosstool graph tooltip*/
+.dijitTooltip {
+   position: absolute;
+   z-index: 2000;
+   display: block;
+   left: 0;
+   top: -10000px;
+   overflow: visible;
+}
+
+
+.dijitTooltipContainer{
+    background-color: #f0f5fd;
+    border:1px solid #cbcbcb;
+    padding:0 0.4em;
+    width:32px;
+    font-size:small;
+}
+
+
+.dijitTooltip iframe{
+  display:none;
 }
 
 

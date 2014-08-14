@@ -1427,12 +1427,10 @@ function( BorderContainer
    	function setHeader(){
 			var wid = innerWidth;
 			var appTitle = setHeader.appTitle = setHeader.appTitle?setHeader.appTitle:dom.byId("appTitle");
-			if (wid < 600 && setHeader.fullText !== 0){
+			if (wid < 700 && setHeader.fullText !== 0){
 				appTitle.innerHTML = "Bathymetry";
-				appTitle.style.width = "175px";
 				setHeader.fullText = 0;
-			}else if(wid > 599 && setHeader.fullText === 0){
-				appTitle.style.width = "380px";
+			}else if(wid > 699 && setHeader.fullText === 0){
 				appTitle.innerHTML = "Delta Bathymetry Catalog"
 				setHeader.fullText = 1;
 			}

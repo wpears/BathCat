@@ -120,6 +120,16 @@ b{
 }
 
 
+::selection{
+  background:rgba(110,235,110,0.7);
+}
+
+
+::-moz-selection{
+  background:rgba(110,235,110,0.7);
+}
+
+
 
 /**Map container and widgets**/
 
@@ -165,6 +175,12 @@ b{
 
 
 /**Tools**/
+.activeTool{
+  box-shadow:0 0 12px 4px #99ceff !important;
+  background-color:#a3d4f3;
+}
+
+
 #ident{
   background-image:url(images/ident.png);
   height:32px;
@@ -364,6 +380,7 @@ b{
  -webkit-transform:translate3d(0,0,0);
 }
 
+
 #legend{
   background-image:url(images/bg.png);
   width:250px;
@@ -379,11 +396,142 @@ b{
 
 
 
+/**Time Slider Labels. Verbose, but allows for clean JS**/
+#timeDiv {
+  padding:1px 1px 1px 1px;
+  bottom:16px;
+  right:28px;
+  background-color:rgba(0,0,0,0);
+  font-size:0.875em;
+  font-weight:bold;
+  color: #333;
+}
+
+/**hide data outlines with time slider**/
+.hiddenPath{
+  visibility:hidden;
+}
+
+
+.labelCon{
+  width:320px;
+  bottom:40px;
+  right:13px;
+  position:absolute;
+  font-size:1.2em;
+  font-weight:900;
+ -webkit-transition: all 0.1s ease;
+ -moz-transition:    all 0.1s ease;
+  transition:        all 0.1s ease;
+ -o-transition:      all 0.1s ease;
+}
+
+
+.labelTouch{
+  width:48px;
+  margin:0;
+  bottom:5px;
+  right:3px;
+}
+
+
+.tsLabel{
+  float:left;
+  margin-right:7px;
+  cursor:pointer;
+  border-radius:2px;
+  padding:2px 4px;
+}
+
+
+.tsLabel:nth-child(1){
+  color:rgb(18,160,0);
+}
+.tsLabel:nth-child(2){
+  color:rgb(221,4,178);
+}
+.tsLabel:nth-child(3){
+  color:rgb(50,84,255);
+}
+.tsLabel:nth-child(4){
+  color:rgb(255,0,0);
+}
+.tsLabel:nth-child(5){
+  color:rgb(112, 84, 59);
+}
+.tsLabel:nth-child(6){
+  color:rgb(25,25,35);
+}
+
+
+.tsHighlight:nth-child(1){
+  background-color:rgb(18,160,0);
+}
+.tsHighlight:nth-child(2){
+  background-color:rgb(221,4,178);
+}
+.tsHighlight:nth-child(3){
+  background-color:rgb(50,84,255);
+}
+.tsHighlight:nth-child(4){
+  background-color:rgb(255,0,0);
+}
+.tsHighlight:nth-child(5){
+  background-color:rgb(112, 84, 59);
+}
+.tsHighlight:nth-child(6){
+  background-color:rgb(25,25,35);
+}
+
+
+.satLabels>.tsLabel:nth-child(1){
+  color:rgb(24, 211, 48);
+}
+.satLabels>.tsLabel:nth-child(2){
+  color:rgb(252, 109, 224);
+}
+.satLabels>.tsLabel:nth-child(3){
+  color:rgb(119, 173, 255);
+}
+.satLabels>.tsLabel:nth-child(4){
+  color:rgb(243, 63, 51);
+}
+.satLabels>.tsLabel:nth-child(5){
+  color:rgb(169,152,137);
+}
+.satLabels>.tsLabel:nth-child(6){
+  color:#fff;
+}
+
+
+.satLabels>.tsHighlight:nth-child(1){
+  background-color:rgb(24, 211, 48);
+}
+.satLabels>.tsHighlight:nth-child(2){
+  background-color:rgb(252, 109, 224);
+}
+.satLabels>.tsHighlight:nth-child(3){
+  background-color:rgb(119, 173, 255);
+}
+.satLabels>.tsHighlight:nth-child(4){
+  background-color:rgb(243, 63, 51);
+}
+.satLabels>.tsHighlight:nth-child(5){
+  background-color:rgb(169,152,137);
+}
+.satLabels>.tsHighlight:nth-child(6){
+  background-color:rgb(25,25,35);
+}
+
+
+.tsLabel.tsHighlight,.satLabels>.tsLabel.tsHighlight{
+  color:#fff;
+}
 
 
 
 
-/**Desktop**/
+/**Desktop top level layout**/
 #lP{
   width:18%;
   box-shadow: 0px 2px 2px -1px #8ca2d7,
@@ -449,7 +597,7 @@ b{
 
 
 
-/**Mobile**/
+/**Mobile top level layout**/
 #dataView, #gridView{
   position:absolute;
   overflow:hidden;
@@ -506,140 +654,13 @@ b{
 }
 
 
-
-
-
-
-
-
-
-#dataNode{
-  width:86%;
-  margin-left:25px;
-  -webkit-transition:opacity 0.15s ease;
- -moz-transition:    opacity 0.15s ease;
-  transition:        opacity 0.15s ease;
- -o-transition:      opacity 0.15s ease;
-}
-.projectinfo{
-  display:block;
-  margin-bottom:10px;
-}
-#dataCon{
-  overflow-y:scroll;
-  position:relative;
-  height:100%;
-  transform:translate3d(0,0,0);
- -webkit-transform:translate3d(0,0,0);
-}
-#downloadNode{
-  display: none;
-  padding:0 23px 5px 0;
- -webkit-transition: opacity 0.25s ease;
- -moz-transition:    opacity 0.25s ease;
-  transition:        opacity 0.25s ease;
- -o-transition:      opacity 0.25s ease;
-}
-
-.downloadlink{
-  margin-top:4px;
-  float:right;
-  font-size:0.9em;
-  line-height: 1.2em;
-  padding:0 1px 0 1px;
-}
-
-.downloadlink:hover{
-  color:#fff;
-  background-color:#5ADE6B;
-}
-
-.downloadlink:active{
-  margin-top:5px;
-}
-
-#dlLink{
-  margin-right:10px;
-}
-#dlTitle{
-  margin-left:27px;
-}
-
-#foot{
-  transform:translate3d(0,0,0);
- -webkit-transform:translate3d(0,0,0);
- -moz-box-sizing:border-box;
-  box-sizing:border-box;
-  margin:0;
-  position:absolute;
-  bottom:0;
-  left:0;
-  font-size:1em;
-  height:32px;
-  width:100%;
-  white-space:nowrap;
-  overflow:visible;
-}
-.footDiv{
- -moz-box-sizing:border-box;
-  box-sizing:border-box;
-  display:inline-block;
-  vertical-align: top;
-  border: 1px solid #a5b6e0;
-  height:32px;
-  padding:3px;
-  width:33.3333333%;
-  text-align:center;
-  background-color:rgba(210,225,249,1);
-  background-image:-webkit-linear-gradient(top, rgba(243,243,243,0.8), rgba(210,225,249,0.8));
-  background-image:-moz-linear-gradient(top, rgba(243,243,243,0.8), rgba(210,225,249,0.8));
-  cursor:default;
-}
-.footDiv:hover{
-  cursor:pointer;
-  background-image:-webkit-linear-gradient(top, #e1ebfb, #b4cdf5);
-  background-image:-moz-linear-gradient(top, #e1ebfb, #b4cdf5);
-  background-color:#b4cdf5;
-}
-.footDiv:active{
-  background-color:rgba(243,243,243,1);
-  background-image:-webkit-linear-gradient(top,#a0bce5,#f0f5fd);
-  background-image:-moz-linear-gradient(top,#a0bce5,#f0f5fd);
-  padding-top:4px;
-}
-
-#infopane{
-  -moz-box-sizing:border-box;
-  box-sizing:border-box;
-  background:url(images/bg.png);
-  overflow-y:scroll;
-  padding:3px 5px 0 25px;
-  margin-top:3px;
-  position:absolute;
-  height:242px;
-  width:100%;
-  bottom:-210px;
-  transform:translate3d(0,0,0);
- -webkit-transform:translate3d(0,0,0);
- -webkit-transition: -webkit-transform 0.15s ease;
- -moz-transition:    transform 0.15s ease;
-  transition:        transform 0.15s ease;
- -o-transition:      transform 0.15s ease;
-}
-#infoPaneTitle{
-  font-size:1.5em;
-  margin-bottom:0;
-}
-
-.activeFoot,.activeFoot:hover{
-  background-color:rgba(243,243,243,1);
-  background-image:-webkit-linear-gradient(top,#a0bce5,#f0f5fd);
-  background-image:-moz-linear-gradient(top,#a0bce5,#f0f5fd);
+.tabglow{
+  box-shadow:0 0 8px 4px #99ceff !important;            
 }
 
 
 
-
+/**Grid**/
 #gridNode{
   height:100%;
   width:100%;
@@ -687,143 +708,6 @@ b{
 
 
 
-
-
-
-.labelCon{
-  width:320px;
-  bottom:40px;
-  right:13px;
-  position:absolute;
-  font-size:1.2em;
-  font-weight:900;
- -webkit-transition: all 0.1s ease;
- -moz-transition:    all 0.1s ease;
-  transition:        all 0.1s ease;
- -o-transition:      all 0.1s ease;
-}
-.labelTouch{
-  width:48px;
-  margin:0;
-  bottom:5px;
-  right:3px;
-}
-.tsLabel{
-  float:left;
-  margin-right:7px;
-  cursor:pointer;
-  border-radius:2px;
-  padding:2px 4px;
-}
-
-
-.tsLabel:nth-child(1){
-  color:rgb(18,160,0);
-}
-.tsLabel:nth-child(2){
-  color:rgb(221,4,178);
-}
-.tsLabel:nth-child(3){
-  color:rgb(50,84,255);
-}
-.tsLabel:nth-child(4){
-  color:rgb(255,0,0);
-}
-.tsLabel:nth-child(5){
-  color:rgb(112, 84, 59);
-}
-.tsLabel:nth-child(6){
-  color:rgb(25,25,35);
-}
-
-.tsHighlight:nth-child(1){
-  background-color:rgb(18,160,0);
-}
-.tsHighlight:nth-child(2){
-  background-color:rgb(221,4,178);
-}
-.tsHighlight:nth-child(3){
-  background-color:rgb(50,84,255);
-}
-.tsHighlight:nth-child(4){
-  background-color:rgb(255,0,0);
-}
-.tsHighlight:nth-child(5){
-  background-color:rgb(112, 84, 59);
-}
-.tsHighlight:nth-child(6){
-  background-color:rgb(25,25,35);
-}
-
-.satLabels>.tsLabel:nth-child(1){
-  color:rgb(24, 211, 48);
-}
-.satLabels>.tsLabel:nth-child(2){
-  color:rgb(252, 109, 224);
-}
-.satLabels>.tsLabel:nth-child(3){
-  color:rgb(119, 173, 255);
-}
-.satLabels>.tsLabel:nth-child(4){
-  color:rgb(243, 63, 51);
-}
-.satLabels>.tsLabel:nth-child(5){
-  color:rgb(169,152,137);
-}
-.satLabels>.tsLabel:nth-child(6){
-  color:#fff;
-}
-
-.satLabels>.tsHighlight:nth-child(1){
-  background-color:rgb(24, 211, 48);
-}
-.satLabels>.tsHighlight:nth-child(2){
-  background-color:rgb(252, 109, 224);
-}
-.satLabels>.tsHighlight:nth-child(3){
-  background-color:rgb(119, 173, 255);
-}
-.satLabels>.tsHighlight:nth-child(4){
-  background-color:rgb(243, 63, 51);
-}
-.satLabels>.tsHighlight:nth-child(5){
-  background-color:rgb(169,152,137);
-}
-.satLabels>.tsHighlight:nth-child(6){
-  background-color:rgb(25,25,35);
-}
-
-.tsLabel.tsHighlight,.satLabels>.tsLabel.tsHighlight{
-  color:#fff;
-}
-
-
-
-
-
-.activeTool{
-  box-shadow:0 0 12px 4px #99ceff !important;
-  background-color:#a3d4f3;
-}
-
-.helpglow{
-  box-shadow:0 0 16px 6px #5ADE6B !important;
-  background-color:#5ADE6B;             
-}
-
-.tabglow{
-  box-shadow:0 0 8px 4px #99ceff !important;            
-}
-
-::selection{
-    background:rgba(110,235,110,0.7);
-}
-
-::-moz-selection{
-    background:rgba(110,235,110,0.7);
-}
-
-
 .dgrid{
   font-size:1em;
   color:#686868;
@@ -842,11 +726,12 @@ user-select: none;
   width:100%;
   outline:none;
 }
+
+
 .dgrid-scroller:active,.dgrid-content:active{
   background:none;
 }
 
-}/*...this is needed to stop blue flash on grid on mobile*/
 
 .dgrid-content,.dgrid-input{
   cursor:pointer;
@@ -981,20 +866,7 @@ th:active{
   background-color:inherit;
 }
 
-
-#timeDiv {
-  padding:1px 1px 1px 1px;
-  bottom:16px;
-  right:28px;
-  background-color:rgba(0,0,0,0);
-  font-size:0.875em;
-  font-weight:bold;
-  color: #333;
-}
-
-.hiddenPath{
-  visibility:hidden;
-}
+/**Grid row highlight colors**/
 .highlmag{
   background-color:rgba(252,109,224,0.7);
 }
@@ -1009,6 +881,136 @@ th:active{
 }
 .highlbro{
   background-color:rgba(112, 84, 59, 0.7);
+}
+
+#dataNode{
+  width:86%;
+  margin-left:25px;
+  -webkit-transition:opacity 0.15s ease;
+ -moz-transition:    opacity 0.15s ease;
+  transition:        opacity 0.15s ease;
+ -o-transition:      opacity 0.15s ease;
+}
+.projectinfo{
+  display:block;
+  margin-bottom:10px;
+}
+#dataCon{
+  overflow-y:scroll;
+  position:relative;
+  height:100%;
+  transform:translate3d(0,0,0);
+ -webkit-transform:translate3d(0,0,0);
+}
+#downloadNode{
+  display: none;
+  padding:0 23px 5px 0;
+ -webkit-transition: opacity 0.25s ease;
+ -moz-transition:    opacity 0.25s ease;
+  transition:        opacity 0.25s ease;
+ -o-transition:      opacity 0.25s ease;
+}
+
+.downloadlink{
+  margin-top:4px;
+  float:right;
+  font-size:0.9em;
+  line-height: 1.2em;
+  padding:0 1px 0 1px;
+}
+
+.downloadlink:hover{
+  color:#fff;
+  background-color:#5ADE6B;
+}
+
+.downloadlink:active{
+  margin-top:5px;
+}
+
+#dlLink{
+  margin-right:10px;
+}
+#dlTitle{
+  margin-left:27px;
+}
+
+#foot{
+  transform:translate3d(0,0,0);
+ -webkit-transform:translate3d(0,0,0);
+ -moz-box-sizing:border-box;
+  box-sizing:border-box;
+  margin:0;
+  position:absolute;
+  bottom:0;
+  left:0;
+  font-size:1em;
+  height:32px;
+  width:100%;
+  white-space:nowrap;
+  overflow:visible;
+}
+.footDiv{
+ -moz-box-sizing:border-box;
+  box-sizing:border-box;
+  display:inline-block;
+  vertical-align: top;
+  border: 1px solid #a5b6e0;
+  height:32px;
+  padding:3px;
+  width:33.3333333%;
+  text-align:center;
+  background-color:rgba(210,225,249,1);
+  background-image:-webkit-linear-gradient(top, rgba(243,243,243,0.8), rgba(210,225,249,0.8));
+  background-image:-moz-linear-gradient(top, rgba(243,243,243,0.8), rgba(210,225,249,0.8));
+  cursor:default;
+}
+.footDiv:hover{
+  cursor:pointer;
+  background-image:-webkit-linear-gradient(top, #e1ebfb, #b4cdf5);
+  background-image:-moz-linear-gradient(top, #e1ebfb, #b4cdf5);
+  background-color:#b4cdf5;
+}
+.footDiv:active{
+  background-color:rgba(243,243,243,1);
+  background-image:-webkit-linear-gradient(top,#a0bce5,#f0f5fd);
+  background-image:-moz-linear-gradient(top,#a0bce5,#f0f5fd);
+  padding-top:4px;
+}
+
+#infopane{
+  -moz-box-sizing:border-box;
+  box-sizing:border-box;
+  background:url(images/bg.png);
+  overflow-y:scroll;
+  padding:3px 5px 0 25px;
+  margin-top:3px;
+  position:absolute;
+  height:242px;
+  width:100%;
+  bottom:-210px;
+  transform:translate3d(0,0,0);
+ -webkit-transform:translate3d(0,0,0);
+ -webkit-transition: -webkit-transform 0.15s ease;
+ -moz-transition:    transform 0.15s ease;
+  transition:        transform 0.15s ease;
+ -o-transition:      transform 0.15s ease;
+}
+#infoPaneTitle{
+  font-size:1.5em;
+  margin-bottom:0;
+}
+
+.activeFoot,.activeFoot:hover{
+  background-color:rgba(243,243,243,1);
+  background-image:-webkit-linear-gradient(top,#a0bce5,#f0f5fd);
+  background-image:-moz-linear-gradient(top,#a0bce5,#f0f5fd);
+}
+
+
+.helpglow{
+  box-shadow:0 0 16px 6px #5ADE6B !important;
+  background-color:#5ADE6B;             
 }
 
 

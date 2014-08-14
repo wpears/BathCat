@@ -59,25 +59,17 @@ define(["dojo/dom-class"],function(domClass){
         return scroller.firstChild.childNodes[shuffleTracker[oid-1]];
     }
 
-    function addHighlight(oid){
-      if(OIDs[oid]) domClass.add(gridToggle,"gridHighlight")
-    }
-
-    function removeHighlight(oid){
-      if(OIDs[oid]) domClass.remove(gridToggle,"gridHighlight")
-    }
 
     function setNode(){
       gridToggle = scroller.getElementsByClassName('gridToggle')[toggleCount];
     }
 
+
     function getRow(){
       return gridToggle.parentNode.parentNode.parentNode;
     }
 
-    return { addHighlight:addHighlight
-           , removeHighlight:removeHighlight
-           , setNode:setNode
+    return { setNode:setNode
            , getRow:getRow
            };
   };

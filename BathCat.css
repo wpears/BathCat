@@ -668,46 +668,6 @@ b{
 }
 
 
-.splitterThumb{
-  overflow:hidden;
-  position:absolute;
-  top:48%;
-  background:#b0b0b0 none;
-  height:19px;
-  left:2px;
-  width:1px
-}
-
-
-#lPSplitter{
-  margin-right:-6px;
-  margin-bottom:1px !important;
-  box-shadow:0 1px 2px 0px #8ca2d7;
-  width:6px;
-  height:100%;
-  background:#e1ebfb;
-  position:absolute;
-  right:0;
-  top:0;
-  z-index: 100;
-}
-
-
-#lPSplitter:hover{
-  cursor:ew-resize;
-}
-
-
-#lPSplitter:active{
-  background-color:#aaa;
-}
-
-
-
-
-
-
-
 .dgrid{
   font-size:1em;
   color:#686868;
@@ -777,9 +737,7 @@ user-select: none;
   background-image:-webkit-linear-gradient(top, #E1EBFB,#f3f3f3);
   background-image:-moz-linear-gradient(top, #E1EBFB,#f3f3f3);
 }
-.gridHighlight{
-  background-color:black;
-}
+
 .gridToggle:active{
   background-color:#E1EBFB;
   background-image:-webkit-linear-gradient(top, #f3f3f3,#E1EBFB);
@@ -882,6 +840,45 @@ th:active{
 .highlbro{
   background-color:rgba(112, 84, 59, 0.7);
 }
+
+
+#lPSplitter{
+  margin-right:-6px;
+  margin-bottom:1px !important;
+  box-shadow:0 1px 2px 0px #8ca2d7;
+  width:6px;
+  height:100%;
+  background:#e1ebfb;
+  position:absolute;
+  right:0;
+  top:0;
+  z-index: 100;
+}
+
+
+#lPSplitter:hover{
+  cursor:ew-resize;
+}
+
+
+#lPSplitter:active{
+  background-color:#aaa;
+}
+
+
+.splitterThumb{
+  overflow:hidden;
+  position:absolute;
+  top:48%;
+  background:#b0b0b0 none;
+  height:19px;
+  left:2px;
+  width:1px
+}
+
+
+
+
 
 #dataNode{
   width:86%;

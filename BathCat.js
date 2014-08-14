@@ -116,7 +116,7 @@ function( BorderContainer
    		, mapDiv = dom.byId("mapDiv")
    		, gridPane, gridNode, spl
    		, dataPane, dataCon, dataNode, dlLink, downloadNode
-   		, crossAnchor, identAnchor, measureAnchor, noClick
+   		, crossAnchor, identAnchor, measureAnchor, toolOffMessage
    		, zoomSlider, fullExtentButton, topo, sat, timeDiv
 
    		, introText = "<p>The <strong>Delta Bathymetry Catalog</strong> houses the complete set of multibeam bathymetric data collected by the Bathymetry and Technical Support section of the California Department of Water Resources.</p><p>Click on a feature in the map or table to bring up its <strong>description</strong>. Double-click to view the <strong>raster image</strong>.</p> <p><strong>Download</strong> data as text files from the descrption pane.</p> <p><strong>Measure</strong> distances, <strong>identify</strong> raster elevations, and draw <strong>profile graphs</strong> with the tools at the top-right.</p> <p>Change what displays by <strong>collection date</strong> with the slider at bottom-right. <strong>Sort</strong> by date and name with the table's column headers.</p> <p>See the <strong>help</strong> below for further information.</p>"
@@ -351,13 +351,13 @@ function( BorderContainer
 					if(ie9){
 						fx.animateProperty({node:leg, duration:200, properties:{right:30}}).play();
 					}else
-					domClass.replace(leg,"movd","legend")
+					domClass.replace(leg,"movd","hiddenLegend")
 				}
 				function hideLegend(){
 					if(ie9){
 						fx.animateProperty({node:leg, duration:200, properties:{right:-255}}).play();
 					}else
-					domClass.replace(leg,"legend","movd");
+					domClass.replace(leg,"hiddenLegend","movd");
 				}
 				return{
 					node:leg,
@@ -538,7 +538,7 @@ function( BorderContainer
 
 
 
-		tooltip = Tooltip(noClick);
+		tooltip = Tooltip(toolOffMessage);
 
 		on.once(crossAnchor,"mousedown", function(e){
 				var options = { map:map
@@ -910,7 +910,7 @@ function( BorderContainer
    		}
 
 
-   		dataPane.innerHTML='<div id="dataCon"><div id="dataNode"></div><div id="downloadNode"><strong id="dlTitle">Downloads:</strong><a class="lrp" href="zips/Metadata.zip" target="_self">Metadata</a><a class="lrp" id="dlLink" href="tryagain.zip" target="_self">Dataset</a></div></div><div id="infopane"></div><div id="foot" class="unselectable"><div class="footDiv">Help</div><div class="footDiv">Terms of Use</div><div class="footDiv">Contact</div></div>';
+   		dataPane.innerHTML='<div id="dataCon"><div id="dataNode"></div><div id="downloadNode"><strong id="dlTitle">Downloads:</strong><a class="downloadlink" href="zips/Metadata.zip" target="_self">Metadata</a><a class="downloadlink" id="dlLink" href="tryagain.zip" target="_self">Dataset</a></div></div><div id="infopane"></div><div id="foot" class="unselectable"><div class="footDiv">Help</div><div class="footDiv">Terms of Use</div><div class="footDiv">Contact</div></div>';
 
    		mainWindow.appendChild(gridPane);
    		mainWindow.appendChild(dataPane);
@@ -1395,7 +1395,7 @@ function( BorderContainer
 			crossAnchor = dom.byId("cros")
 			identAnchor = dom.byId("ident")
 			measureAnchor = dom.byId("mea")
-			noClick = dom.byId("noClick")
+			toolOffMessage = dom.byId("toolOffMessage")
 
 			zoomSlider =dom.byId("mapDiv_zoom_slider")
 			fullExtentButton = dom.byId("fullExtentButton")

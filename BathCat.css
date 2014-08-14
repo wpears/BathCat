@@ -136,6 +136,8 @@ b{
 }
 
 
+
+/**Title**/
 #appTitle{
   color: #99ceff;
   padding:10px 3px;
@@ -160,6 +162,220 @@ b{
   margin-top:1px;
 }
 
+
+
+/**Tools**/
+#ident{
+  background-image:url(images/ident.png);
+  height:32px;
+  width:32px;
+  top:45px;
+  right:78px;
+  border-radius:14px;
+}
+
+
+#cros{
+  height:32px;
+  width:32px;
+  top:45px;
+  right:135px;
+  border-radius:2px;
+  background-image:url(images/graph.png);
+}
+
+
+#mea{
+  background-image: url(images/ruler2.png);
+  width:32px;
+  height:32px;
+  top:45px;
+  right:25px;
+  border-radius:2px;
+}
+
+
+#measur{
+  z-index: 500;
+  display:none;
+  background-color:rgba(245,245,245,0.8);
+  width:214px;
+  height:120px;
+  top:80px;
+  right:18px;
+  border-radius: 6px;
+  border:1px solid;
+  box-shadow:0px 2px 2px -1px #a5b6e0;
+}
+
+
+#toolOffMessage{
+  padding:3px 7px 7px 7px;
+  font-size: 0.875em;
+  z-index:400;
+  display:none;
+  opacity:0;
+  height:40px;
+  width:120px;
+  background-image:url(images/bg.png);
+  border-radius: 6px;
+  box-shadow: 1px 1px 1px 0 #b2b2b2,
+              0 0 1px 1px #b2b2b2;
+ -webkit-transition: opacity 0.1s ease;
+ -moz-transition:    opacity 0.1s ease;
+  transition:        opacity 0.1s ease;
+ -o-transition:      opacity 0.1s ease;
+}
+
+
+.unclick{
+  opacity:0.5;
+  background-color:rgba(230,237,255,0.5);
+  cursor:default
+}
+
+
+.clickable{
+  background-color:rgba(230,237,255,0.8);
+  opacity:1;
+}
+
+
+.clickable:hover{
+  cursor:pointer;
+  box-shadow: 0 1px 1px 0 #003793;
+}
+
+
+.clickable:active{
+  margin-top:1px;
+  box-shadow: 0 0 1px 0 #2d7bff;
+}
+
+
+
+/**Zoom Slider additions**/
+#mapDiv_zoom_slider{
+  left:10px;
+  top:5px;
+}
+
+
+#fullExtentButton{
+  background: url(images/globe.png) no-repeat;
+  width:24px;
+  height:24px;
+  top:40px;
+  left:14px;
+  opacity:0.8;
+  border-radius:15px;
+}
+
+
+#fullExtentButton:hover{
+  cursor:pointer;
+  opacity:1;
+}
+
+
+#fullExtentButton:active{
+  top:41px;
+}
+
+
+
+/**Basemap switcher**/
+#bmaps{
+  bottom:10px;
+  left:10px;
+  width:150px;
+}
+
+
+.bmapspan{
+  position:absolute;
+  bottom:0;
+  margin-bottom:-4px;
+  margin-left:21px;
+}
+
+
+.bmap{
+  position:relative;
+  font-size:12px;
+  font-weight:500;
+  color:#fdfdfd;
+  text-shadow:0 0 2px #333,
+              0 0 2px #333;
+  border-radius:2px;
+  border:1px solid #888;
+  box-shadow: 0px 1px 1px 0 #333,
+             inset 0px 1px 1px 0px #eee;
+}
+
+
+.bmap:hover{
+  cursor:pointer;
+   box-shadow: 0px 1px 1px 0 #222,
+             inset 0 1px 2px 0 #eff,
+             inset 0 -1px 2px 0 #444;
+}
+
+
+.bmap:active{
+  box-shadow: inset 0 1px 2px 0 #888,
+              inset 0 -1px 1px 0 #ddd;
+  border-top:none;
+}
+
+
+.currentbmap, .currentbmap:hover{
+  box-shadow: inset 0 1px 2px 0 #888,
+              inset 0 -1px 1px 0 #ddd;
+}
+
+
+#topo{
+  background-image:url(images/topo60.png);
+  float:left;
+  width:60px;
+  height:58px;
+}
+
+
+#sat{
+  background-image:url(images/sat60.png);
+  width:60px;
+  height:58px;
+  float:left;
+  margin-left:6px;
+}
+
+
+#topo >.bmapspan{
+  margin-left:17px;
+}
+
+
+
+/**Legend**/
+.hiddenLegend{
+  transform:translate3d(0,0,0);
+ -webkit-transform:translate3d(0,0,0);
+}
+
+#legend{
+  background-image:url(images/bg.png);
+  width:250px;
+  height:55px;
+  bottom:70px;
+  right:-255px;
+  border-radius:4px;
+ -webkit-transition: -webkit-transform 0.15s ease-out;
+ -moz-transition:    transform 0.15s ease-out;
+  transition:        transform 0.15s ease-out;
+ -o-transition:      transform 0.15s ease-out;
+}
 
 
 
@@ -294,11 +510,7 @@ b{
 
 
 
-#gridNode{
-  height:100%;
-  width:100%;
-  border:none;
-}
+
 
 
 #dataNode{
@@ -319,46 +531,7 @@ b{
   height:100%;
   transform:translate3d(0,0,0);
  -webkit-transform:translate3d(0,0,0);
-
 }
-
-
-
-#loadingg{
-  font-size:1.3em;
-  position:absolute;
-  top:32%;
-  left:30%;
-}
-.splitterThumb{
-  overflow:hidden;
-  position:absolute;
-  top:48%;
-  background:#b0b0b0 none;
-  height:19px;
-  left:2px;
-  width:1px
-}
-
-#lPSplitter{
-  margin-right:-6px;
-  margin-bottom:1px !important;
-  box-shadow:0 1px 2px 0px #8ca2d7;
-  width:6px;
-  height:100%;
-  background:#e1ebfb;
-  position:absolute;
-  right:0;
-  top:0;
-  z-index: 100;
-}
-#lPSplitter:hover{
-  cursor:ew-resize;
-}
-#lPSplitter:active{
-  background-color:#aaa;
-}
-
 #downloadNode{
   display: none;
   padding:0 23px 5px 0;
@@ -368,7 +541,7 @@ b{
  -o-transition:      opacity 0.25s ease;
 }
 
-.lrp{
+.downloadlink{
   margin-top:4px;
   float:right;
   font-size:0.9em;
@@ -376,12 +549,12 @@ b{
   padding:0 1px 0 1px;
 }
 
-.lrp:hover{
+.downloadlink:hover{
   color:#fff;
   background-color:#5ADE6B;
 }
 
-.lrp:active{
+.downloadlink:active{
   margin-top:5px;
 }
 
@@ -466,177 +639,54 @@ b{
 
 
 
-#copy{
-  color:#555;
-  float:right;
-  margin-right:20px;
-  padding:5px;
-  font-size:0.75em;
-  text-decoration:none;
-}
 
-#ident{
-  background-image:url(images/ident.png);
-  height:32px;
-  width:32px;
-  top:45px;
-  right:78px;
-  border-radius:14px;
-}
-
-#cros{
-  height:32px;
-  width:32px;
-  top:45px;
-  right:135px;
-  border-radius:2px;
-  background-image:url(images/graph.png);
-}
-
-#mea{
-  background-image: url(images/ruler2.png);
-  width:32px;
-  height:32px;
-  top:45px;
-  right:25px;
-  border-radius:2px;
+#gridNode{
+  height:100%;
+  width:100%;
+  border:none;
 }
 
 
-
-#measur{
-  z-index: 500;
-  display:none;
-  background-color:rgba(245,245,245,0.8);
-  width:214px;
-  height:120px;
-  top:80px;
-  right:18px;
-  border-radius: 6px;
-  border:1px solid;
-  box-shadow:0px 2px 2px -1px #a5b6e0;
-}
-.lab{
-  width:28px;
-  margin:0 auto;
-}
-#noClick{
-  padding:3px 7px 7px 7px;
-  font-size: 0.875em;
-  z-index:400;
-  display:none;
-  opacity:0;
-  height:40px;
-  width:120px;
-  background-image:url(images/bg.png);
-  border-radius: 6px;
-  box-shadow: 1px 1px 1px 0 #b2b2b2,
-              0 0 1px 1px #b2b2b2;
- -webkit-transition: opacity 0.1s ease;
- -moz-transition:    opacity 0.1s ease;
-  transition:        opacity 0.1s ease;
- -o-transition:      opacity 0.1s ease;
-
-}
-
-
-.unclick{
-  opacity:0.5;
-  background-color:rgba(230,237,255,0.5);
-  cursor:default
-}
-
-.clickable{
-  background-color:rgba(230,237,255,0.8);
-  opacity:1;
-}
-.clickable:hover{
-  cursor:pointer;
-  box-shadow: 0 1px 1px 0 #003793;
-}
-.clickable:active{
-  margin-top:1px;
-  box-shadow: 0 0 1px 0 #2d7bff;
-}
-
-
-#bmaps{
-  bottom:10px;
-  left:10px;
-  width:150px;
-}
-
-.bmapspan{
+.splitterThumb{
+  overflow:hidden;
   position:absolute;
-  bottom:0;
-  margin-bottom:-4px;
-  margin-left:21px;
-}
-.bmap{
-  position:relative;
-  font-size:12px;
-  font-weight:500;
-  color:#fdfdfd;
-  text-shadow:0 0 2px #333,
-              0 0 2px #333;
-  border-radius:2px;
-  border:1px solid #888;
-  box-shadow: 0px 1px 1px 0 #333,
-             inset 0px 1px 1px 0px #eee;
+  top:48%;
+  background:#b0b0b0 none;
+  height:19px;
+  left:2px;
+  width:1px
 }
 
-.bmap:hover{
-  cursor:pointer;
-   box-shadow: 0px 1px 1px 0 #222,
-             inset 0 1px 2px 0 #eff,
-             inset 0 -1px 2px 0 #444;
-}
-.bmap:active{
-  box-shadow: inset 0 1px 2px 0 #888,
-              inset 0 -1px 1px 0 #ddd;
-  border-top:none;
-}
-.currentbmap,.currentbmap:hover{
-  box-shadow: inset 0 1px 2px 0 #888,
-              inset 0 -1px 1px 0 #ddd;
-}
-#topo{
-  background-image:url(images/topo60.png);
-  float:left;
-  width:60px;
-  height:58px;
-}
-#sat{
-  background-image:url(images/sat60.png);
-  width:60px;
-  height:58px;
-  float:left;
-  margin-left:6px;
-}
-#topo >.bmapspan{
-  margin-left:17px;
-}
-#mapDiv_zoom_slider{
-  left:10px;
-  top:5px;
-}
-.legend{
-  transform:translate3d(0,0,0);
- -webkit-transform:translate3d(0,0,0);
+
+#lPSplitter{
+  margin-right:-6px;
+  margin-bottom:1px !important;
+  box-shadow:0 1px 2px 0px #8ca2d7;
+  width:6px;
+  height:100%;
+  background:#e1ebfb;
+  position:absolute;
+  right:0;
+  top:0;
+  z-index: 100;
 }
 
-#legend{
-  background-image:url(images/bg.png);
-  width:250px;
-  height:55px;
-  bottom:70px;
-  right:-255px;
-  border-radius:4px;
- -webkit-transition: -webkit-transform 0.15s ease-out;
- -moz-transition:    transform 0.15s ease-out;
-  transition:        transform 0.15s ease-out;
- -o-transition:      transform 0.15s ease-out;
+
+#lPSplitter:hover{
+  cursor:ew-resize;
 }
+
+
+#lPSplitter:active{
+  background-color:#aaa;
+}
+
+
+
+
+
+
+
 
 
 
@@ -1100,23 +1150,4 @@ th:active{
 
 .esriSimpleSliderVertical .esriSimpleSliderIncrementButton {
   border-bottom: 1px solid #666666;
-}
-
-#fullExtentButton{
-  background: url(images/globe.png) no-repeat;
-  width:24px;
-  height:24px;
-  top:40px;
-  left:14px;
-  opacity:0.8;
-  border-radius:15px;
-}
-
-#fullExtentButton:hover{
-  cursor:pointer;
-  opacity:1;
-
-}
-#fullExtentButton:active{
-  top:41px;
 }

@@ -7,7 +7,7 @@
   src: url("fonts/Harabara.ttf");
 }
 @font-face{
-  font-family:SSP;
+  font-family:'Source Sans Pro';
   src: url("fonts/SourceSansPro-Regular.ttf");
 }
 
@@ -19,7 +19,7 @@ html, body {
 body{
   background: url(images/bg.png);
   overflow:hidden; 
-  font-family: 'SSP', sans-serif;
+  font-family: 'Source Sans Pro', sans-serif;
   color: #555566;
   visibility: hidden;
   line-height:1.4em;
@@ -197,8 +197,8 @@ a{
 
 
 #dataNode{
-  width:85%;
-  margin-left:27px;
+  width:86%;
+  margin-left:25px;
   -webkit-transition:opacity 0.15s ease;
  -moz-transition:    opacity 0.15s ease;
   transition:        opacity 0.15s ease;
@@ -365,7 +365,7 @@ a{
   box-sizing:border-box;
   background:url(images/bg.png);
   overflow-y:scroll;
-  padding:3px 5px 0 26px;
+  padding:3px 5px 0 25px;
   margin-top:3px;
   position:absolute;
   height:242px;
@@ -904,6 +904,7 @@ th:active{
  strong{
   color: #99ceff;
   text-shadow:1px 1px 1px #007FDE;
+  font-size:1.1em;
  }
 
  b{
@@ -992,7 +993,7 @@ th:active{
 
 .esriScalebarLabel{
   margin-top:-28px;
-  font-family:SSP;
+  font-family:'Source Sans Pro';
   font-size:0.75em;
   font-weight:bold;
 }

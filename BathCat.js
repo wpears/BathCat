@@ -1,4 +1,4 @@
-require(["dgrid/dgrid"],function(){
+require(["dgrid/dgrid", "modules/modules"],function(){
 require(["dijit/layout/BorderContainer"
 				,"dijit/layout/ContentPane"
 
@@ -32,19 +32,19 @@ require(["dijit/layout/BorderContainer"
   			,"esri/symbols/SimpleMarkerSymbol"
   			,"esri/geometry/Point"
 
-  			,"modules/geosearch.js"
-  			,"modules/symbols.js"
-				,"modules/popup.js"
-				,"modules/crosstool.js"
-				,"modules/identtool.js"
-				,"modules/measuretool.js"
-				,"modules/clearnode.js"
-				,"modules/tooltip.js"
-				,"modules/getdate.js"
-				,"modules/gridconnector.js"
-				,"modules/setvisiblerasters.js"
-				,"modules/basemap.js"
-				,"modules/zoomlevel.js"
+  			,"modules/geosearch"
+  			,"modules/symbols"
+				,"modules/popup"
+				,"modules/crosstool"
+				,"modules/identtool"
+				,"modules/measuretool"
+				,"modules/clearnode"
+				,"modules/tooltip"
+				,"modules/getdate"
+				,"modules/gridconnector"
+				,"modules/setvisiblerasters"
+				,"modules/basemap"
+				,"modules/zoomlevel"
 
 				,"require"
 				],

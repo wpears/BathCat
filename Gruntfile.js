@@ -1,26 +1,5 @@
 module.exports = function(grunt){
   grunt.initConfig({
-    dojo: {
-      dist:{
-        options: {
-          dojo:'js/api_amd_38.min.js',          
-          profile:'build.profile.js',
-          basePath:'./',
-          releaseDir:'./release',
-          action:'release'
-        }
-      }
-    }
-  });
-  grunt.loadNpmTasks('grunt-dojo');
-  grunt.registerTask('default',function(){
-    grunt.task.run('dojo:dist')
-  })
-
-}
-
-module.exports = function(grunt){
-  grunt.initConfig({
     uglify:{
       options:{
         mangle:true,
@@ -28,20 +7,29 @@ module.exports = function(grunt){
       },
       my_target:{
         files:{
-          './spree.min.js':['./spree.js']
+          'built/BathCat.min.js':['BathCat.js']
         }
       }
     },
+    cssmin:{
+      minify:{
+        files:{
+          'built/BathCat.min.css':['BathCat.css']
+        }
+
+      }
+    },
     watch:{
-      files:['./spree.js'],
+      files:['BathCat.js','BathCat.css'],
       tasks:['default']
     }
   })
 
   
   grunt.loadNpmTasks("grunt-contrib-uglify");
+  grunt.loadNpmTasks('grunt-contrib-cssmin');
   grunt.loadNpmTasks("grunt-contrib-watch");
 
 
-  grunt.registerTask('default',['uglify'])
+  grunt.registerTask('default',['uglify','cssmin'])
 };

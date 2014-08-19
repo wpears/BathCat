@@ -21,8 +21,16 @@ module.exports = function(grunt){
     },
     copy: {
       main: {
-        src: 'images/*',
-        dest: 'built/'
+        files:[
+          {
+            src: 'images/*',
+            dest: 'built/'
+          },
+          {
+            src:'fonts/*',
+            dest:'built/'
+          }
+        ]
       }
     },
     watch:{

@@ -19,6 +19,12 @@ module.exports = function(grunt){
 
       }
     },
+    copy: {
+      main: {
+        src: 'images/*',
+        dest: 'built/'
+      }
+    },
     watch:{
       files:['BathCat.js','BathCat.css'],
       tasks:['default']
@@ -26,10 +32,12 @@ module.exports = function(grunt){
   })
 
   
-  grunt.loadNpmTasks("grunt-contrib-uglify");
+  grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-cssmin');
+  grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks("grunt-contrib-watch");
 
 
-  grunt.registerTask('default',['uglify','cssmin'])
+  grunt.registerTask('default', ['uglify','cssmin'])
+  grunt.registerTask('build', ['uglify', 'cssmin', 'copy'])
 };

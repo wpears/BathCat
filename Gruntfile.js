@@ -29,6 +29,10 @@ module.exports = function(grunt){
           {
             src:'fonts/*',
             dest:'built/'
+          },
+          {
+            src:'modules/*',
+            dest:'../dojo/'
           }
         ]
       }

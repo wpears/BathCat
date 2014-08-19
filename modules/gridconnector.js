@@ -315,7 +315,7 @@ function( Grid
       var expandReady = 1;
 
       function expand(e){
-        gridPane.style.width = e.x+"px";
+        gridPane.style.width = e.pageX+"px";
         placeMap();
         expandReady = 1;
       }

@@ -103,7 +103,8 @@ function( BorderContainer
    	var W = window
    		, DOC = document
    		, protocol = DOC.location.protocol
-   		, origin = DOC.location.origin
+   		, host = DOC.location.host
+   		, origin = protocol +'//' + host
    		, touch = has("touch")
    		, ie9 = (DOC.all&&DOC.addEventListener&&!W.atob) ? true : false
    		, fx = ie9 ? require("dojo/_base/fx", function(fx){return fx}) : null

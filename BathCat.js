@@ -1,4 +1,4 @@
-require(["esri/esri","dgrid/dgrid", "modules/modules"],function(){
+require(["esri/esri","dgrid/dgrid", "dojox/dojox","modules/modules"],function(){
 require(["dijit/layout/BorderContainer"
 				,"dijit/layout/ContentPane"
 

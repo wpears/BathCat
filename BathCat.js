@@ -922,7 +922,7 @@ function( BorderContainer
    		if(touch){
    			attachMobileViews();
    		}else{
-   			placeMap();
+   			placeMap(gridPane.clientWidth + 6);
    			attachPanes();
    		}
 		}
@@ -1409,16 +1409,15 @@ function( BorderContainer
 
 
     //Allows proper map layout on load and resize
-		function placeMap(){
- 	    var lPWidth = gridPane.clientWidth+6;
+		function placeMap(width){
  	    if(ie9){
-					mapDiv.style.left = lPWidth+"px";
-				}else{
-					mapDiv.style["-webkit-transform"] = "translate3d("+lPWidth+"px,0, 0)";
-					mapDiv.style["transform"] = "translate3d("+lPWidth+"px,0, 0)";
-				}
+				mapDiv.style.left = width+"px";
+			}else{
+				mapDiv.style["-webkit-transform"] = "translate3d("+width+"px,0, 0)";
+				mapDiv.style["transform"] = "translate3d("+width+"px,0, 0)";
+			}
 
- 			mapDiv.style.width = (innerWidth-lPWidth)+"px";
+ 			mapDiv.style.width = (innerWidth-width)+"px";
    	}
 
 
@@ -1485,7 +1484,7 @@ function( BorderContainer
 			innerWidth = W.innerWidth;
 			setrPConHeight();
 
-			placeMap();
+			placeMap(gridPane.clientWidth+6);
 			setHeader();
 			defaultZoomLevel = winHeight > 940?11:winHeight > 475?10:9;
 

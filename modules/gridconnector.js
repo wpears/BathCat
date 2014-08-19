@@ -315,8 +315,13 @@ function( Grid
       var expandReady = 1;
 
       function expand(e){
-        gridPane.style.width = e.pageX+"px";
-        placeMap();
+        var x = e.pageX
+        var conX = x-17;
+        if(x < 0) x = 0
+        if(conX < 0) conX = 0;
+        gridPane.style.width = x + 'px';
+        gridContent.style.width = conX + 'px';
+        placeMap(x);
         expandReady = 1;
       }
     
@@ -326,7 +331,7 @@ function( Grid
           expandReady = 0;
         }
       }
-    }()
+    }();
 
 
 
@@ -347,7 +352,9 @@ function( Grid
 
     on(spl, "mousedown", function(e){               //expand left pane
       gridPane.style.minWidth = 0;
+
       var mM = on(W, "mousemove", triggerExpand);
+
       on.once(W,"mouseup", function(evt){
         map.resize();
         mM.remove();

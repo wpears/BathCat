@@ -20,7 +20,7 @@ module.exports = function(grunt){
       }
     },
     copy: {
-      main: {
+      deploy: {
         files:[
           {
             src: 'images/*',
@@ -29,7 +29,11 @@ module.exports = function(grunt){
           {
             src:'fonts/*',
             dest:'built/'
-          },
+          }
+        ]
+      },
+      build: {
+        files:[
           {
             src:'modules/*',
             dest:'../dojo/'
@@ -39,7 +43,7 @@ module.exports = function(grunt){
     },
     watch:{
       files:['BathCat.js','BathCat.css'],
-      tasks:['default']
+      tasks:['minify']
     }
   })
 
@@ -50,6 +54,10 @@ module.exports = function(grunt){
   grunt.loadNpmTasks("grunt-contrib-watch");
 
 
-  grunt.registerTask('default', ['uglify','cssmin'])
-  grunt.registerTask('build', ['uglify', 'cssmin', 'copy'])
+  grunt.registerTask('minify', ['uglify','cssmin'])
+  grunt.registerTask('deploy', ['uglify', 'cssmin', 'copy:deploy'])
+  grunt.registerTask('build', ['deploy','copy:build'])
+
+  grunt.registerTask('default','deploy');
+
 };

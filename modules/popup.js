@@ -32,13 +32,21 @@
 
       , place = function(){
           popUp = DOC.createElement('div');
+          popStyle = popUp.style;
+
           popUp.id ='popUp';
           popUp.innerHTML = '<div id = "popHeader"class = "panehead"> <span id = "popTitle">Profile Tool</span> <div id = "popClose"class = "closebox"></div> </div> <div id = "popContainer"></div> <div id = "popSplitterV"> <div id = "popLineV"></div> </div> <div id = "popSplitterH"> <div id = "popLineH"></div> </div>';
+          
+          if(ie9){
+            popStyle.left = "10000px"
+            popStyle.top = "10000px"
+          }
+          
           DOC.body.appendChild(popUp);                  
         }
       , init = function(){
           place();
-          popStyle = popUp.style;
+
           popHeader = DOC.getElementById("popHeader");
           headStyle = popHeader.style;
           popContainer = DOC.getElementById("popContainer");

@@ -26,12 +26,15 @@ define(["require"], function(require){
           whyNoClick.currTimeouts[1] = WIN.setTimeout(whyNoClick.displayTimeout, transition);
         }
 
-        whyNoClick.ieTimeout = function(){fx.animateProperty(
-                                            { node:node
-                                            , duration:transition+50
-                                            , properties:{opacity:0}
-                                            , onEnd:whyNoClick.displayTimeout}).play()
-                                         };
+        whyNoClick.ieTimeout = function(){
+          fx.animateProperty(
+              { node:node
+              , duration:transition+50
+              , properties:{opacity:0}
+              , onEnd:whyNoClick.displayTimeout
+              }).play()
+        };
+
         whyNoClick.currTimeouts =[];
 
 
@@ -46,7 +49,7 @@ define(["require"], function(require){
       styl.display='block';
       if(ie9){
         fx.animateProperty({node:node, duration:75, properties:{opacity:1}}).play();
-        whyNoClick.currTimeouts[0] = WIN.setTimeout(whyNoClick.ieTimeOut, duration);
+        whyNoClick.currTimeouts[0] = WIN.setTimeout(whyNoClick.ieTimeout, duration);
       }else{
         WIN.clearTimeout(whyNoClick.currTimeouts[1]);
         styl.opacity = 1;

@@ -1,4 +1,9 @@
+var fs = require('fs');
+
 module.exports = function(grunt){
+
+  var buildDir = 'built/';
+
   grunt.initConfig({
     uglify:{
       options:{
@@ -24,11 +29,11 @@ module.exports = function(grunt){
         files:[
           {
             src: 'images/*',
-            dest: 'built/'
+            dest: built
           },
           {
             src:'fonts/*',
-            dest:'built/'
+            dest: built
           }
         ]
       },

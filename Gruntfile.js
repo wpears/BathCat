@@ -81,10 +81,16 @@ module.exports = function(grunt){
   });
 
   grunt.registerTask("clean", "Remove all but most recent build", function(){
-    grunt.log.writeln("Removing old builds.");
+    
+    grunt.log.writeln("\n\nRemoving old builds.\n");
     var done = this.async();
+
     fs.readdir('.',function(err,files){
-      if(err){grunt.log.error("Error checking for old builds.")}
+
+      if(err){
+        grunt.log.error("\nError checking for old builds.\n");
+        done();
+      }
 
       var buildReg = /build\d{8}/; //Will break in November 2286!
 
@@ -95,11 +101,14 @@ module.exports = function(grunt){
       });
 
       builds.sort(buildSorter);
-      builds.pop();
+      builds.shift();
 
       async.each(builds,rimraf,function(err){
-        if(err)grunt.log.error("Didn't delete builds properly.");
-        grunt.log.writeln("Builds cleaned.")
+        if(err){
+          grunt.log.error("\nDidn't delete builds properly.\n");
+          done();
+        }
+        grunt.log.writeln("\nBuilds cleaned.\n")
         done();
       });
 

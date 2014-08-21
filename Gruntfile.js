@@ -1,8 +1,23 @@
 var fs = require('fs');
 
+
+function getBuildTag(){
+  return (Date.now()/100000 >>0).toString();
+}
+
 module.exports = function(grunt){
 
-  var buildDir = 'built/';
+
+  var buildDir = 'build'+getBuildTag()+'/';
+  var jsMin = buildDir + 'BathCat.min.js';
+  var cssMin = buildDir + 'BathCat.min.css'
+
+  var uglifyFiles = {};
+  var cssMinFiles = {};
+
+  uglifyFiles[jsMin] = ['BathCat.js'];
+  cssMinFiles[cssMin] = ['BathCat.css'];
+
 
   grunt.initConfig({
     uglify:{
@@ -11,17 +26,12 @@ module.exports = function(grunt){
         compress:true
       },
       my_target:{
-        files:{
-          'built/BathCat.min.js':['BathCat.js']
-        }
+        files:uglifyFiles
       }
     },
     cssmin:{
       minify:{
-        files:{
-          'built/BathCat.min.css':['BathCat.css']
-        }
-
+        files:cssMinFiles
       }
     },
     copy: {
@@ -29,11 +39,11 @@ module.exports = function(grunt){
         files:[
           {
             src: 'images/*',
-            dest: built
+            dest: buildDir
           },
           {
             src:'fonts/*',
-            dest: built
+            dest: buildDir
           }
         ]
       },
@@ -62,7 +72,9 @@ module.exports = function(grunt){
   grunt.registerTask('minify', ['uglify','cssmin'])
   grunt.registerTask('deploy', ['uglify', 'cssmin', 'copy:deploy'])
   grunt.registerTask('build', ['deploy','copy:build'])
-
+  grunt.registerTask("update", "Update build dependencies",function(){});
+  //clean
+  
   grunt.registerTask('default','deploy');
 
 };

@@ -1,7 +1,3 @@
-var fs = require('fs');
-var rimraf = require('rimraf');
-var async = require('async');
-
 
 function getBuildTag(){
   return (Date.now()/100000 >>0).toString();
@@ -9,7 +5,7 @@ function getBuildTag(){
 
 module.exports = function(grunt){
 
-  var dojoBuildDir = '../dojo/'
+  var dojoBuildDir = '../dojo/';
   var buildDir = 'build'+getBuildTag()+'/';
   var jsMin = buildDir + 'BathCat.min.js';
   var cssMin = buildDir + 'BathCat.min.css'
@@ -70,50 +66,18 @@ module.exports = function(grunt){
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks("grunt-contrib-watch");
 
+  grunt.loadTasks('./buildfiles/tasks/'); //clean and update
+
 
   grunt.registerTask('minify', ['uglify','cssmin']);
   grunt.registerTask('deploy', ['uglify', 'cssmin', 'copy:deploy']);
   grunt.registerTask('build', ['deploy','copy:build']);
 
-  grunt.registerTask("update", "Update build dependencies",function(){
-    var done = this.async();
 
+  grunt.registerTask('update', 'Update build dependencies',function(){
+    var done = this.async();
   });
 
-  grunt.registerTask("clean", "Remove all but most recent build", function(){
-    
-    grunt.log.writeln("\n\nRemoving old builds.\n");
-    var done = this.async();
-
-    fs.readdir('.',function(err,files){
-
-      if(err){
-        grunt.log.error("\nError checking for old builds.\n");
-        done();
-      }
-
-      var buildReg = /build\d{8}/; //Will break in November 2286!
-
-      var buildSorter = function(a,b){return a<b};
-
-      var builds = files.filter(function(v){
-        return buildReg.test(v);
-      });
-
-      builds.sort(buildSorter);
-      builds.shift();
-
-      async.each(builds,rimraf,function(err){
-        if(err){
-          grunt.log.error("\nDidn't delete builds properly.\n");
-          done();
-        }
-        grunt.log.writeln("\nBuilds cleaned.\n")
-        done();
-      });
-
-    })
-  });
   
   grunt.registerTask('default','deploy');
 

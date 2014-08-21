@@ -22,6 +22,8 @@
     "grunt-dojo": "~0.3.0",
     "grunt-contrib-cssmin": "~0.10.0",
     "grunt-contrib-watch": "~0.6.1",
-    "grunt-contrib-copy": "~0.5.0"
+    "grunt-contrib-copy": "~0.5.0",
+    "async": "~0.9.0",
+    "rimraf": "~2.2.8"
   }
 }

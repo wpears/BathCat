@@ -1,6 +1,5 @@
 $@
 node_modules
-built
 build*
 !buildfiles
 Thumbs.db

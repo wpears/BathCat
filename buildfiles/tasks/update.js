@@ -17,6 +17,7 @@ module.exports = function(grunt){
       var dojoBuildDir = '../dojo/' + buildsArr[1].sort().pop();
 
       var bcSrc = bcBuildDir + '/BathCat.min.js';
+      var bcHref = bcBuildDir + '/BathCat.min.css';
       var dojoSrc = dojoBuildDir + '/dojo/dojo.js';
 
       fs.readFile('index.html',function(err,data){
@@ -28,6 +29,7 @@ module.exports = function(grunt){
         var $ = cheerio.load(data);
 
         $('#bcScript').attr('src',bcSrc);
+        $('#bcLink').attr('href',bcHref);
         $('#dojoScript').attr('src',dojoSrc);
 
 

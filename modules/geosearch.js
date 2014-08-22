@@ -2,7 +2,22 @@ define (["modules/splice"
         ],
 function( splice
         ){
-  return function(features, insideTimeBoundary, highlighter, showData){
+
+  /* esri's JS API doesn't support events firing on overlapping features. 
+   * Since the catalog highlights datasets on mouseover and there are overlapping datasets,
+   * this is a problem... this module is the solution. It creates bins which can be quickly
+   * searched for datasets that intersect with the current mouse position.
+   * 
+   * Requires a highlighting function to be passed in, which is supplied with a feature's
+   * Object ID and whether to highlight or clear the highlight.
+   *
+   * Respects time boundaries if passed in as an array and will call a function (showData) with a
+   * dataset's attributes when it is stored and highlighted
+   *
+   * Feature storage (through Object IDs) is managed here as well, since the geosearch function
+   * as currently written depends on the ability to store/clear features
+   */
+  return function(features, highlighter, insideTimeBoundary, showData){
     var graphics = features.graphics
       , featureCount = graphics.length
       , oidStore = new Array(featureCount + 1)
@@ -20,6 +35,12 @@ function( splice
       , lastIndex
       ;
 
+    if(!insideTimeBoundary){
+      insideTimeBoundary = new Array(featureCount);
+      for(var i=0; i <featureCount; i++){
+        insideTimeBoundary[i] = 1;
+      }
+    }
 
 
 
@@ -63,7 +84,7 @@ function( splice
       prevArr.length = 1;
       prevArr[0] = oid;
       highlighter(oid,"hi", 1);
-      showData(attributes);
+      if(showData) showData(attributes);
     }
 
 
@@ -115,7 +136,7 @@ function( splice
 
 
 /***********GEOSEARCH****************/
-//n.b. that this could be modularized to be more generally useful, q.v. the repeated code in 
+//bits of these functions could be modularized to be more generally useful, q.v. the repeated code in 
 //clearBin and syntheticQuery. However, currently organized for raw speed (no function call overhead)
 //where possible
 
@@ -265,7 +286,7 @@ function( splice
           temp.length = 0;
           currArr = temp;
         }
-        showData(null);
+        if(showData) showData(null);
       }
 
 

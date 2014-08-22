@@ -310,7 +310,7 @@ function( BorderContainer
 
 
 		//selects map features and manages OIDs
-		geoSearch = GeoSearch(outlines, insideTimeBoundary, highlighter, showData);
+		geoSearch = GeoSearch(outlines, highlighter, insideTimeBoundary, showData);
 
 
 

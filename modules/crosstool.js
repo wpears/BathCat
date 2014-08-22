@@ -346,8 +346,9 @@ function( addSymbol
 
 
       , createChart = function(profile){
-          var chartContainer = construct.create("div", {height:300}, containerNode)
-            , chartDiv = construct.create("div", {height:300}, chartContainer)
+          var conHeight = containerNode.clientHeight -70 + 'px'
+            , chartContainer = construct.create("div", {style:{height:conHeight}}, containerNode)
+            , chartDiv = construct.create("div", {style:{height:conHeight}}, chartContainer)
             , chart = new Chart(chartDiv)
             ;
             containerNode.scrollTop = containerNode.scrollHeight;

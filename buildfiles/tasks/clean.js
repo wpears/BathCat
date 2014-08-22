@@ -1,6 +1,6 @@
-var fs = require('fs');
 var rimraf = require('rimraf');
 var async = require('async');
+var getBuilds = require('../modules/getBuilds');
 
 module.exports = function(grunt){
 
@@ -9,20 +9,11 @@ module.exports = function(grunt){
     grunt.log.writeln("\n\nRemoving old builds.\n");
     var done = this.async();
 
-    fs.readdir('.',function(err,files){
-
-      if(err){
+    getBuilds('.', function(err,builds){
+     if(err){
         grunt.log.error("\nError checking for old builds.\n");
-        done();
+        return done();
       }
-
-      var buildReg = /build\d{8}/; //Will break in November 2286!
-
-      var buildSorter = function(a,b){return a<b};
-
-      var builds = files.filter(function(v){
-        return buildReg.test(v);
-      });
 
       builds.sort(buildSorter);
       builds.shift();
@@ -30,7 +21,7 @@ module.exports = function(grunt){
       async.each(builds,rimraf,function(err){
         if(err){
           grunt.log.error("\nDidn't delete builds properly.\n");
-          done();
+          return done();
         }
         grunt.log.writeln("\nBuilds cleaned.\n")
         done();

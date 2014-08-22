@@ -73,11 +73,6 @@ module.exports = function(grunt){
   grunt.registerTask('deploy', ['uglify', 'cssmin', 'copy:deploy']);
   grunt.registerTask('build', ['deploy','copy:build']);
 
-
-  grunt.registerTask('update', 'Update build dependencies',function(){
-    var done = this.async();
-  });
-
   
   grunt.registerTask('default','deploy');
 

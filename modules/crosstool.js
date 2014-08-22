@@ -103,6 +103,15 @@ function( addSymbol
             ;
           return M.round(numb*offset)/offset;
       }
+
+
+      , blockEvent = function(evt){
+          evt.stopPropagation();
+          evt.preventDefault();
+          return false;
+        }
+
+
       , update = function(p1, p2){
           lineGeometry = new Polyline(spatialRef);
           lineGeometry.addPath([p1, p2]);
@@ -118,7 +127,7 @@ function( addSymbol
         }
 
       , startNewLine = function(e){
-          if(e.pageX < mouseDownX+10&&e.pageX > mouseDownX-10&&e.pageY < mouseDownY+10&&e.pageY > mouseDownY-10)
+          if(e.button != 2 && e.pageX < mouseDownX+10&&e.pageX > mouseDownX-10&&e.pageY < mouseDownY+10&&e.pageY > mouseDownY-10)
             addFirstPoint(e)
         }
 
@@ -143,7 +152,6 @@ function( addSymbol
       }
 
       , addFirstPoint = function(e1){
-        window.chartNames=chartNames;
           var profile = new Profile(e1)
             , mapPoint = e1.mapPoint
             , idArray
@@ -159,6 +167,10 @@ function( addSymbol
           });
 
           self.handlers[3] = map.on("mouse-up", function(e2){
+            if(e2.button == 2){
+              on.once(DOC.body,"contextmenu",blockEvent);
+              return cancelProfile();
+            }
             if(e2.pageX < mouseDownX+10&&e2.pageX > mouseDownX-10&&e2.pageY < mouseDownY+10&&e2.pageY > mouseDownY-10)
               addSecondPoint(e1, e2, profile);
           });
@@ -596,7 +608,7 @@ function( addSymbol
       revive:function(){
         featureEvents.disable(eventFeatures)
         self.handlers[0] = map.on("mouse-down", function(e){mouseDownX = e.pageX;mouseDownY = e.pageY;});
-        self.handlers[1] = map.on("mouse-up", addFirstPoint);
+        self.handlers[1] = map.on("mouse-up", startNewLine);
       },
       stop:function(){
         this.idle();

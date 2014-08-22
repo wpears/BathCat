@@ -78,6 +78,6 @@ module.exports = function(grunt){
   grunt.registerTask('build', ['deploy','copy:build']);
 
   
-  grunt.registerTask('default',['deploy','update']);
+  grunt.registerTask('default',['deploy']);
 
 };

@@ -2,6 +2,8 @@ var rimraf = require('rimraf');
 var async = require('async');
 var getBuilds = require('../modules/getBuilds');
 
+var buildSorter = function(a,b){return a<b};
+
 module.exports = function(grunt){
 
   grunt.registerTask('clean','Remove all but the newest build.', function(){

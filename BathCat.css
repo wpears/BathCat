@@ -381,7 +381,7 @@ b{
 }
 
 
-#legend{
+#legendWrapper{
   background-image:url(images/bg.png);
   width:250px;
   height:55px;
@@ -392,6 +392,17 @@ b{
  -moz-transition:    transform 0.15s ease-out;
   transition:        transform 0.15s ease-out;
  -o-transition:      transform 0.15s ease-out;
+}
+
+
+#legend{
+  width:250px;
+  height:55px;
+}
+
+
+.legend{
+  background-image:url(images/leg.png);
 }
 
 

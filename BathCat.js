@@ -346,7 +346,7 @@ function( BorderContainer
 
 		if(!touch){
 			legendObj = function(){
-				var leg = dom.byId("legend");
+				var leg = dom.byId("legendWrapper");
 
 				function showLegend(){
 					if(ie9){
@@ -881,12 +881,17 @@ function( BorderContainer
    			closer.innerHTML = '<div id="arro"></div>';
 	   		mainWindow.appendChild(closer);
 
-	   		var legend = DOC.createElement('img');
+	   		var legendWrapper = DOC.createElement('div');
+	   		var legend = DOC.createElement('div');
+
+	   		legendWrapper.id = "legendWrapper";
 	   		legend.id = "legend";
-	   		legend.className = "legend atop";
-	   		legend.title = "Image Legend (NAVD88 ft)";
-	   		legend.src = "";
-	   		DOC.body.appendChild(legend);
+
+	   		legendWrapper.className = "atop";
+	   		legendWrapper.title = "Image Legend (NAVD88 ft)";
+
+	   		legendWrapper.appendChild(legend);
+	   		DOC.body.appendChild(legendWrapper);
 	   	}
    	}
 

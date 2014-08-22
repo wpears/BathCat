@@ -18,10 +18,11 @@ define(["modules/settoolvisibility"],function(setToolVisibility){
     ;
 
   function setVisibleRasters(newOIDs, fromCheck){
+    if(!map) throw new Error("Visible Rasters modules not properly initialized.");
     if(!map.layerIds[2]){ //if the raster has not been added, add it.
       map.addLayer(rasterLayer);
       if(!touch){
-        legend.node.src = "built/images/leg.png";
+        legend.node.firstChild.className = "legend";
         legend.show();
       }
     }

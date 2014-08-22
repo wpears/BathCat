@@ -42,6 +42,10 @@ module.exports = function(grunt){
           {
             src:'fonts/*',
             dest: buildDir
+          },
+          {
+            src: 'buildfiles/web.config',
+            dest: buildDir + 'web.config'
           }
         ]
       },
@@ -74,6 +78,6 @@ module.exports = function(grunt){
   grunt.registerTask('build', ['deploy','copy:build']);
 
   
-  grunt.registerTask('default','deploy');
+  grunt.registerTask('default',['deploy','update']);
 
 };

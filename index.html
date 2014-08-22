@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8"/>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no, width=device-width"/>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no, width=device-width">
     <link rel="dns-prefetch" href="http://server.arcgisonline.com">
     <link rel="icon" href="../favicon.ico">
     <!--[if lt IE 9]>
@@ -20,23 +20,23 @@
   <body class="soria" id="body">
     <div id="mainWindow" class="unselectable">
       <div id="mapDiv" class="unselectable">
-        <a id="appTitle"class="atop" href="http://water.ca.gov/ncro/3-ResourceAssessment/RAB_BATH.cfm" target="_blank">Delta Bathymetry Catalog</a>
+        <a id="appTitle" class="atop" href="http://water.ca.gov/ncro/3-ResourceAssessment/RAB_BATH.cfm" target="_blank">Delta Bathymetry Catalog</a>
         <div id="fullExtentButton" class="atop" title="Full Extent"></div>
         <div id="bmaps" class="atop">
-          <div id="topo"class="bmap currentbmap"title="Topographic Basemap"><span class='bmapspan'>Topo.</span></div>
-          <div id="sat"class="bmap"title="Satellite Basemap"><span class='bmapspan'>Sat.</span></div>
+          <div id="topo" class="bmap currentbmap" title="Topographic Basemap"><span class="bmapspan">Topo.</span></div>
+          <div id="sat" class="bmap" title="Satellite Basemap"><span class="bmapspan">Sat.</span></div>
         </div>
-        <div id="mea"class="atop clickable"title="Make map measurements."></div>
-        <div id="ident"class="unclick atop"title="Identify NAVD88 elevation from an image."></div>
-        <div id="cros"class="atop"title="Create a profile graph from an image."></div>
-        <div id="timeDiv"class="atop"></div>
+        <div id="mea" class="atop clickable" title="Make map measurements."></div>
+        <div id="ident" class="unclick atop" title="Identify NAVD88 elevation from an image."></div>
+        <div id="cros" class="atop" title="Create a profile graph from an image."></div>
+        <div id="timeDiv" class="atop"></div>
       </div>
     </div>
     <div id="toolOffMessage" class="atop">Turn an image on to use this tool.</div>
     <!--[if gt IE 8]><!-->
 
-    <script data-dojo-config="async:1,tlmSiblingOfDojo:0" src="../dojo/build14086615/dojo/dojo.js"></script>
-    <script async src="./build14086594/BathCat.min.js"></script>
+    <script id="dojoScript" data-dojo-config="async:1" src="../dojo/build14086615/dojo/dojo.js"></script>
+    <script id="bcScript" async src="./build14086679/BathCat.min.js"></script>
     <!--<![endif]-->
      <!--[if lte IE]><script async src="js/ieselect.js"></script><![endif]-->
   </body>

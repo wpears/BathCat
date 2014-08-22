@@ -3,9 +3,33 @@ define( ["modules/colorrampobject"
         ,"dojo/on"
         ],
 function( ramp
-        , elCache
+        , elementCache
         , on
         ){
+
+  /*****Identify cross sections with minimal server interaction*****/
+
+  /*
+   * The naive way to make cross sections is to send an identify task to the server for every
+   * point of interest. This leads to hundreds of simultaneous requests to the ArcGIS Server,
+   * taking 3-5 seconds to draw a profile and requiring substantial server resources.
+   *
+   * This module is an elaborate hack to almost eliminate server interaction from the tool and
+   * reduce profile creation time to a few hundred miliseconds (much of which is graph drawing)
+   *
+   * This is done by creating and updating a hidden img and canvas to match the image returned
+   * from the ArcGIS server that represents the bathymetry rasters in the current extent.
+   *
+   * The hidden img is written to the canvas, which provides access to individual pixel values.
+   *
+   * The color ramp of every image is fixed such that each color represents the same elevation
+   * across datasets. The mapping from color to elevation was preprocessed with a script in
+   * development. The result is the colorrampobject dependency.
+   *
+   * Thus we can query pixel values from the canvas and get elevations from them with a simple
+   * object lookup. This is quite fast.
+   */
+   
   return function(rasterLayer, map){
     var getImage=rasterLayer.getImageUrl
       , width = map.width
@@ -15,19 +39,18 @@ function( ramp
       , suffix = makeSuffix(width,height)
       , extent = map.extent
       , points
-      , currentLayers = []
       , currentBbox = "&bbox="+extent.xmin+"%2C"+extent.ymin+"%2C"+extent.xmax+"%2C"+extent.ymax
       , lastBbox = 'last'
-      , canCache = elCache('canvas')
-      , imgCache = elCache('img')
+      , canCache = elementCache('canvas')
+      , imgCache = elementCache('img')
       , layerCache = {}
       ;
-    rasterLayer.getImageUrl = function(){  //might not need the monkey patch.. just grab the Bbox from extent on('extent-change')
+
+    rasterLayer.getImageUrl = function(){
       var args = Array.prototype.slice.call(arguments,0,3)
         , cb = arguments[3]
         , fn = function(){
                  var urlArr = arguments[0].split('&');
-                 currentLayers = urlArr[3].slice(19).split('%2C');
                  currentBbox = '&'+urlArr[4];
                  cb.apply(this,arguments);
                }

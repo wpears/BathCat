@@ -29,23 +29,42 @@ function( ramp
    * Thus we can query pixel values from the canvas and get elevations from them with a simple
    * object lookup. This is quite fast.
    */
-   
+
   return function(rasterLayer, map){
-    var getImage=rasterLayer.getImageUrl
-      , width = map.width
+
+    var width = map.width
       , height = map.height
+      , extent = map.extent
+
       , srText = "&bboxSR=102100&imageSR=102100&size="
       , prefix = rasterLayer.url+"/export?dpi=96&transparent=true&format=png8&layers=show%3A"
       , suffix = makeSuffix(width,height)
-      , extent = map.extent
-      , points
       , currentBbox = "&bbox="+extent.xmin+"%2C"+extent.ymin+"%2C"+extent.xmax+"%2C"+extent.ymax
       , lastBbox = 'last'
+      , getImage = rasterLayer.getImageUrl
+
       , canCache = elementCache('canvas')
       , imgCache = elementCache('img')
       , layerCache = {}
+
+      , points
       ;
 
+
+
+    /**Utilities to create image endpoint url**/
+    function makeSuffix(width,height){
+      return srText + width + "%2C" + height + "&f=image"
+    }
+
+
+    function buildQuery(layer){
+      return prefix+layer+currentBbox+suffix;
+    }
+
+
+
+    /**Monkey patch getImageUrl to auto-update the bounding box**/
     rasterLayer.getImageUrl = function(){
       var args = Array.prototype.slice.call(arguments,0,3)
         , cb = arguments[3]
@@ -59,20 +78,88 @@ function( ramp
       getImage.apply(this,args);
     };
 
-    on(window, 'resize', setDim)
 
 
-function setDim(){
-  width = map.container.clientWidth;
-  height = map.container.clientHeight;
-  suffix = makeSuffix(width, height);
-}
+    /**track dimensions and update image endpoint suffix**/
+    on(window, 'resize', setDimensions)
+
+    function setDimensions(){
+      width = map.container.clientWidth;
+      height = map.container.clientHeight;
+      suffix = makeSuffix(width, height);
+    }
 
 
-function makeSuffix(width,height){
-  //console.log(srText,width,srText + width + "%2C" + height + "&f=image")
-  return srText + width + "%2C" + height + "&f=image"
-}
+
+    /**Constructor of a canvas identify task. This will be returned to the caller.**/
+    function task(){
+      this.points=null;
+      this.prepping = 0;
+      this.executing = 0;
+      this.layerCount = 0;
+      this.prepared = {};
+      this.called = 0;
+      this.results ={};
+    }
+
+
+
+    /**The id task's two main functions: prepare a task, then execute it**/
+    task.prototype.prepare = prepare;
+    task.prototype.execute = execute;
+
+
+
+    /**Prepare for the id. Get new img/canvas if the bbox has changed, else reuse them. **/
+    function prepare(layers){
+      if(this.executing&&!layers.length){
+        this.cb(null);
+      }
+      this.prepping = 1;
+      checkBboxFreshness();
+
+      for(var i=0, len=layers.length; i < len; i++){
+        var id=layers[i];
+        this.prepared[id] = 1;
+        var cachedContext = getCanvas(id, createPrepare, this)
+        if(cachedContext){
+          runPrep(id, cachedContext, this);
+        }
+      }
+    }
+
+
+
+
+    function checkBboxFreshness(){
+      if(lastBbox !== currentBbox){
+        
+        for(var key in layerCache){
+          var item = layerCache[key]
+            , can = item.can
+            , ctx = item.ctx
+            , img = item.img
+            ;
+          ctx.clearRect(0,0,can.width,can.height)
+          imgCache.reclaim(img)
+          canCache.reclaim(can)
+          delete layerCache[key]
+        }
+
+        lastBbox = currentBbox;
+      }
+    }
+
+
+
+    function getCanvas(layer, createOnload, thisTask){
+      thisTask.layerCount++;
+      var cachedContext = layerCache[layer]?layerCache[layer].ctx:null;
+      if(cachedContext) return cachedContext;
+      createCanvas(layer, createOnload, thisTask);
+      return false;
+    }
+
 
 
 
@@ -102,38 +189,10 @@ function getElevsForChart(points, ftGap, ctx){
 }
 
 
-function testCache(){
-  if(lastBbox !== currentBbox){
-    for(var key in layerCache){
-      var item = layerCache[key]
-        , can = item.can
-        , ctx = item.ctx
-        , img = item.img
-        ;
-//      console.log("Returning img and can to cache!");
-      ctx.clearRect(0,0,can.width,can.height)
-      imgCache.reclaim(img)
-      canCache.reclaim(can)
-      delete layerCache[key]
-    }
-    lastBbox = currentBbox;
-}
-}
 
 
-function prepare(layers){
-  if(this.executing&&!layers.length){this.cb(null);}
-  this.prepping = 1;
-  testCache();
-  for(var i=0, len=layers.length; i < len; i++){
-    var id=layers[i];
-    this.prepared[id] = 1;
-    var cachedContext = getCanvas(id, createPrepare, this)
-    if(cachedContext){
-      runPrep(id, cachedContext, this);
-    }
-  }
-}
+
+
 
 
 function execute(layers,pointObj,cb){ //points is a flattened array [x0,y0,x1,y1,x2,y2,...]
@@ -141,9 +200,9 @@ function execute(layers,pointObj,cb){ //points is a flattened array [x0,y0,x1,y1
   this.ftGap = pointObj.ftGap;
   this.cb = cb;
   this.executing = 1;
-  testCache();
+  checkBboxFreshness();
   var prep = this.prepared;
-  var that = this;
+  var thisTask = this;
  // console.log("prepped for executing",prep)
   for(var i=0, len=layers.length; i < len; i++){
     var id = layers[i];
@@ -167,63 +226,23 @@ function execute(layers,pointObj,cb){ //points is a flattened array [x0,y0,x1,y1
 }
 
 
-function getCanvas(layer, createOnload, that){
-  //console.log("Getting canvas",arguments)
-  that.layerCount++;
-  var cachedContext = layerCache[layer]?layerCache[layer].ctx:null;
-  if(cachedContext) return cachedContext;
-  createCanvas(layer, createOnload, that);
-  return false;
-}
 
 
-
-/*create a canvas that, when loaded, will do the operation 
-  and spit out an object {layerid:[1:-32.2,2:-28.4, etc]}
-  This means currying the point/list of points on the onload.
-  HOWEVER, necessarily don't know list of points on prepare
-  So instead the PREPARE onloads should put the ready contexts in a stack
-  the execute onloads know everything, and can be passed the curried fn
-
-  And yet how to signal finished, AND ensure whole stack called?
-  Executing flag...
-  on preparing onloads.. could check and execute rather than pushing to stack
-  The "pull or build" fn also increments overlapCount
-  the curried fn decrements before passing to getElevs
-
-
- okay. constructor and prototype
-   bbox and current layers. hm. I think I still have to disallow dragging for now.
-   current layers though... NOPE.remember you are building one query for each layer.
-   you need to instead 
-
-
-   heyyyyyyyo. So the cache. It's done loading... I'll need to just store the context and call
-   getElevsForChart on the pnt arr and context
-  */
-
-
-function buildQuery(layer){
-//  console.log(prefix,layer,currentBbox,suffix)
-  return prefix+layer+currentBbox+suffix;
-}
-
-function decLayerCount(that){
- // console.log("decrementing",that,that.layerCount,that.results)
-  that.layerCount--;
-  if(that.layerCount === 0){
-    that.called=1;
-    that.cb(that.results);
+function decLayerCount(thisTask){
+  thisTask.layerCount--;
+  if(thisTask.layerCount === 0){
+    thisTask.called=1;
+    thisTask.cb(thisTask.results);
   }
 }
 
-function runPrep(layer, ctx, that){
-//  console.log("runPrep", arguments,that.executing)
-  if(that.executing){
-      that.results[layer] = getElevsForChart(that.points, that.ftGap, ctx);
-      decLayerCount(that);
+function runPrep(layer, ctx, thisTask){
+//  console.log("runPrep", arguments,thisTask.executing)
+  if(thisTask.executing){
+      thisTask.results[layer] = getElevsForChart(thisTask.points, thisTask.ftGap, ctx);
+      decLayerCount(thisTask);
   }else{
-      that.prepared[layer]=ctx;
+      thisTask.prepared[layer]=ctx;
   }
 }
 
@@ -244,7 +263,7 @@ function createExecute(layer, ctx, img){
 }
 
 
-function createCanvas(layer, createOnload, that){
+function createCanvas(layer, createOnload, thisTask){
   //console.log("creating canvas", arguments)
   var can = canCache.get()  //watch garbage.. recreate canvas/img trackers
   //console.log(can)
@@ -258,7 +277,7 @@ function createCanvas(layer, createOnload, that){
     layerCache[layer]={ctx:ctx,can:can,img:img};
     can.width = width;
     can.height = height;
-    img.onload = onload.bind(that);
+    img.onload = onload.bind(thisTask);
     img.src = buildQuery(layer);
   //  console.log("waiting for onload");
 }
@@ -276,20 +295,6 @@ function release(){
   canvases.length = 0;
   images.length = 0;
 }
-
-function task(){
-  this.points=null;
-  this.prepping = 0;
-  this.executing = 0;
-  this.layerCount = 0;
-  this.prepared = {};
-  this.called = 0;
-  this.results ={};
-}
-
-
-task.prototype.prepare = prepare;
-task.prototype.execute = execute;
 
 
   return {

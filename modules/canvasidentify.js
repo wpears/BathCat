@@ -97,7 +97,7 @@ function( ramp
       this.prepping = 0;
       this.executing = 0;
       this.layerCount = 0;
-      this.prepared = {};
+      this.preparedContexts = {};
       this.called = 0;
       this.results ={};
     }
@@ -110,7 +110,9 @@ function( ramp
 
 
 
-    /**Prepare for the id. Get new img/canvas if the bbox has changed, else reuse them. **/
+    /**Prepare for the id. Get new img/canvas if the bbox has changed, else reuse them.
+     * This allows for canvases/images to be loaded before the canvas needs to be queried
+     **/
     function prepare(layers){
       if(this.executing&&!layers.length){
         this.cb(null);
@@ -119,18 +121,42 @@ function( ramp
       checkBboxFreshness();
 
       for(var i=0, len=layers.length; i < len; i++){
-        var id=layers[i];
-        this.prepared[id] = 1;
-        var cachedContext = getCanvas(id, createPrepare, this)
+        var layer=layers[i];
+        this.preparedContexts[layer] = null; //signal preparations for this layer have been started
+        var cachedContext = getCachedContext(layer, makePrepareOnload, this)
         if(cachedContext){
-          runPrep(id, cachedContext, this);
+          prepareLayer(layer, cachedContext, this);
         }
       }
     }
 
 
 
+    /**Return a function that can be used as the onload callback of an img made in preparation.**/
+    function makePrepareOnload(layer, ctx, img){
+      return function(){
+        ctx.drawImage(img,0,0);
+        prepareLayer(layer, ctx, this);
+      }
+    }
 
+
+    
+
+    function prepareLayer(layer, ctx, thisTask){
+      if(thisTask.executing){
+        getLayerElevations(layer, ctx, thisTask);
+      }else{
+        thisTask.preparedContexts[layer]=ctx;
+      }
+    }
+
+
+
+
+
+
+    /**If the Bbox has changed, wipe and release each canvas and image associated with a layer**/
     function checkBboxFreshness(){
       if(lastBbox !== currentBbox){
         
@@ -152,12 +178,31 @@ function( ramp
 
 
 
-    function getCanvas(layer, createOnload, thisTask){
+    /**If this layer has cached elements, return the context, else create elements for this layer
+     * The makeOnloadFn is to allow different 
+    **/
+    function getCachedContext(layer, makeOnloadFn, thisTask){
       thisTask.layerCount++;
       var cachedContext = layerCache[layer]?layerCache[layer].ctx:null;
       if(cachedContext) return cachedContext;
-      createCanvas(layer, createOnload, thisTask);
-      return false;
+      createElements(layer, makeOnloadFn, thisTask);
+      return null;
+    }
+
+
+
+
+    function createElements(layer, makeOnloadFn, thisTask){
+      var can = canCache.get();
+      var img = imgCache.get();
+      var ctx  =can.getContext('2d');
+      var onload = makeOnloadFn(layer, ctx, img);
+
+      layerCache[layer]={ctx:ctx,can:can,img:img};
+      can.width = width;
+      can.height = height;
+      img.onload = onload.bind(thisTask);
+      img.src = buildQuery(layer);
     }
 
 
@@ -195,29 +240,31 @@ function getElevsForChart(points, ftGap, ctx){
 
 
 
-function execute(layers,pointObj,cb){ //points is a flattened array [x0,y0,x1,y1,x2,y2,...]
+function execute(layers, pointObj, cb){ //points is a flattened array [x0,y0,x1,y1,x2,y2,...]
   this.points = pointObj.points;
   this.ftGap = pointObj.ftGap;
   this.cb = cb;
   this.executing = 1;
   checkBboxFreshness();
-  var prep = this.prepared;
+  var preparedContexts = this.preparedContexts;
   var thisTask = this;
- // console.log("prepped for executing",prep)
+
+  //If we've encountered a new layer (no preparations), get or create its context/canvas/img
   for(var i=0, len=layers.length; i < len; i++){
-    var id = layers[i];
-    if(prep[id]) continue;
-    getCanvas(id, createExecute, this);
+    var layer = layers[i];
+    if(preparedContexts[layer] !== undefined) continue;
+    else getCachedContext(layer, makeExecuteOnload, this);
   }
-//  console.log("checking for layers in prep")
-  for(var layer in prep){
-    //console.log(layer,prep[layer])
-    if(prep[layer] !== 1){
-      this.results[layer] = getElevsForChart(this.points, this.ftGap, prep[layer]);
-      decLayerCount(this);
+
+  //get elevations for the contexts that were fully prepared before we started executing
+  for(var layer in preparedContexts){
+    if(preparedContexts[layer]){
+      getLayerElevations(layer, prepared[layer], this);
     }
   }
-  if(this.prepping &&!Object.keys(prep).length){cb(null);}
+  
+  //exit if in unexpected state
+  if(this.prepping && !Object.keys(preparedContexts).length){cb(null);}
 
   /*loop through layers, if in prepared continue, else build or pull from cache. execute from prepared.
   execute others.
@@ -226,6 +273,10 @@ function execute(layers,pointObj,cb){ //points is a flattened array [x0,y0,x1,y1
 }
 
 
+function getLayerElevations(layer, ctx, thisLayer){
+  this.results[layer] = getElevsForChart(this.points, this.ftGap, ctx);
+  decLayerCount(this);
+}
 
 
 function decLayerCount(thisTask){
@@ -236,51 +287,14 @@ function decLayerCount(thisTask){
   }
 }
 
-function runPrep(layer, ctx, thisTask){
-//  console.log("runPrep", arguments,thisTask.executing)
-  if(thisTask.executing){
-      thisTask.results[layer] = getElevsForChart(thisTask.points, thisTask.ftGap, ctx);
-      decLayerCount(thisTask);
-  }else{
-      thisTask.prepared[layer]=ctx;
-  }
-}
 
-function createPrepare(layer, ctx, img){
- // console.log("createPrep",arguments)
+function makeExecuteOnload(layer, ctx, img){
   return function(){
     ctx.drawImage(img,0,0);
-    runPrep(layer, ctx, this);
+    getLayerElevations(layer, ctx, this);
   }
 }
 
-function createExecute(layer, ctx, img){
-  return function(){
-    ctx.drawImage(img,0,0);
-    this.results[layer] = getElevsForChart(this.points, this.ftGap, ctx);
-    decLayerCount(this);
-  }
-}
-
-
-function createCanvas(layer, createOnload, thisTask){
-  //console.log("creating canvas", arguments)
-  var can = canCache.get()  //watch garbage.. recreate canvas/img trackers
-  //console.log(can)
-  var img = imgCache.get()
-    //console.log(img)
-  var ctx  =can.getContext('2d')
-  //console.log(ctx)
-  var onload = createOnload(layer, ctx, img);
-
-  //  console.log("Created",can,img,ctx,onload)
-    layerCache[layer]={ctx:ctx,can:can,img:img};
-    can.width = width;
-    can.height = height;
-    img.onload = onload.bind(thisTask);
-    img.src = buildQuery(layer);
-  //  console.log("waiting for onload");
-}
 
 
 function release(){

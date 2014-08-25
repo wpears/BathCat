@@ -188,7 +188,7 @@ function( ramp
 
 
 
-    /**Get and save the canvas/img from the cache manager, run makeOnloadFn to make a closure for the
+    /**Get and save the canvas/img from the cache manager, run makeOnloadFn to get a function for the
      **img's onload (bound to the current task), set to img src to match the current image in the display
      **/
     function createElements(layer, makeOnloadFn, thisTask){

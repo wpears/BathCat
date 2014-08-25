@@ -57,7 +57,6 @@ function( ramp
       return srText + width + "%2C" + height + "&f=image"
     }
 
-
     function buildQuery(layer){
       return prefix+layer+currentBbox+suffix;
     }
@@ -80,7 +79,7 @@ function( ramp
 
 
 
-    /**track dimensions and update image endpoint suffix**/
+    /**Track dimensions and update image endpoint suffix**/
     on(window, 'resize', setDimensions)
 
     function setDimensions(){
@@ -111,7 +110,7 @@ function( ramp
 
 
     /**Prepare for the id. Get new img/canvas if the bbox has changed, else reuse them.
-     * This allows for canvases/images to be loaded before the canvas needs to be queried
+     **This allows for canvases/images to be loaded before the canvas needs to be queried
      **/
     function prepare(layers){
       if(this.executing&&!layers.length){
@@ -142,7 +141,7 @@ function( ramp
 
 
     
-
+    /**If we are executing when the image loads, get elevations, else save prepared context**/
     function prepareLayer(layer, ctx, thisTask){
       if(thisTask.executing){
         getLayerElevations(layer, ctx, thisTask);
@@ -150,9 +149,6 @@ function( ramp
         thisTask.preparedContexts[layer]=ctx;
       }
     }
-
-
-
 
 
 
@@ -179,8 +175,9 @@ function( ramp
 
 
     /**If this layer has cached elements, return the context, else create elements for this layer
-     * The makeOnloadFn is to allow different 
-    **/
+     **The makeOnloadFn is to compensate for different needs whether we are preparing or executing
+     **A simple layer count is used so that we may know when all layers have been processed
+     **/
     function getCachedContext(layer, makeOnloadFn, thisTask){
       thisTask.layerCount++;
       var cachedContext = layerCache[layer]?layerCache[layer].ctx:null;
@@ -191,7 +188,9 @@ function( ramp
 
 
 
-
+    /**Get and save the canvas/img from the cache manager, run makeOnloadFn to make a closure for the
+     **img's onload (bound to the current task), set to img src to match the current image in the display
+     **/
     function createElements(layer, makeOnloadFn, thisTask){
       var can = canCache.get();
       var img = imgCache.get();
@@ -208,117 +207,97 @@ function( ramp
 
 
 
-function getElevation(x,y,ctx){
-   var data = ctx.getImageData(x, y, 1, 1).data
-    , key = (data[0]<<16)+(data[1]<<8)+data[2]
-    ;
- //   console.log(data,key)
-    return ramp[key];
-}
+    function execute(layers, pointObj, cb){
+      /*points is a flattened xy array [x0,y0,x1,y1,...,xn,yn]*/
+      /*ftGap determines spacing of points in the query*/
+      this.points = pointObj.points;
+      this.ftGap = pointObj.ftGap;
+      this.cb = cb;
+      this.executing = 1;
+
+      checkBboxFreshness();
+      var preparedContexts = this.preparedContexts;
+      var thisTask = this;
+
+      /*With a new layer (no preparations), get its context/canvas/img, then get elevations*/
+      for(var i=0, len=layers.length; i < len; i++){
+        var layer = layers[i];
+        if(preparedContexts[layer] !== undefined) continue;
+        else getCachedContext(layer, makeExecuteOnload, this);
+      }
+
+      /*Get elevations for the contexts that were fully prepared before we started executing*/
+      for(var layer in preparedContexts){
+        if(preparedContexts[layer]){
+          getLayerElevations(layer, prepared[layer], this);
+        }
+      }
+
+      /*exit if in unexpected state*/
+      if(this.prepping && !Object.keys(preparedContexts).length){cb(null);}
+    }
 
 
-function getElevations(points, ctx){
-  var elevs = new Array(points.length/2);
-  for(var i = 0, j = points.length; i<j; i+=2){
-    elevs[i/2]=getElevation(points[i],points[i+1],ctx);
-  }
-  return elevs;
-}
 
-function getElevsForChart(points, ftGap, ctx){
-  var elevs = new Array(points.length/2);
-  for(var i = 0, j = points.length; i<j; i+=2){
-    elevs[i/2]={x:ftGap*i/2,y:getElevation(points[i],points[i+1],ctx)};
-  }
-  return elevs;
-}
+    /**Draw to the canvas and get elevations for layers first encountered in the execute step**/
+    function makeExecuteOnload(layer, ctx, img){
+      return function(){
+        ctx.drawImage(img,0,0);
+        getLayerElevations(layer, ctx, this);
+      }
+    }
 
 
 
+    /**Calculate elevations and mark this layer as processed**/
+    function getLayerElevations(layer, ctx, thisLayer){
+      this.results[layer] = getElevations(this.points, this.ftGap, ctx);
+      decLayerCount(this);
+    }
 
 
 
+    /**Mark a layer as processed by decrementing the task's layerCount
+     **Once everything has been processed, call the callback with all the results
+     **/
+    function decLayerCount(thisTask){
+      thisTask.layerCount--;
+      if(thisTask.layerCount === 0){
+        thisTask.called=1;
+        thisTask.cb(thisTask.results);
+      }
+    }
 
 
-function execute(layers, pointObj, cb){ //points is a flattened array [x0,y0,x1,y1,x2,y2,...]
-  this.points = pointObj.points;
-  this.ftGap = pointObj.ftGap;
-  this.cb = cb;
-  this.executing = 1;
-  checkBboxFreshness();
-  var preparedContexts = this.preparedContexts;
-  var thisTask = this;
 
-  //If we've encountered a new layer (no preparations), get or create its context/canvas/img
-  for(var i=0, len=layers.length; i < len; i++){
-    var layer = layers[i];
-    if(preparedContexts[layer] !== undefined) continue;
-    else getCachedContext(layer, makeExecuteOnload, this);
-  }
+    /**Return an array of objects, each an x,y point with x as distance along the profile
+     **and y as the elevation relative to NAVD88
+     **points is a flattened array of xy points *on the canvas* [x0,y0,x1,y1,...,xn,yn]
+     **/
+    function getElevations(points, ftGap, ctx){
+      var elevs = new Array(points.length/2);
+      for(var i = 0, j = points.length; i<j; i+=2){
+        elevs[i/2]={x:ftGap*i/2,
+                    y:getElevation(points[i], points[i+1], ctx)
+                   };
+      }
+      return elevs;
+    }
 
-  //get elevations for the contexts that were fully prepared before we started executing
-  for(var layer in preparedContexts){
-    if(preparedContexts[layer]){
-      getLayerElevations(layer, prepared[layer], this);
+
+
+    /*Get image data at a canvas xy point, encode it, and get the elevation from the ramp object**/
+    function getElevation(x, y, ctx){
+      var data = ctx.getImageData(x, y, 1, 1).data
+      , key = (data[0]<<16)+(data[1]<<8)+data[2]
+      ;
+      return ramp[key];
+    }
+
+
+
+    return {
+      task:task
     }
   }
-  
-  //exit if in unexpected state
-  if(this.prepping && !Object.keys(preparedContexts).length){cb(null);}
-
-  /*loop through layers, if in prepared continue, else build or pull from cache. execute from prepared.
-  execute others.
-  */
-
-}
-
-
-function getLayerElevations(layer, ctx, thisLayer){
-  this.results[layer] = getElevsForChart(this.points, this.ftGap, ctx);
-  decLayerCount(this);
-}
-
-
-function decLayerCount(thisTask){
-  thisTask.layerCount--;
-  if(thisTask.layerCount === 0){
-    thisTask.called=1;
-    thisTask.cb(thisTask.results);
-  }
-}
-
-
-function makeExecuteOnload(layer, ctx, img){
-  return function(){
-    ctx.drawImage(img,0,0);
-    getLayerElevations(layer, ctx, this);
-  }
-}
-
-
-
-function release(){
-  thisCtx = null;
-  for(var i=0, j=canvases.length; i<j; i++){
-    var thisCan=canvases[i],thisImg=images[i];
-    thisCan.getContext('2d').clearRect(0,0,thisCan.width,thisCan.height)
-    canCache.reclaim(canvases[i]);
-    images[i].pnt = null;
-    imgCache.reclaim(images[i]);
-  }
-  canvases.length = 0;
-  images.length = 0;
-}
-
-
-  return {
-    task:task
-  }
-}
 });
-
-//in crosstool
-// instantiate the id tool.
-// get two points.
-// calculate points for full line
-// identify each of these points

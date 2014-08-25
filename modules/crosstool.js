@@ -55,7 +55,12 @@ function( addSymbol
         , SimpleLine
         , SimpleMarker
 
-        ){  
+        ){
+  /* Provide a rasterLayer to query
+   * A container to put the profiles in
+   * An anchor on which clicking activates the tool
+   * And an geoSearch instance, to provide quick layer identification
+   */
   return function ( rasterLayer, container, anchor, geoSearch, options) {
     options=options?options:{};
 
@@ -619,8 +624,6 @@ function( addSymbol
           , yDist = index*obj.yGap
           ;
           return new Point({x:x+xDist,y:y+yDist,spatialReference:spatialRef})
-
-
     }
 
 
@@ -696,11 +699,12 @@ function( addSymbol
 
 
 
-    //Implements the tool interface. 
+    /*Implements the tool interface through which calling code triggers the module's functionality*/ 
     crossTool={
 
       handlers:[],
 
+      /*Initialize the container, apply module-wide, long-lived handlers, save 'this' value*/
       init:function(e){
         function handleClick (e){
           if(domClass.contains(anchor,"clickable")){
@@ -709,6 +713,7 @@ function( addSymbol
             if (tooltip) tooltip(e);
           }
         }
+
         self = this;
         container.init();
         handleClick(e);
@@ -723,37 +728,45 @@ function( addSymbol
         on(container.getClose(),"click", function(){
             tools.wipe(crossTool, anchor, eventFeatures);
         });
+
         chartTheme.chart.fill="rgba(0,0,0,0)"
         chartTheme.plotarea.fill="rgba(0,0,0,0)"
         chartTheme.setMarkers(chartMarkers); 
       },
 
+      /*Display the container and trigger revive*/
       start:function(){
         container.show();
         containerNode = container.getContainer();
         this.revive();
       },
 
+      /*Remove handlers and reenable esri feature events*/
       idle:function(){
         for(var i = 0;i < self.handlers.length;i++){
           self.handlers[i].remove();
         }
+
         self.handlers.length = 0;   
         featureEvents.enable(eventFeatures)
       },
 
+      /*Attach handlers and pause esri events on features*/
       revive:function(){
         featureEvents.disable(eventFeatures)
         self.handlers[0] = map.on("mouse-down", mouseCoords.set);
         self.handlers[1] = map.on("mouse-up", addFirstPoint);
       },
 
+      /*After removing handlers, remove UI and graphics, then hide the container*/
       stop:function(){
         this.idle();
-        currentNumber = 1;   
+        currentNumber = 1;
+
         for(var i = 0, j = profiles.length;i < j;i++){
           removeChartAndGraphics(profiles[i]); 
-        } 
+        }
+
         clearNode(containerNode);
         container.hide();
         profiles.length = 0;

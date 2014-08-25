@@ -58,21 +58,27 @@ function( addSymbol
         ){  
   return function ( rasterLayer, container, anchor, geoSearch, options) {
       options=options?options:{};
+
+      /*The crossTool implements the tool interface from modules/tools.*/
+      /*This module is initalized by calling the tool's init method.*/
+      /*The listeners/fns herein are coordinated around the tool's start/stop/revive/idle methods*/
+      /*See the creation of the crossTool object at the bottom of this module for more info*/
       var crossTool
         , self
         , W = window
         , DOC = document
+
         , map = options.map||W.esri.map||W.map
-        , rastersShowing = options.rastersShowing||null //Use rastersShowing if you turn off rasters
+          /*Use rastersShowing to toggle rasters on and off*/
+        , rastersShowing = options.rastersShowing||null
         , eventFeatures = options.eventFeatures||[]
         , chartNames = options.chartNames||null
         , chartDates = options.chartDates||null
         , tooltip = options.tooltip||null
-        , canId = CanvasId(rasterLayer, map)
+
+        , canvasIdentify = CanvasId(rasterLayer, map)
         , spatialRef = map.spatialReference
         , mapGfx = map.graphics
-        , mouseDownY
-        , mouseDownX
         , profiles = []
         , currentNumber = 1
         , mouseLine
@@ -89,52 +95,21 @@ function( addSymbol
         , hoverPointSymbol = new SimpleMarker(SimpleMarker.STYLE_CIRCLE, 10, lineSymbol, new Color('#4879bc'))
 
         , chartMarkers ={
-                  CIRCLE:        "m-3, 0 c0,-5 7,-5 7, 0 m-7, 0 c0, 5 7, 5 7, 0",
-                  SQUARE:        "m-3,-3 l0, 7 7, 0 0,-7 z",
-                  DIAMOND:    "m0,-3 l3, 3 -3, 3 -3,-3 z",
-                  CROSS:        "m0,-3 l0, 7 m-3,-3 l7, 0",
-                  X:        "m-3,-3 l7, 7 m0,-7 l-7, 7",
-                  TRIANGLE:    "m-3, 3 l3,-7 3, 7 z",
+                  CIRCLE:           "m-3, 0 c0,-5 7,-5 7, 0 m-7, 0 c0, 5 7, 5 7, 0",
+                  SQUARE:           "m-3,-3 l0, 7 7, 0 0,-7 z",
+                  DIAMOND:          "m0,-3 l3, 3 -3, 3 -3,-3 z",
+                  CROSS:            "m0,-3 l0, 7 m-3,-3 l7, 0",
+                  X:                "m-3,-3 l7, 7 m0,-7 l-7, 7",
+                  TRIANGLE:         "m-3, 3 l3,-7 3, 7 z",
                   TRIANGLE_INVERTED:"m-3,-3 l3, 7 3,-7 z"}
       
-      , round = function(numb, deci){
-          var M = Math
-            , offset = M.pow(10,deci)
-            ;
-          return M.round(numb*offset)/offset;
-      }
 
-
-      , blockEvent = function(evt){
-          evt.stopPropagation();
-          evt.preventDefault();
-          return false;
-        }
-
-
-      , update = function(p1, p2){
-          lineGeometry = new Polyline(spatialRef);
-          lineGeometry.addPath([p1, p2]);
-          mouseLine.setGeometry(lineGeometry);
-          updateReady = 1;  
-        }
-
-      , moveLine = function(p1, p2){
-          if(updateReady){
-            updateReady = 0;
-            update(p1, p2)
-          }
-        }
-
-      , startNewLine = function(e){
-          if(e.button != 2 && e.pageX < mouseDownX+10&&e.pageX > mouseDownX-10&&e.pageY < mouseDownY+10&&e.pageY > mouseDownY-10)
-            addFirstPoint(e)
-        }
-
-      , Profile = function(e1){
+        /*Profile constructor. Quite a bit of state managed herein*/
+        /*Note the creation of a canvasid task when called*/
+        , Profile = function(e1){
           this.e1 = e1;
           this.e2 = null;
-          this.task = new canId.task();
+          this.task = new canvasIdentify.task();
           this.results  =null;
           this.seriesCount = 0;
           this.pointObj =null;
@@ -151,11 +126,45 @@ function( addSymbol
       
       }
 
+
+
+      /*
+       * Functions for creating the points and line of each profile on the map
+       * Also, functions that manage handlers and prepare/execute the canvas identify task
+       */
+
+
+      /*Track location of mousedowns to differentiate between clicks and pans*/
+      , mouseCoords = function(){
+        var mouseDownX, mouseDownY;
+
+        return {
+          set: function (e){
+            mouseDownX = e.pageX;
+            mouseDownY = e.pageY;
+          },
+          isNear: function(e){
+            if(  e.pageX < mouseDownX+10
+              && e.pageX > mouseDownX-10
+              && e.pageY < mouseDownY+10
+              && e.pageY > mouseDownY-10
+              ) return 1;
+            else return 0;
+          }
+        };  
+      }()
+
+
+
+      /*Create a new profile, add the first point, attach line movement and second point handlers*/
       , addFirstPoint = function(e1){
+          if(e.button == 2 || !mouseCoords.isNear(e1)) return;
+
           var profile = new Profile(e1)
             , mapPoint = e1.mapPoint
             , idArray
             ;
+
           profiles.push(profile);
 
           addSymbol(map, mapPoint, dataPointSymbol, profile.graphics);
@@ -171,9 +180,10 @@ function( addSymbol
               on.once(DOC.body,"contextmenu",blockEvent);
               return cancelProfile();
             }
-            if(e2.pageX < mouseDownX+10&&e2.pageX > mouseDownX-10&&e2.pageY < mouseDownY+10&&e2.pageY > mouseDownY-10)
+            if(mouseCoords.isNear(e2))
               addSecondPoint(e1, e2, profile);
           });
+
           self.handlers[4] = map.on("zoom-start", cancelProfile);
           self.handlers[5] = map.on("pan-start", cancelProfile);
 
@@ -182,58 +192,108 @@ function( addSymbol
           profile.chartName = chartNames[idArray[0]];
           profile.prepared = idArray;
 
-        }
-
-      , resetHandlers = function(){
-          self.handlers[2].remove();
-          self.handlers[3].remove();
-          self.handlers[4].remove();
-          self.handlers[5].remove();
-          self.handlers[1] = map.on("mouse-up", startNewLine);
-        }
-
-      , removeProfile = function (){
-        var profile = profiles.pop();
-        removeChart(profile);
-        currentNumber--;
       }
 
+
+
+      /*Stop current profile*/
       , cancelProfile = function(){
         removeProfile();
         resetHandlers();
       }
 
 
+
+      /*Remove saved profile and any graphics/charts it references*/
+      , removeProfile = function (){
+        var profile = profiles.pop();
+        removeChartAndGraphics(profile);
+        currentNumber--;
+      }
+
+
+
+      /*Reset handlers to inital state*/
+      , resetHandlers = function(){
+          self.handlers[2].remove();
+          self.handlers[3].remove();
+          self.handlers[4].remove();
+          self.handlers[5].remove();
+          self.handlers[1] = map.on("mouse-up", addFirstPoint);
+      }
+
+
+
+      /*Prevent an event from firing/propagating*/
+      , blockEvent = function(evt){
+          evt.stopPropagation();
+          evt.preventDefault();
+          return false;
+      }
+
+
+
+      /*Trigger a line update after the last update has completed*/
+      , moveLine = function(p1, p2){
+          if(updateReady){
+            updateReady = 0;
+            update(p1, p2)
+          }
+      }
+
+
+
+      /*Update line geometry, mark readiness for next update*/
+      , update = function(p1, p2){
+          lineGeometry = new Polyline(spatialRef);
+          lineGeometry.addPath([p1, p2]);
+          mouseLine.setGeometry(lineGeometry);
+          updateReady = 1;  
+        }
+
+
+
+      /*
+       * Get the layers likely effected by the first point
+       * Generate points in a square around the actual event point and look for effected
+       * layers with geoSearch.
+       * These layers get are fed to the canvas id task to be prepared for queries
+       */
       , findLayerIds = function(mapPoint,profile){
-          var mapX = mapPoint.x
-            , mapY = mapPoint.y
-            , d = 50
-            , ids = []
-            , idObj = {}
-            ;
+        var mapX = mapPoint.x
+          , mapY = mapPoint.y
+          , d = 50
+          , ids = []
+          , idObj = {}
+          ;
 
+        for(var x=-d; x<=d; x+=d){
+          for(var y=-d; y<=d; y+=d){
+            
+            var pnt = new Point({x:mapX+x, y:mapY+y, spatialReference:spatialRef});
+            var result = geoSearch({mapPoint:pnt},0,1)
 
-          for(var x=-d; x<=d; x+=d){
-            for(var y=-d; y<=d; y+=d){
-              
-              var pnt = new Point({x:mapX+x, y:mapY+y, spatialReference:spatialRef});
-              var result = geoSearch({mapPoint:pnt},0,1)
-
-              for(var j=0; j<result.length;j++){
-                idObj[result[j]] = 1;
-              }
+            for(var j=0; j<result.length;j++){
+              idObj[result[j]] = 1;
             }
           }
+        }
 
-          for(var item in idObj){
-            if(!rastersShowing||rastersShowing[item])
-              ids.push(+item - 1);
-          }
+        for(var item in idObj){
+          if(!rastersShowing||rastersShowing[item])
+            ids.push(+item - 1);
+        }
 
-          return ids
-      }  
+        return ids;
+      }
 
 
+
+      /*
+       * Add the second point and the profile label. Reset the handlers to allow for the next profile
+       * Build points of interest and execute the canvas id with them,
+       * provding buildGraph to be called with the results when finished
+       */
       , addSecondPoint = function(e1, e2, profile){
           var mp1 = e1.mapPoint
             , mp2 = e2.mapPoint
@@ -257,16 +317,18 @@ function( addSymbol
                        ,self.handlers
                        );
           setTimeout(function(){
-           // if(profile.prepared)
-              profile.task.execute(profile.prepared,profile.pointObj,buildGraph(profile));
+            profile.task.execute(profile.prepared,profile.pointObj,buildGraph(profile));
           },10);
-        }
+      }
+
+
 
       /*
-       * Get difference in pixels and difference in feet.
+       * Get difference in pixels and difference in feet between points 1 and 2
        * Find the distance between points in feet (3,6,9, etc)
        * Convert this into pixels.
-       * Get the rise/run in px (gapInFt*M.sin(ang))
+       * Get the rise/run in pixels (gapInFt*M.sin(ang))
+       * Return object containing generated points and info on the profile's angle and point spacing
        */
       , generatePoints = function(profile){
           var M = Math
@@ -274,6 +336,7 @@ function( addSymbol
             , mp2 = profile.e2.mapPoint
             , sp1 = profile.e1.screenPoint
             , sp2 = profile.e2.screenPoint
+
             , initialX = sp1.x
             , initialY = sp1.y
             , mpdx = mp1.x-mp2.x
@@ -281,6 +344,8 @@ function( addSymbol
             , spdx = initialX-sp2.x
             , spdy = initialY-sp2.y
             , ang = M.atan(mpdy/mpdx)
+
+            /*meters per web mercator meter can be approximated by the cosine of the current latitude*/
             , mPerWmm = M.cos((mp1.getLatitude()+mp2.getLatitude())/360*M.PI)
             , ftPerM = 3.28084
             , distInFt = M.sqrt(mpdx*mpdx+mpdy*mpdy)*mPerWmm*ftPerM
@@ -288,6 +353,7 @@ function( addSymbol
             , gapInFt = M.ceil(distInFt/600)*3
             , gapInWmm = gapInFt/ftPerM/mPerWmm
             , gapInPx = gapInFt*distInPx/distInFt
+
             , pointsInProfile = M.ceil(distInFt/gapInFt + 1)
             , points = new Array(pointsInProfile*2)
             , xComponent = M.cos(ang)
@@ -297,6 +363,8 @@ function( addSymbol
             , xGapWmm = gapInWmm*xComponent
             , yGapWmm = gapInWmm*yComponent
             ;
+
+          /*Account for profiles drawn in any direction*/
           if(spdx < 0){
             yGapPx = -yGapPx;
           }else if(spdx > 0){
@@ -309,12 +377,14 @@ function( addSymbol
             xGapWmm = 0;
           }
 
+          /*both x and y screen componented are flattened into the points array*/
           for(var i=0, len=points.length; i<len; i+=2){
             points[i]= M.round(initialX);
             points[i+1]=M.round(initialY);
-            initialX+= xGapPx;
-            initialY+= yGapPx;
+            initialX += xGapPx;
+            initialY += yGapPx;
           }
+
           return { points:points
                  , xGap:xGapWmm
                  , yGap:yGapWmm
@@ -323,6 +393,11 @@ function( addSymbol
                  , ang:ang
                  };
       }
+
+
+
+
+
 
 
       , buildGraph = function(profile){
@@ -388,6 +463,14 @@ function( addSymbol
           return chart
       }
 
+      /*Round a number to a certain number of decimal places*/
+      , round = function(numb, decimalPlaces){
+          var M = Math
+            , offset = M.pow(10,decimalPlaces)
+            ;
+          return M.round(numb*offset)/offset;
+      }
+
       , generateString = function(profile){
           var linkString = "x,y,z\n"
             , xGap = round(profile.pointObj.xGap,2)
@@ -443,7 +526,7 @@ function( addSymbol
           var box = DOC.createElement('div');
           box.className = "closebox graphclose";
           profile.chartContainer.appendChild(box);
-          on.once(box, "click", function(){removeChart(profile,1);});
+          on.once(box, "click", function(){removeChartAndGraphics(profile,1);});
       }
 
       , addLegend = function(profile){
@@ -460,7 +543,7 @@ function( addSymbol
           //
         }
       
-      , removeChart = function(profile,single){
+      , removeChartAndGraphics = function(profile,single){
         if(single){
           if(profile.chartNumber === currentNumber-1)currentNumber--;
           for(var i = 0; i< profiles.length; i++){
@@ -607,14 +690,14 @@ function( addSymbol
       },
       revive:function(){
         featureEvents.disable(eventFeatures)
-        self.handlers[0] = map.on("mouse-down", function(e){mouseDownX = e.pageX;mouseDownY = e.pageY;});
-        self.handlers[1] = map.on("mouse-up", startNewLine);
+        self.handlers[0] = map.on("mouse-down", setMouseCoords);
+        self.handlers[1] = map.on("mouse-up", addFirstPoint);
       },
       stop:function(){
         this.idle();
         currentNumber = 1;   
         for(var i = 0, j = profiles.length;i < j;i++){
-          removeChart(profiles[i]); 
+          removeChartAndGraphics(profiles[i]); 
         } 
         clearNode(containerNode);
         container.hide();

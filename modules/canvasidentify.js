@@ -1,9 +1,11 @@
 define( ["modules/colorrampobject"
         ,"modules/elementcache"
+        ,"modules/getrasterurl"
         ,"dojo/on"
         ],
 function( ramp
-        , elementCache
+        , ElementCache
+        , GetRasterUrl
         , on
         ){
 
@@ -18,7 +20,8 @@ function( ramp
    * reduce profile creation time to a few hundred miliseconds (much of which is graph drawing)
    *
    * This is done by creating and updating a hidden img and canvas to match the image returned
-   * from the ArcGIS server that represents the bathymetry rasters in the current extent.
+   * from the ArcGIS server that represents the bathymetry rasters in the current extent. The
+   * url tracking/building is done in the getrasterurl module.
    *
    * The hidden img is written to the canvas, which provides access to individual pixel values.
    *
@@ -32,61 +35,14 @@ function( ramp
 
   return function(rasterLayer, map){
 
-    var width = map.width
-      , height = map.height
-      , extent = map.extent
+    var getRasterUrl = GetRasterUrl(rasterLayer, map)
 
-      , srText = "&bboxSR=102100&imageSR=102100&size="
-      , prefix = rasterLayer.url+"/export?dpi=96&transparent=true&format=png8&layers=show%3A"
-      , suffix = makeSuffix(width,height)
-      , currentBbox = "&bbox="+extent.xmin+"%2C"+extent.ymin+"%2C"+extent.xmax+"%2C"+extent.ymax
-      , lastBbox = 'last'
-      , getImage = rasterLayer.getImageUrl
-
-      , canCache = elementCache('canvas')
-      , imgCache = elementCache('img')
+      , canCache = ElementCache('canvas')
+      , imgCache = ElementCache('img')
       , layerCache = {}
 
       , points
       ;
-
-
-
-    /**Utilities to create image endpoint url**/
-    function makeSuffix(width,height){
-      return srText + width + "%2C" + height + "&f=image"
-    }
-
-    function buildQuery(layer){
-      return prefix+layer+currentBbox+suffix;
-    }
-
-
-
-    /**Monkey patch getImageUrl to auto-update the bounding box**/
-    rasterLayer.getImageUrl = function(){
-      var args = Array.prototype.slice.call(arguments,0,3)
-        , cb = arguments[3]
-        , fn = function(){
-                 var urlArr = arguments[0].split('&');
-                 currentBbox = '&'+urlArr[4];
-                 cb.apply(this,arguments);
-               }
-        ;
-      args.push(fn)
-      getImage.apply(this,args);
-    };
-
-
-
-    /**Track dimensions and update image endpoint suffix**/
-    map.on('resize', setDimensions)
-
-    function setDimensions(){
-      width = map.container.clientWidth;
-      height = map.container.clientHeight;
-      suffix = makeSuffix(width, height);
-    }
 
 
 
@@ -154,8 +110,8 @@ function( ramp
 
     /**If the Bbox has changed, wipe and release each canvas and image associated with a layer**/
     function checkBboxFreshness(){
-      if(lastBbox !== currentBbox){
-        
+      if(getRasterUrl.bBoxChanged()){
+
         for(var key in layerCache){
           var item = layerCache[key]
             , can = item.can
@@ -167,8 +123,6 @@ function( ramp
           canCache.reclaim(can)
           delete layerCache[key]
         }
-
-        lastBbox = currentBbox;
       }
     }
 
@@ -198,10 +152,10 @@ function( ramp
       var onload = makeOnloadFn(layer, ctx, img);
 
       layerCache[layer]={ctx:ctx,can:can,img:img};
-      can.width = width;
-      can.height = height;
+      can.width = getRasterUrl.getWidth();
+      can.height = getRasterUrl.getHeight();
       img.onload = onload.bind(thisTask);
-      img.src = buildQuery(layer);
+      img.src = getRasterUrl.getUrl(layer);
     }
 
 

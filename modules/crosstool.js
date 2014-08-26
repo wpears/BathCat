@@ -164,7 +164,7 @@ function( addSymbol
 
     /*Create a new profile, add the first point, attach line movement and second point handlers*/
     , addFirstPoint = function(e1){
-        if(e.button == 2 || !mouseCoords.isNear(e1)) return;
+        if(e1.button == 2 || !mouseCoords.isNear(e1)) return;
 
         var profile = new Profile(e1)
           , mapPoint = e1.mapPoint

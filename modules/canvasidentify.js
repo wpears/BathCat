@@ -229,7 +229,7 @@ function( ramp
       /*Get elevations for the contexts that were fully prepared before we started executing*/
       for(var layer in preparedContexts){
         if(preparedContexts[layer]){
-          getLayerElevations(layer, prepared[layer], this);
+          getLayerElevations(layer, preparedContexts[layer], this);
         }
       }
 
@@ -250,9 +250,9 @@ function( ramp
 
 
     /**Calculate elevations and mark this layer as processed**/
-    function getLayerElevations(layer, ctx, thisLayer){
-      this.results[layer] = getElevations(this.points, this.ftGap, ctx);
-      decLayerCount(this);
+    function getLayerElevations(layer, ctx, thisTask){
+      thisTask.results[layer] = getElevations(thisTask.points, thisTask.ftGap, ctx);
+      decLayerCount(thisTask);
     }
 
 

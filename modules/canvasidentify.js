@@ -80,7 +80,7 @@ function( ramp
 
 
     /**Track dimensions and update image endpoint suffix**/
-    on(window, 'resize', setDimensions)
+    map.on('resize', setDimensions)
 
     function setDimensions(){
       width = map.container.clientWidth;

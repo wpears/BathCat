@@ -149,13 +149,13 @@ function( addSymbol
         init:function(e){
           self = this;
           function handleClick(e){
-            if(domClass.contains(ident,"clickable"))
+            if(domClass.contains(anchor,"clickable"))
               return tools.toggle(e, self);
             else 
               if (toolTooltip) toolTooltip(e);
           }
           handleClick(e);
-          on(ident,"mousedown", handleClick);   
+          on(anchor,"mousedown", handleClick);   
         },              
         start:function(){
           this.revive();
@@ -179,7 +179,7 @@ function( addSymbol
           identOff = 0;
         },
         stop:function(){
-          if(DOC.getElementsByClassName("idle")[0] !== ident) this.idle();
+          if(DOC.getElementsByClassName("idle")[0] !== anchor) this.idle();
           clearGraphics(map,this.graphics);
           clearGraphics(map,this.labels);
           listeners.forEach(function(v){
@@ -196,7 +196,7 @@ function( addSymbol
 
           
         },
-        isShowing:function(){return DOC.getElementsByClassName("activeTool")[0] === ident||DOC.getElementsByClassName("idle")[0] === ident},
+        isShowing:function(){return DOC.getElementsByClassName("activeTool")[0] === anchor||DOC.getElementsByClassName("idle")[0] === anchor},
       };  
     }
 });

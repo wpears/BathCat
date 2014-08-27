@@ -12,11 +12,19 @@ function( on
     var imgCache = ElementCache('img');
 
     var animTargets;
-    var images = {};
+    var images = [];
+
     var DOC = document;
     var playButton = DOC.getElementById("anim");
-
     var container;
+    var animClass = "animationImage";
+    var transClass = "animationImage animationTransition";
+
+    var animationOn = 0;
+    var currIndex = 0;
+    var animDelay = 1500;
+
+
 
     on(playButton,"mousedown",animate);
 
@@ -25,8 +33,6 @@ function( on
       animTargets = getTargets();
       makeImages(animTargets);
 
-      var current = animTargets[0];
-      console.log(animTargets)
     }
 
 
@@ -58,27 +64,54 @@ function( on
 
     function makeImages(targets){
       var count = targets.length;
-      targets.forEach(function(v){
+      targets.forEach(function(v,i){
         var image = imgCache.get();
-        image.className = "animationImage";
+        image.className = animClass;
         image.onload = function(){
           if(--count===0){
-            startAnimation();
+            rasterLayer.hide();
+            animationOn = 1;
+            animLoop();
           }
         }
         image.src=getRasterUrl.getUrl(v);
-        images[v]=image;
+        images.push({layer:v, img:image});
         container.appendChild(image);
       });
     }
 
-
-    function startAnimation(){
-      console.log("STARTING");
-      rasterLayer.hide();
-
+    function getPrev(index){
+      if(index === 0) return images.length-1;
+      return index-1;
     }
 
+    function getNext(index){
+      if(index === images.length-1) return 0;
+      return index+1;
+    }
+
+
+
+    function animLoop(){
+      console.log("looping");
+
+      var prevIndex = getPrev(currIndex);
+      var nextIndex = getNext(currIndex);
+
+      var curr = images[currIndex].img;
+      var prev = images[prevIndex].img;
+      var next = images[nextIndex].img;
+
+      curr.className = transClass;
+      prev.className = animClass;
+
+      next.style.opacity = 1;
+      curr.style.opacity = 0;
+
+      currIndex = nextIndex;
+
+      if(animationOn) setTimeout(animLoop, animDelay);
+    }
 
 
 

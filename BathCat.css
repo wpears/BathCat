@@ -204,7 +204,7 @@ b{
   height:32px;
   width:32px;
   top:45px;
-  right:182px;
+  right:192px;
   border-radius:14px;
   background-image:url(images/play32.png);
 }
@@ -238,6 +238,16 @@ b{
   position:absolute;
   top:0;
   left:0;
+  opacity:0;
+}
+
+
+.animationTransition{
+  z-index:1000;
+ -webkit-transition: opacity 1s ease-in-out;
+ -moz-transition:    opacity 1s ease-in-out;
+  transition:        opacity 1s ease-in-out;
+ -o-transition:      opacity 1s ease-in-out;
 }
 
 

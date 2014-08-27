@@ -61,6 +61,12 @@ function( on
       return +features[a].attributes.Date - +features[b].attributes.Date;
     }
 
+    function startAnimation(){
+      rasterLayer.hide();
+      animationOn = 1;
+      animLoop();
+    }
+
 
     function makeImages(targets){
       var count = targets.length;
@@ -69,9 +75,7 @@ function( on
         image.className = animClass;
         image.onload = function(){
           if(--count===0){
-            rasterLayer.hide();
-            animationOn = 1;
-            animLoop();
+            startAnimation();
           }
         }
         image.src=getRasterUrl.getUrl(v);

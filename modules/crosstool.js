@@ -196,7 +196,6 @@ function( addSymbol
         idArray = findLayerIds(mapPoint,profile);
         profile.task.prepare(idArray);
         profile.chartName = chartNames[idArray[0]];
-        profile.prepared = idArray;
 
     }
 
@@ -289,7 +288,6 @@ function( addSymbol
         if(!rastersShowing||rastersShowing[item])
           ids.push(+item - 1);
       }
-
       return ids;
     }
 
@@ -314,6 +312,7 @@ function( addSymbol
         resetHandlers();
 
         profile.pointObj = generatePoints(profile);
+
         addTextSymbol(map
                      ,profile.chartNumber
                      ,profile.e1.mapPoint
@@ -322,8 +321,12 @@ function( addSymbol
                      ,profile.graphics
                      ,self.handlers
                      );
+
+        var idArray = findLayerIds(mp2,profile)
+        if(!profile.chartName) profile.chartName = chartNames[idArray[0]];
+
         setTimeout(function(){
-          profile.task.execute(profile.prepared,profile.pointObj,buildGraph(profile));
+          profile.task.execute(idArray, profile.pointObj, buildGraph(profile));
         },10);
     }
 
@@ -408,12 +411,14 @@ function( addSymbol
 
     /*Get a fn with the appropriate profile in its closure and build a chart for this profile*/
     , buildGraph = function(profile){
-          var chart = createChart(profile)
+          var chart
             , min = 0
             ;
+        if(profile.chartName) chart = createChart(profile);
 
         return function(results){
-          if(!results){removeProfile(); return}
+          if(!results) return removeProfile();
+          if(!chart) chart = createChart(profile);
 
           /*Release the event loop, needed if imgs are already cached*/
           setTimeout(function(){

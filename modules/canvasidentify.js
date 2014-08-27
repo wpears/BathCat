@@ -177,7 +177,10 @@ function( ramp
       for(var i=0, len=layers.length; i < len; i++){
         var layer = layers[i];
         if(preparedContexts[layer] !== undefined) continue;
-        else getCachedContext(layer, makeExecuteOnload, this);
+        else{
+          var cached = getCachedContext(layer, makeExecuteOnload, this);
+          if(cached) getLayerElevations(layer, cached, this);
+        }
       }
 
       /*Get elevations for the contexts that were fully prepared before we started executing*/
@@ -186,9 +189,6 @@ function( ramp
           getLayerElevations(layer, preparedContexts[layer], this);
         }
       }
-
-      /*exit if in unexpected state*/
-      if(this.prepping && !Object.keys(preparedContexts).length){cb(null);}
     }
 
 

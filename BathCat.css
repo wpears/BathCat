@@ -1071,6 +1071,8 @@ border-radius:2px;
 box-shadow: 0 1px 2px 1px #a5b6e0,
             0px 0px 2px 0 #a5b6e0;
 }
+
+
 #popContainer{
   position:absolute;
   overflow-y:scroll;
@@ -1078,9 +1080,13 @@ box-shadow: 0 1px 2px 1px #a5b6e0,
   width:593px;
   top:27px;
 }
+
+
 #popContainer>div{
   position:relative;
 }
+
+
 .export{
   font-size:15px;
   color:#5ADE6B;
@@ -1094,14 +1100,17 @@ box-shadow: 0 1px 2px 1px #a5b6e0,
   line-height: 1.2em;
 }
 
+
 .export:hover{
   color:#fff;
   background-color:#5ADE6B;
 }
 
+
 .export:active{
   top:4px;
 }
+
 
 .dojoxLegendNode{
   position:absolute;
@@ -1109,21 +1118,30 @@ box-shadow: 0 1px 2px 1px #a5b6e0,
   right:15px;
   font-size:14px;
 }
+
+
 .dojoxLegendText{
   margin-right:5px;
 }
+
+
 .dijitCheckBoxInput{
   margin-left:5px;
 }
+
 
 #popContainer strong{
   margin-top:-305px;
   position:absolute;
 }
+
+
 #popContainer >div >div>div:nth-last-child(2){
   text-shadow:1px 1px 1px #007FDE;
   letter-spacing: 1px;
 }
+
+
 .ie9noexport{
   position:absolute;
   left:-140px;
@@ -1138,6 +1156,8 @@ box-shadow: 0 1px 2px 1px #a5b6e0,
   box-shadow: 1px 1px 1px 0 #a5b6e0,
              -1px 0px 1px 0 #a5b6e0;
 }
+
+
 .panehead{
 -webkit-touch-callout: none;
 -webkit-user-select: none;
@@ -1153,21 +1173,29 @@ user-select: none;
   background-image:-webkit-linear-gradient(top, #f3f3f3,#E1EBFB);
   background-image:-moz-linear-gradient(top, #f3f3f3,#E1EBFB);        
 }
+
+
 #popHeader{
   cursor:all-scroll;
   overflow:hidden;
 }
+
+
 #popHeader:active{
   background-color:#f3f3f3;
   background-image:-webkit-linear-gradient(top, #E1EBFB,#f3f3f3);
   background-image:-moz-linear-gradient(top, #E1EBFB,#f3f3f3);  
 }
+
+
 #popTitle{
   position:absolute;
   top:2px;
   left:4px;
   overflow:hidden;
 }
+
+
 .closebox{
   font-family:sans-serif;
   background: rgba(0,0,0,0) url(images/add24.png) no-repeat;
@@ -1187,13 +1215,19 @@ user-select: none;
   cursor:pointer;
   opacity:0.7;
 }
+
+
 .closebox:hover{
 opacity:1;
 }
+
+
 .graphclose{
 color:#f6f6f6;
 padding:0;
 }
+
+
 #popSplitterV{
   position:absolute;
   right:0;
@@ -1204,9 +1238,13 @@ padding:0;
   border-radius:0 2px 2px 0;
   cursor:e-resize;
 }
+
+
 #popSplitterV:active{
   background-color:#B0B0B0;
 }
+
+
 #popSplitterH{
   position:absolute;
   bottom:0;
@@ -1217,9 +1255,13 @@ padding:0;
   border-radius:0 0 2px 2px;
   cursor:s-resize; 
 }
+
+
 #popSplitterH:active{
   background-color:#B0B0B0;
 }
+
+
 #popLineV{
   position:absolute;
   top:45%;
@@ -1228,6 +1270,8 @@ padding:0;
   left:3px;
   background-color:#B0B0B0;
 }
+
+
 #popLineH{
   position:absolute;
   top:3px;
@@ -1240,6 +1284,7 @@ padding:0;
 
 /**Identify Tool**/
 
+
 .identDiv{
   background: url(images/bg.png) repeat;
   position:absolute;
@@ -1250,11 +1295,15 @@ padding:0;
   box-shadow: 0 1px 2px 1px #a5b6e0,
               0 0 2px 0 #a5b6e0;
 }
+
+
 .identEntry{
   display:block;
   font-size:15px;
   margin-left:8px;
 }
+
+
 .identValue{
   font-weight:600;
 }

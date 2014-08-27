@@ -828,6 +828,15 @@ th:active{
 }
 
 
+.highlmag .field-Image,
+.highlblu .field-Image,
+.highlgre .field-Image,
+.highlred .field-Image,
+.highlbro .field-Image{
+  background-color:rgba(255,255,255,0.4);
+}
+
+
 .hiddenRow.dgrid-row, .hiddenGridToggle.dgrid-row{
   height:0;
   visibility:hidden;

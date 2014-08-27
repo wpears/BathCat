@@ -42,7 +42,7 @@ require(["dijit/layout/BorderContainer"
 				,"modules/clearnode"
 				,"modules/tooltip"
 				,"modules/getdate"
-				,"modules/gridconnector"
+				,"modules/gridconnector.js"
 				,"modules/setvisiblerasters"
 				,"modules/basemap"
 				,"modules/zoomlevel"
@@ -613,16 +613,29 @@ function( BorderContainer
 
 
 		    function cellClick(e){  //grid click handler
-		      var et = e.target, oid = getOIDFromGrid(e), attributes;
-		      if(!oid)return;
-		      if(!geoSearch.isStored(oid)&&et.tagName=="INPUT"&&et.checked)return
+		      var et = e.target
+		      	, oid = getOIDFromGrid(e)
+		      	, attributes
+		      	;
+
+		      if(!oid || et.tagName=="INPUT")return;
+		      if(domClass.contains(et,"field-Image")){
+		      	var input = et.firstChild;
+		      	input.checked = !input.checked;
+		      	return gridInput(e);
+		      }
+
 		      highlighter(oid,"hi", 1);
-		      if(et!== previousRecentTarget){ //prevent click before double click
+
+		      //prevent click before double click
+		      if(et!== previousRecentTarget){
 		        window.clearTimeout(mouseDownTimeout);
 		        previousRecentTarget = et;
 		        mouseDownTimeout = W.setTimeout(nullPrevious, 400);
 		        attributes = outlines.graphics[oid-1].attributes;
-		        if(geoSearch.isStored(oid)&&geoSearch.selected.length === 1){ //target is sole open
+
+		        //target is sole open
+		        if(geoSearch.isStored(oid)&&geoSearch.selected.length === 1){
 		          geoSearch.clear(oid, 1, 1);
 		          showData(null);
 		        }else{
@@ -640,10 +653,12 @@ function( BorderContainer
 		        if(!graphic){
 		          return;
 		        }
+
 		        if(e.target.localName!== "div"){
 		          geoSearch.clearAndSet(oid)
 		          inputBox = gridObject.getInputBox(oid);
 		          map.setExtent(graphic._extent.expand(1.3));
+
 		          if(!inputBox.checked){
 		            inputBox.checked = true;
 		            rastersShowing[oid] = 1;
@@ -653,6 +668,23 @@ function( BorderContainer
 		        }
 		      }
 		    }
+
+
+
+		    function gridInput (e){
+        	var oid = getOIDFromGrid(e);
+
+        	if(rastersShowing[oid]){
+          	rastersShowing[oid] = 0;
+        	}else{
+          	rastersShowing[oid] = 1;
+          //gridObject.makeViewable(oid,map.getLevel(),map.extent.getCenter());
+        	}
+
+        	setVisibleRasters.add(oid);
+        	setVisibleRasters.run(1);
+    		}
+
 
 
 		    function sortAndScroll(fn){
@@ -688,6 +720,9 @@ function( BorderContainer
 		      });
 
 
+		      gridObject.grid.on(".dgrid-input:change", gridInput);
+
+
 		      on(headerNodes[0], "mousedown", sortAndScroll(gridObject.gridSorter.name));
 
 
@@ -701,8 +736,8 @@ function( BorderContainer
 
 
 
-
-				outlines.on("mouse-over", function(e) {//map mouseover handler
+				//map mouseover handler
+				outlines.on("mouse-over", function(e) {
 					if(outlineMouseMove) outlineMouseMove.remove();
 					outlineMouseMove = outlines.on("mouse-move", mmManager);
 					if(cursor){
@@ -724,7 +759,8 @@ function( BorderContainer
 				}
 
 
-				outlines.on("mouse-out", function(e){		//map mouseout handler
+				//map mouseout handler
+				outlines.on("mouse-out", function(e){
 					if(!cursor){map.setMapCursor("default"); cursor=1;}
 					outlineMouseMove.remove();
 					outlineMouseMove = null;
@@ -735,28 +771,37 @@ function( BorderContainer
 				outlines.on("mouse-down", function(e){mouseDownX = e.pageX;mouseDownY = e.pageY;});
 
 
-				outlines.on("mouse-up", function(e){            //map click handler
+        //map click handler
+				outlines.on("mouse-up", function(e){
 					if(e.pageX < mouseDownX+10&&e.pageX > mouseDownX-10&&e.pageY < mouseDownY+10&&e.pageY > mouseDownY-10){
 						justMousedUp = true;
-						var attributes = e.graphic.attributes, oid = attributes.OBJECTID;
-						if(oid!== previousRecentTarget){//prevent click before double click
+
+						var attributes = e.graphic.attributes
+							, oid = attributes.OBJECTID
+							;
+
+						//prevent click before double click
+						if(oid!== previousRecentTarget){
 							W.clearTimeout(mouseDownTimeout);
 							previousRecentTarget = oid;
 							mouseDownTimeout = W.setTimeout(nullPrevious, 400);
+
 							geoSearch(e, 1, 0);
-							if (geoSearch.selected.length > 1)
-								gridObject.gridSorter.ascendingName();
+
+							if(geoSearch.selected.length > 1) gridObject.gridSorter.ascendingName();
 							gridObject.scrollToRow(oid);
 						}
 					}
 				});
 
 
-				outlines.on("dbl-click", function(e){						//map dblclick handler
-					var oid = e.graphic.attributes.OBJECTID,
+				//map dblclick handler
+				outlines.on("dbl-click", function(e){
+					var oid = e.graphic.attributes.OBJECTID
+						//If graphics were already on and accidentally cleared by doubleclick
+						, reSearch = geoSearch.selected.indexOf(oid)===-1
+						;
 
-					//If graphics were already on and accidentally cleared by doubleclick
-					reSearch = geoSearch.selected.indexOf(oid)===-1;
 					if(reSearch){
 						geoSearch(e, 1, 0);
 						gridObject.scrollToRow(oid);

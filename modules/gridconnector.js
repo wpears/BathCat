@@ -335,19 +335,6 @@ function( Grid
 
 
 
-    on(grid,".dgrid-input:change", function(e){
-        var oid =+e.target.parentNode.parentNode.children[2].innerHTML;
-        if(rastersShowing[oid]){
-          rastersShowing[oid] = 0;
-        }else{
-          rastersShowing[oid] = 1;
-          makeViewable(oid,map.getLevel(),map.extent.getCenter());
-        }       
-        setVisibleRasters.add(oid);
-        setVisibleRasters.run(1);
-    });
-
-
     on(headerNodes[3],"mousedown", showAllImages);
 
     on(spl, "mousedown", function(e){               //expand left pane
@@ -370,6 +357,7 @@ function( Grid
            , checkImageInputs:checkImageInputs
            , expand:triggerExpand
            , sedToggle:sedToggle
+           , makeViewable:makeViewable
            };
   }
 });

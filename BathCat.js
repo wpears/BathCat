@@ -35,7 +35,8 @@ require(["dijit/layout/BorderContainer"
   			,"modules/geosearch"
   			,"modules/symbols"
 				,"modules/popup"
-				,"modules/crosstool"
+				,"modules/animationtool.js"
+				,"modules/crosstool.js"
 				,"modules/identtool"
 				,"modules/measuretool"
 				,"modules/clearnode"
@@ -84,6 +85,7 @@ function( BorderContainer
 				, GeoSearch
         , symbols
 				, Popup
+				, AnimationTool
 				, CrossTool
 				, IdentTool
 				, MeasureTool
@@ -565,7 +567,9 @@ function( BorderContainer
 				identTool = IdentTool(identAnchor, rasterUrl, layerArray, options);
 				phasingTools[1].tool = identTool;
 				identTool.init(e);
-		}); 
+		});
+
+		AnimationTool(features, rastersShowing, geoSearch, rasterLayer, map)
 
 		meaTool = MeasureTool( measureAnchor
 			                   , new SimpleLine(SimpleLine.STYLE_SOLID, new Color([0, 0, 0]), 2)

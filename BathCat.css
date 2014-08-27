@@ -200,6 +200,15 @@ b{
   background-image:url(images/graph.png);
 }
 
+#anim{
+  height:32px;
+  width:32px;
+  top:45px;
+  right:182px;
+  border-radius:14px;
+  background-image:url(images/play32.png);
+}
+
 
 #mea{
   background-image: url(images/ruler2.png);

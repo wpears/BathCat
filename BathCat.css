@@ -234,6 +234,13 @@ b{
 }
 
 
+.animationImage{
+  position:absolute;
+  top:0;
+  left:0;
+}
+
+
 #toolOffMessage{
   padding:3px 7px 7px 7px;
   font-size: 0.875em;

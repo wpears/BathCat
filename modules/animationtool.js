@@ -21,6 +21,9 @@ function( on
     var transClass = "animationImage animationTransition";
 
     var loopHandle;
+    var restartHandle;
+
+    var startLoop = 1;
     var currIndex = 0;
     var animDelay = 1500;
 
@@ -81,19 +84,29 @@ function( on
     function stopAnim(){
       console.log("STOPPING");
       clearTimeout(loopHandle);
+      startLoop = 0;
       wipeImages();
     }
 
+
     function restartAnim(){
       console.log("RESTARTING")
-      setTimeout(function(){console.log("RESTART CALLED");makeImages(animTargets)},100);
+      if(restartHandle){
+        clearTimeout(restartHandle);
+      }
+
+
+      restartHandle = setTimeout(function(){
+        restartHandle = null;
+        makeImages(animTargets);
+      },0);
     }
 
 
 
     function makeImages(targets){
       var count = targets.length;
-
+      startLoop = 1;
       cleanImages(count);
 
       targets.forEach(function(v,i){
@@ -106,11 +119,14 @@ function( on
         }
 
         image.className = animClass;
+
         image.onload = function(){
+          console.log("onload",count)
           if(--count===0){
-            animLoop();
+            if(startLoop)animLoop();
           }
         }
+
         image.src=getRasterUrl.getUrl(v);
         images[i] = {layer:v, img:image};
         container.appendChild(image);

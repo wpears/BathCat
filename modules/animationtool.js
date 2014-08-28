@@ -26,12 +26,28 @@ function( on
 
 
 
+
     on(playButton,"mousedown",animate);
+
+
+
+    function stopAnim(){
+      animationOn = 0;
+      wipeImages();
+    }
+
+    function wipeImages(){
+
+    }
+
+
 
     function animate(){
       if(!container) container = DOC.getElementById("mapDiv_layers");
       animTargets = getTargets();
       makeImages(animTargets);
+
+      map.on("pan-start",stopAnim);
 
     }
 
@@ -62,7 +78,6 @@ function( on
     }
 
     function startAnimation(){
-      rasterLayer.hide();
       animationOn = 1;
       animLoop();
     }

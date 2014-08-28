@@ -20,25 +20,26 @@ function( on
     var animClass = "animationImage";
     var transClass = "animationImage animationTransition";
 
-    var animationOn = 0;
+    var loopHandle;
     var currIndex = 0;
     var animDelay = 1500;
 
+    var handlers = function(){
+      var panStart
+        , panEnd
+        ;
 
+      return {
+        attach:function(){
+          panStart = map.on("pan-start", stopAnim);
+          panEnd = map.on("pan-end", restartAnim);
+        }
+      }
+    }();
 
 
     on(playButton,"mousedown",animate);
 
-
-
-    function stopAnim(){
-      animationOn = 0;
-      wipeImages();
-    }
-
-    function wipeImages(){
-
-    }
 
 
 
@@ -47,9 +48,9 @@ function( on
       animTargets = getTargets();
       makeImages(animTargets);
 
-      map.on("pan-start",stopAnim);
-
+      handlers.attach();
     }
+
 
 
 
@@ -62,42 +63,92 @@ function( on
               ;
     }
 
-
     function rastersOn(target){
       return rastersShowing[target]
     }
-
 
     function oidsToLayers(target){
       return target - 1;
     }
 
-
     function featureDates(a,b){
       return +features[a].attributes.Date - +features[b].attributes.Date;
     }
 
-    function startAnimation(){
-      animationOn = 1;
-      animLoop();
+
+
+
+    function stopAnim(){
+      console.log("STOPPING");
+      clearTimeout(loopHandle);
+      wipeImages();
     }
+
+    function restartAnim(){
+      console.log("RESTARTING")
+      setTimeout(function(){console.log("RESTART CALLED");makeImages(animTargets)},100);
+    }
+
 
 
     function makeImages(targets){
       var count = targets.length;
+
+      cleanImages(count);
+
       targets.forEach(function(v,i){
-        var image = imgCache.get();
+        var image;
+
+        if(images[i]){
+          image = images[i].img
+        }else{
+          image = imgCache.get();
+        }
+
         image.className = animClass;
         image.onload = function(){
           if(--count===0){
-            startAnimation();
+            animLoop();
           }
         }
         image.src=getRasterUrl.getUrl(v);
-        images.push({layer:v, img:image});
+        images[i] = {layer:v, img:image};
         container.appendChild(image);
       });
+
+      showImages();
     }
+
+
+
+
+    function showImages(){
+      for(var i=0; i<images.length; i++){
+        images[i].img.style.visibility = "visible";
+      }
+    }
+    
+    function wipeImages(){
+      for(var i=0; i<images.length; i++){
+        images[i].img.style.visibility = "hidden";
+      }
+    }
+
+
+
+
+    function cleanImages(i){
+      var count = i;
+
+      for(;i<images.length;i++){
+        imgCache.reclaim(images[i].img)
+      }
+
+      images.length = count;
+    }
+
+
+
 
     function getPrev(index){
       if(index === 0) return images.length-1;
@@ -108,6 +159,7 @@ function( on
       if(index === images.length-1) return 0;
       return index+1;
     }
+
 
 
 
@@ -129,7 +181,7 @@ function( on
 
       currIndex = nextIndex;
 
-      if(animationOn) setTimeout(animLoop, animDelay);
+      loopHandle = setTimeout(animLoop, animDelay);
     }
 
 

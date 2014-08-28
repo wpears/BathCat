@@ -30,12 +30,16 @@ function( on
     var handlers = function(){
       var panStart
         , panEnd
+        , zoomStart
+        , zoomEnd
         ;
 
       return {
         attach:function(){
           panStart = map.on("pan-start", stopAnim);
           panEnd = map.on("pan-end", restartAnim);
+          zoomStart = map.on("zoom-start", stopAnim);
+          zoomEnd = map.on("zoom-end", restartAnim);
         }
       }
     }();

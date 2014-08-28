@@ -1,8 +1,10 @@
 define( ["dojo/on"
+        ,"dojo/dom-class"
         ,"modules/getrasterurl"
         ,"modules/elementcache"
         ],
 function( on
+        , domClass
         , GetRasterUrl
         , ElementCache
         ){
@@ -19,6 +21,7 @@ function( on
     var container;
     var animClass = "animationImage";
     var transClass = "animationImage animationTransition";
+    var animOn = "animationOn";
 
     var loopHandle;
     var restartHandle;
@@ -26,6 +29,7 @@ function( on
     var startLoop = 1;
     var currIndex = 0;
     var animDelay = 1500;
+
 
     var handlers = function(){
       var panStart
@@ -40,12 +44,37 @@ function( on
           panEnd = map.on("pan-end", restartAnim);
           zoomStart = map.on("zoom-start", stopAnim);
           zoomEnd = map.on("zoom-end", restartAnim);
+        },
+        remove:function(){
+          panStart.remove();
+          panEnd.remove();
+          zoomStart.remove();
+          zoomEnd.remove();
         }
       }
     }();
 
 
-    on(playButton,"mousedown",animate);
+    var toggleAnimation = function(){
+      var animating = 0;
+
+      return function(){
+        domClass.toggle(playButton, animOn);
+        
+        if(animating){
+          freeze();
+          animating = 0;
+        }else{
+          animate();
+          animating = 1;
+        }
+      }
+    }();
+
+
+
+    on(playButton,"mousedown", toggleAnimation);
+
 
 
 
@@ -56,6 +85,12 @@ function( on
       makeImages(animTargets);
 
       handlers.attach();
+    }
+
+
+    function freeze(){
+      stopAnim();
+      handlers.remove();
     }
 
 
@@ -204,34 +239,5 @@ function( on
       loopHandle = setTimeout(animLoop, animDelay);
     }
 
-
-
-//on various updates... animTargets = getTargets();
-
-
-
-   /* return {
-      handlers:[],
-
-      init:function(e){
-
-      },
-
-      start:function(){
-        this.revive();
-      },
-
-      idle:function(){
-
-      },
-
-      revive:function(){
-
-      },
-
-      stop:function(){
-        this.idle();
-      }
-    };*/
   }
 });

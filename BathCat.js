@@ -539,9 +539,11 @@ function( BorderContainer
 
 
 
+		AnimationTool(features, rastersShowing, geoSearch, rasterLayer, map)
 
 
 		tooltip = Tooltip(toolOffMessage);
+
 
 		on.once(crossAnchor,"mousedown", function(e){
 				var options = { map:map
@@ -556,6 +558,7 @@ function( BorderContainer
 				crossTool.init(e);				
 		});
 
+
 		on.once (identAnchor,"mousedown", function(e){
 				var options= { map: map
 										 , rastersShowing: rastersShowing
@@ -569,7 +572,6 @@ function( BorderContainer
 				identTool.init(e);
 		});
 
-		AnimationTool(features, rastersShowing, geoSearch, rasterLayer, map)
 
 		meaTool = MeasureTool( measureAnchor
 			                   , new SimpleLine(SimpleLine.STYLE_SOLID, new Color([0, 0, 0]), 2)
@@ -578,6 +580,7 @@ function( BorderContainer
 												 	 , eventFeatures:eventFeatures
 												 	 }
 												 );
+
 
 		on.once(measureAnchor,"mousedown", function(e){meaTool.init(e)});
 

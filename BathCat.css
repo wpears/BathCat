@@ -180,7 +180,7 @@ b{
 
 
 /**Tools**/
-.activeTool{
+.activeTool, .animationOn{
   box-shadow:0 0 12px 4px #99ceff !important;
   background-color:#a3d4f3;
 }

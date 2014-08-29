@@ -60,7 +60,7 @@ function( on
 
       return function(){
         domClass.toggle(playButton, animOn);
-        
+
         if(animating){
           freeze();
           animating = 0;
@@ -90,7 +90,13 @@ function( on
 
     function freeze(){
       stopAnim();
+      DOC.getElementsByClassName(animClass).forEach(removeNode);
+      images.length = 0;
       handlers.remove();
+    }
+
+    function removeNode(v,i){
+      container.removeChild(v)
     }
 
 
@@ -120,6 +126,23 @@ function( on
 
 
 
+    function selectedChanged(){
+      var oldTargets = animTargets;
+      animTargets = getTargets();
+
+      if(animTargets.length !== oldTargets.length) return 1;
+
+      for(var i=0; i<animTargets.length; i++){
+        if(animTargets[i] !== oldTargets[i]) return 1;
+      }
+
+      return 0;
+    }
+
+
+
+
+
     function stopAnim(){
       console.log("STOPPING");
       clearTimeout(loopHandle);
@@ -142,36 +165,107 @@ function( on
     }
 
 
+    //note need v.. startLoop and count
+    function getNewImage(){
+      var image = imgCache.get();
+      
+      image.className = animClass;
+
+      image.onload = function(){
+        console.log("onload",count)
+        if(--count===0){
+          if(startLoop)animLoop();
+        }
+      }
+
+      image.src= getRasterUrl.getUrl(v);
+      images[i] = {layer:v, img:image};
+      container.appendChild(image);
+    }
+
+
 
     function makeImages(targets){
       var count = targets.length;
       startLoop = 1;
-      cleanImages(count);
+      releaseImages(count);
 
       targets.forEach(function(v,i){
-        var image;
 
-        if(images[i]){
-          image = images[i].img
-        }else{
-          image = imgCache.get();
-        }
+        
 
-        image.className = animClass;
-
-        image.onload = function(){
-          console.log("onload",count)
-          if(--count===0){
-            if(startLoop)animLoop();
-          }
-        }
-
-        image.src=getRasterUrl.getUrl(v);
-        images[i] = {layer:v, img:image};
-        container.appendChild(image);
       });
 
       showImages();
+    }
+
+/*
+splice in images...
+lastTarget..
+[2,5,9]
+[2,5,9,15]
+if not equal at index, splice in
+
+ IMAGES[{2},{5},{9}]
+newTargs[2,6,9]
+
+check
+if equal, use, decrement count, increment imageIndex
+if lessthan, get new image, set onload, splice into images, increment imageIndex
+if greaterthan, get new img, set onload, images[imageIndex] this new img, increment imageIndex
+if images is undef, get new, set onload, images[imageIndex] = thisnewimg, increment
+
+
+
+*/
+
+    function updateImages(targets){
+      var count = targets.length;
+      var newLayers = [];
+      var imgIndex = 0;
+      console.log(images);
+      cleanImages(count);
+      
+      for(var i=0; i<targets.length; i++){
+        var layer = targets[i];
+        var imgObj = images[imgIndex];
+        var imgLayer = +imgObj.layer;
+
+        if(layer === imgLayer){
+          count--;
+        }else if(layer < imgLayer){
+          images.splice(imgIndex,0,getNewImage(layer)); //maybe pass a cb here
+        }else if(layer > imgLayer){
+          images.splice(imgIndex,1);
+          imgIndex--;
+        }else{
+          images[imgIndex] = getNewImage(layer);
+        }
+        imgIndex++;
+      }
+
+      console.log(images);
+
+    }
+
+
+
+
+
+    function releaseImages(count){
+      for(var i=0;i<images.length;i++){
+        imgCache.reclaim(images[i].img)
+      }
+      images.length=count;
+    }
+
+
+    function cleanImages(count){
+      for(var i = count; i<images.length; i++){
+        imgCache.reclaim(images[i].img)
+      }
+
+      images.length = count;
     }
 
 
@@ -192,19 +286,6 @@ function( on
 
 
 
-    function cleanImages(i){
-      var count = i;
-
-      for(;i<images.length;i++){
-        imgCache.reclaim(images[i].img)
-      }
-
-      images.length = count;
-    }
-
-
-
-
     function getPrev(index){
       if(index === 0) return images.length-1;
       return index-1;
@@ -220,6 +301,7 @@ function( on
 
     function animLoop(){
       console.log("looping");
+      if(selectedChanged()) return updateImages(animTargets);
 
       var prevIndex = getPrev(currIndex);
       var nextIndex = getNext(currIndex);

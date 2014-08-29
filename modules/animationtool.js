@@ -165,22 +165,17 @@ function( on
     }
 
 
-    //note need v.. startLoop and count
-    function getNewImage(){
+
+    function getNewImage(layer, cb){
       var image = imgCache.get();
       
       image.className = animClass;
 
-      image.onload = function(){
-        console.log("onload",count)
-        if(--count===0){
-          if(startLoop)animLoop();
-        }
-      }
+      image.onload = cb;
 
-      image.src= getRasterUrl.getUrl(v);
-      images[i] = {layer:v, img:image};
+      image.src= getRasterUrl.getUrl(layer);
       container.appendChild(image);
+      return {layer:layer, img:image};
     }
 
 
@@ -190,10 +185,15 @@ function( on
       startLoop = 1;
       releaseImages(count);
 
+      function cb(){
+        console.log("onload",count)
+        if(--count===0){
+          if(startLoop)animLoop();
+        }
+      }
+
       targets.forEach(function(v,i){
-
-        
-
+        images[i] = getNewImage(v, cb);
       });
 
       showImages();
@@ -225,21 +225,30 @@ if images is undef, get new, set onload, images[imageIndex] = thisnewimg, increm
       var imgIndex = 0;
       console.log(images);
       cleanImages(count);
+
+      function cb(){
+        if(--count===0){
+          animLoop();
+        }
+      }
       
       for(var i=0; i<targets.length; i++){
         var layer = targets[i];
         var imgObj = images[imgIndex];
-        var imgLayer = +imgObj.layer;
 
-        if(layer === imgLayer){
+        if(!imgObj){
+          images[imgIndex] = getNewImage(layer,cb);
+          imgIndex++;
+          continue;
+        }
+
+        if(layer === imgObj.layer){
           count--;
         }else if(layer < imgLayer){
-          images.splice(imgIndex,0,getNewImage(layer)); //maybe pass a cb here
-        }else if(layer > imgLayer){
+          images.splice(imgIndex,0,getNewImage(layer,cb)); //maybe pass a cb here
+        }else{
           images.splice(imgIndex,1);
           imgIndex--;
-        }else{
-          images[imgIndex] = getNewImage(layer);
         }
         imgIndex++;
       }

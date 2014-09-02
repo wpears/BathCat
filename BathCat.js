@@ -597,6 +597,8 @@ function( BorderContainer
 			var outlineMouseMove
 				, mouseDownTimeout
 				, previousRecentTarget
+				, mouseDownX
+				, mouseDownY
 				, justMousedUp = false
 				, outMoveTime = 0
 				, cursor = 1

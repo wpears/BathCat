@@ -143,6 +143,7 @@ function( on
 
 
 
+
     function stopAnim(){
       console.log("STOPPING");
       clearTimeout(loopHandle);
@@ -226,34 +227,48 @@ if images is undef, get new, set onload, images[imageIndex] = thisnewimg, increm
       console.log(images);
       cleanImages(count);
 
+      console.log("need to call cb if no new");
       function cb(){
         if(--count===0){
           animLoop();
         }
       }
-      
+
+      console.log(images,images.length,imgIndex)
+
       for(var i=0; i<targets.length; i++){
+        console.log('currnumb',i)
         var layer = targets[i];
         var imgObj = images[imgIndex];
 
         if(!imgObj){
           images[imgIndex] = getNewImage(layer,cb);
           imgIndex++;
+          console.log('no imgObj',imgIndex);
           continue;
         }
 
-        if(layer === imgObj.layer){
+        var dateOrder = featureDates(layer,imgObj.layer);
+
+        if(dateOrder===0){
+          console.log("SAME LAYER",layer)
           count--;
-        }else if(layer < imgLayer){
+        }else if(dateOrder < 0){
+          console.log("LAYER IS LESS",layer,imgObj.layer)
+          console.log(images.length)
           images.splice(imgIndex,0,getNewImage(layer,cb)); //maybe pass a cb here
+          console.log(images.length)
         }else{
+          console.log("LAYER IS MORE", layer,imgObj.layer)
           images.splice(imgIndex,1);
           imgIndex--;
+          console.log(imgIndex);
         }
         imgIndex++;
+        console.log(imgIndex);
       }
-
-      console.log(images);
+      console.log(images[0],images[1],images[2],images[3])
+      cleanImages(targets.length); //reclean, due to splice
 
     }
 
@@ -270,8 +285,9 @@ if images is undef, get new, set onload, images[imageIndex] = thisnewimg, increm
 
 
     function cleanImages(count){
+      console.log("CLEAING COUNT",count)
       for(var i = count; i<images.length; i++){
-        imgCache.reclaim(images[i].img)
+        if(images[i]) imgCache.reclaim(images[i].img)
       }
 
       images.length = count;
@@ -296,6 +312,7 @@ if images is undef, get new, set onload, images[imageIndex] = thisnewimg, increm
 
 
     function getPrev(index){
+      console.log(images.length)
       if(index === 0) return images.length-1;
       return index-1;
     }
@@ -310,7 +327,10 @@ if images is undef, get new, set onload, images[imageIndex] = thisnewimg, increm
 
     function animLoop(){
       console.log("looping");
-      if(selectedChanged()) return updateImages(animTargets);
+      if(selectedChanged()){
+        currIndex = 0;
+        return updateImages(animTargets);
+      }
 
       var prevIndex = getPrev(currIndex);
       var nextIndex = getNext(currIndex);

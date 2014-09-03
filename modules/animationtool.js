@@ -174,13 +174,18 @@ function( on
 
     function getNewImage(layer, cb){
       var image = imgCache.get();
-      
+      var oldSrc = image.src;
+
       image.className = animClass;
 
       image.onload = cb;
-
+      
       image.src= getRasterUrl.getUrl(layer);
+
       container.appendChild(image);
+
+      if(oldSrc === image.src)setTimeout(cb,0);
+
       return {layer:layer, img:image};
     }
 
@@ -227,67 +232,59 @@ if images is undef, get new, set onload, images[imageIndex] = thisnewimg, increm
 
     function updateImages(targets){
       var count = targets.length;
-      var newLayers = [];
       var imgIndex = 0;
-      console.log(images);
 
-      console.log("need to call cb if no new");
       function cb(){
         if(--count===0){
           animLoop();
         }
       }
 
-      console.log(images,images.length,imgIndex)
-
       for(var i=0; i<targets.length; i++){
-        console.log('currnumb',i)
         var layer = targets[i];
         var imgObj = images[imgIndex];
 
         if(!imgObj){
           images[imgIndex] = getNewImage(layer,cb);
           imgIndex++;
-          console.log('no imgObj',imgIndex);
           continue;
         }
 
         var dateOrder = featureDates(layer,imgObj.layer);
 
         if(dateOrder===0){
-          console.log("SAME LAYER",layer)
           count--;
         }else if(dateOrder < 0){
-          console.log("LAYER IS LESS",layer,imgObj.layer)
-          console.log(images.length)
-          images.splice(imgIndex,0,getNewImage(layer,cb)); //maybe pass a cb here
-          console.log(images.length)
+          images.splice(imgIndex,0,getNewImage(layer,cb));
         }else{
-          console.log("LAYER IS MORE", layer,imgObj.layer)
-          console.log(images,images.length)
+          reclaim(images[imgIndex].img);
           images.splice(imgIndex,1);
+
           imgIndex--;
           count--;
-          console.log(imgIndex);
-          console.log(images,images.length)
         }
+
         imgIndex++;
-        console.log(imgIndex);
       }
-      console.log(images[0],images[1],images[2],images[3])
-      cleanImages(targets.length); //reclean, due to splice
-      console.log("COUNT",count);
-      if(count===0)animLoop();
+
+      cleanImages(targets.length);
+
+      if(targets.length === 0) return toggleAnimation();
+
+      if(count===0) animLoop();
 
     }
 
 
-
+    function reclaim(img){
+      img.style.opacity = 0;
+      imgCache.reclaim(img);
+    }
 
 
     function releaseImages(count){
       for(var i=0;i<images.length;i++){
-        imgCache.reclaim(images[i].img)
+        reclaim(images[i].img)
       }
       images.length=count;
     }
@@ -296,7 +293,9 @@ if images is undef, get new, set onload, images[imageIndex] = thisnewimg, increm
     function cleanImages(count){
       console.log("CLEAING COUNT",count)
       for(var i = count; i<images.length; i++){
-        if(images[i]) imgCache.reclaim(images[i].img)
+        if(images[i]){
+          reclaim(images[i].img)
+        }
       }
 
       images.length = count;

@@ -90,12 +90,17 @@ function( on
 
     function freeze(){
       stopAnim();
-      DOC.getElementsByClassName(animClass).forEach(removeNode);
+      var elems = Array.prototype.slice.call(DOC.getElementsByClassName(animClass));
+
+      for(var i=0, len = elems.length; i<len;i++){
+        removeNode(elems[i])
+      }
+
       images.length = 0;
       handlers.remove();
     }
 
-    function removeNode(v,i){
+    function removeNode(v){
       container.removeChild(v)
     }
 

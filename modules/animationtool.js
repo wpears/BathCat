@@ -192,6 +192,7 @@ function( on
 
 
     function makeImages(targets){
+      console.log("making new images",targets);
       var count = targets.length;
       startLoop = 1;
       releaseImages(count);
@@ -208,6 +209,10 @@ function( on
       });
 
       showImages();
+      
+      if(!targets.length){
+        animLoop();
+      }
     }
 
 /*
@@ -239,11 +244,11 @@ if images is undef, get new, set onload, images[imageIndex] = thisnewimg, increm
           animLoop();
         }
       }
-
+      console.log(targets)
       for(var i=0; i<targets.length; i++){
         var layer = targets[i];
         var imgObj = images[imgIndex];
-
+        console.log(images);
         if(!imgObj){
           images[imgIndex] = getNewImage(layer,cb);
           imgIndex++;
@@ -253,23 +258,24 @@ if images is undef, get new, set onload, images[imageIndex] = thisnewimg, increm
         var dateOrder = featureDates(layer,imgObj.layer);
 
         if(dateOrder===0){
+          console.log("equal",layer);
           count--;
         }else if(dateOrder < 0){
+          console.log("less",layer)
           images.splice(imgIndex,0,getNewImage(layer,cb));
         }else{
+          console.log('more',layer);
           reclaim(images[imgIndex].img);
           images.splice(imgIndex,1);
-
           imgIndex--;
-          count--;
+          i--;
         }
 
         imgIndex++;
       }
-
+      console.log(images,images.length)
       cleanImages(targets.length);
 
-      if(targets.length === 0) return toggleAnimation();
 
       if(count===0) animLoop();
 
@@ -320,7 +326,7 @@ if images is undef, get new, set onload, images[imageIndex] = thisnewimg, increm
 
 
     function getPrev(index){
-      console.log(images.length)
+      console.log(images.length, images)
       if(index === 0) return images.length-1;
       return index-1;
     }
@@ -339,6 +345,10 @@ if images is undef, get new, set onload, images[imageIndex] = thisnewimg, increm
         currIndex = 0;
         return updateImages(animTargets);
       }
+
+      if(!images.length) return loopHandle = setTimeout(animLoop, animDelay);
+
+
 
       var prevIndex = getPrev(currIndex);
       var nextIndex = getNext(currIndex);

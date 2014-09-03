@@ -230,7 +230,6 @@ if images is undef, get new, set onload, images[imageIndex] = thisnewimg, increm
       var newLayers = [];
       var imgIndex = 0;
       console.log(images);
-      cleanImages(count);
 
       console.log("need to call cb if no new");
       function cb(){
@@ -265,15 +264,20 @@ if images is undef, get new, set onload, images[imageIndex] = thisnewimg, increm
           console.log(images.length)
         }else{
           console.log("LAYER IS MORE", layer,imgObj.layer)
+          console.log(images,images.length)
           images.splice(imgIndex,1);
           imgIndex--;
+          count--;
           console.log(imgIndex);
+          console.log(images,images.length)
         }
         imgIndex++;
         console.log(imgIndex);
       }
       console.log(images[0],images[1],images[2],images[3])
       cleanImages(targets.length); //reclean, due to splice
+      console.log("COUNT",count);
+      if(count===0)animLoop();
 
     }
 

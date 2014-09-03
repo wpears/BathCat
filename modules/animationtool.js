@@ -36,6 +36,7 @@ function( on
         , panEnd
         , zoomStart
         , zoomEnd
+        , click
         ;
 
       return {
@@ -44,12 +45,14 @@ function( on
           panEnd = map.on("pan-end", restartAnim);
           zoomStart = map.on("zoom-start", stopAnim);
           zoomEnd = map.on("zoom-end", restartAnim);
+          click = on(DOC.body, "click", checkForUpdate);
         },
         remove:function(){
           panStart.remove();
           panEnd.remove();
           zoomStart.remove();
           zoomEnd.remove();
+          click.remove();
         }
       }
     }();
@@ -145,7 +148,13 @@ function( on
     }
 
 
-
+    function checkForUpdate(){
+      if(selectedChanged()){
+        clearTimeout(loopHandle);
+        currIndex = 0;
+        updateImages(animTargets);
+      }
+    }
 
 
 
@@ -209,7 +218,7 @@ function( on
       });
 
       showImages();
-      
+
       if(!targets.length){
         animLoop();
       }
@@ -341,14 +350,8 @@ if images is undef, get new, set onload, images[imageIndex] = thisnewimg, increm
 
     function animLoop(){
       console.log("looping");
-      if(selectedChanged()){
-        currIndex = 0;
-        return updateImages(animTargets);
-      }
 
       if(!images.length) return loopHandle = setTimeout(animLoop, animDelay);
-
-
 
       var prevIndex = getPrev(currIndex);
       var nextIndex = getNext(currIndex);

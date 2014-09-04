@@ -149,8 +149,10 @@ function( on
 
 
     function checkForUpdate(){
+      console.log("CLICK")
       if(selectedChanged()){
         clearTimeout(loopHandle);
+        startLoop = 0;
         currIndex = 0;
         updateImages(animTargets);
       }
@@ -175,6 +177,7 @@ function( on
 
       restartHandle = setTimeout(function(){
         restartHandle = null;
+        selectedChanged();
         makeImages(animTargets);
       },0);
     }

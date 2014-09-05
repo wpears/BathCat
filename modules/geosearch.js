@@ -33,6 +33,7 @@ function( splice
       , queriedLayers = []
       , lastBin = null
       , lastIndex
+      , lastClickFromGrid = 0
       ;
 
     if(!insideTimeBoundary){
@@ -81,6 +82,7 @@ function( splice
     function clearAndSetOID(oid, attributes){
       clearAllStoredOIDs();
       storeOID(oid);
+      lastClickFromGrid =1;
       prevArr.length = 1;
       prevArr[0] = oid;
       highlighter(oid,"hi", 1);
@@ -161,6 +163,7 @@ function( splice
     }
 
 
+    /*Allow queries from non-event sources*/
     function syntheticQuery(mapX, mapY, bin){
       queriedLayers.length = 0;
       if(!bin) return queriedLayers;
@@ -193,7 +196,7 @@ function( splice
 
 
     function geoSearch(e, mouseDown, synthetic){//think about using two sorted arrays, one mins one maxs
-      var i, j, curr, oid, temp, binTemp,
+      var i, j, curr, oid, temp, binTemp, flaggedOID = -1,
       mapX, mapY, binArr, someTargeted = 0;
 
       //null is passed as the first argument on mouseout
@@ -223,10 +226,17 @@ function( splice
       }
 
 
-      if(mouseDown&&binArr!== lastClickBin){
-        //we've clicked on a new set of features
-        clearAllStoredOIDs();
-        lastClickBin = binArr;
+      if(mouseDown){
+        if(lastClickFromGrid){
+          flaggedOID = prevArr[0];
+          clearStoredOID(flaggedOID, 1, 0);
+          lastClickFromGrid = 0;
+        }
+        if(binArr!== lastClickBin){
+          //we've clicked on a new set of features
+          clearAllStoredOIDs();
+          lastClickBin = binArr;
+        }
       }
 
 
@@ -248,17 +258,24 @@ function( splice
           break;
         }
 
+        if(oid === flaggedOID){
+          highlighter(oid,"", 1);
+          continue;
+        }
+
         //leave hidden things alone
         if(insideTimeBoundary[oid]){
           //if point is within extent
           if(curr.xmax>= mapX&&curr.xmin<= mapX&&curr.ymin<= mapY&&curr.ymax>= mapY){
             someTargeted = 1;
             highlighter(oid,"hi", 1);
+
             if(mouseDown){
                 currArr.push(oid);
                 if(!oidStore[oid])
                   storeOID(oid);
             }
+
           }else{
             if(oidStore[oid]){
               //don't clear stored unless we've clicked on something new
@@ -276,7 +293,7 @@ function( splice
       
       //we've clicked on a feature. either clear it if it is already selected or 
       //save it and trigger the showData side effects
-      if(mouseDown&&someTargeted){
+      if(mouseDown&&someTargeted||flaggedOID !== -1){
         if(prevArr.length===currArr.length&&JSON.stringify(prevArr)=== JSON.stringify(currArr)){
           clearAllStoredOIDs();
           currArr.length = 0;
@@ -287,8 +304,8 @@ function( splice
           currArr = temp;
         }
         if(showData) showData(null);
+        flaggedOID = -1;
       }
-
 
       //rehighlight true selections when clicking on features hidden by the timeslider
       if(!someTargeted&&mouseDown&&prevArr){

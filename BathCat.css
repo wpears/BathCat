@@ -812,19 +812,19 @@ th:active{
 
 /**Grid row highlight colors**/
 .highlmag{
-  background-color:rgba(252,109,224,1);
+  background-color:rgba(252,109,224,0.7);
 }
 .highlblu{
-  background-color:rgba(119,173,255,1);
+  background-color:rgba(119,173,255,0.7);
 }
 .highlgre{
-  background-color:rgba(24,211,48,1);
+  background-color:rgba(24,211,48,0.7);
 }
 .highlred{
-  background-color:rgba(243,63,51,1);
+  background-color:rgba(243,63,51,0.7);
 }
 .highlbro{
-  background-color:rgba(112, 84, 59,1);
+  background-color:rgba(112, 84, 59,0.7);
 }
 
 .highlmag > table,
@@ -832,7 +832,15 @@ th:active{
 .highlgre > table,
 .highlred > table,
 .highlbro > table{
-  background-color:rgba(255,255,255,0.4);
+  background-color:rgba(255,255,255,0.3);
+}
+
+.highlmag >.animHighlight,
+.highlblu >.animHighlight,
+.highlgre >.animHighlight,
+.highlred >.animHighlight,
+.highlbro >.animHighlight{
+  background-color:rgba(255,255,255,0);
 }
 
 
@@ -842,6 +850,15 @@ th:active{
 .highlred .field-Image,
 .highlbro .field-Image{
   background-color:rgba(255,255,255,0.4);
+}
+
+.highlmag td,
+.highlblu td,
+.highlgre td,
+.highlred td,
+.highlbro td{
+  border-color:#ddd;
+  border-bottom:1px solid #bbbbdd;
 }
 
 

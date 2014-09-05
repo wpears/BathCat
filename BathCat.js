@@ -32,7 +32,7 @@ require(["dijit/layout/BorderContainer"
   			,"esri/symbols/SimpleMarkerSymbol"
   			,"esri/geometry/Point"
 
-  			,"modules/geosearch"
+  			,"modules/geosearch.js"
   			,"modules/symbols"
 				,"modules/popup"
 				,"modules/animationtool.js"
@@ -539,7 +539,7 @@ function( BorderContainer
 
 
 
-		AnimationTool(features, rastersShowing, geoSearch, rasterLayer, map)
+		AnimationTool(features, rastersShowing, geoSearch, rasterLayer, gridObject.oidToRow, map)
 
 
 		tooltip = Tooltip(toolOffMessage);

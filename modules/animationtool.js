@@ -8,7 +8,7 @@ function( on
         , GetRasterUrl
         , ElementCache
         ){
-  return function(features, rastersShowing, geoSearch, rasterLayer, map){
+  return function(features, rastersShowing, geoSearch, rasterLayer, getRow, map){
 
     var getRasterUrl = GetRasterUrl(rasterLayer, map);
     var imgCache = ElementCache('img');
@@ -153,6 +153,10 @@ function( on
       if(selectedChanged()){
         clearTimeout(loopHandle);
         startLoop = 0;
+
+        var prev = images[getPrev(currIndex)]
+        if(prev)hideLast(prev.layer+1)
+
         currIndex = 0;
         updateImages(animTargets);
       }
@@ -164,6 +168,10 @@ function( on
       console.log("STOPPING");
       clearTimeout(loopHandle);
       startLoop = 0;
+
+      var prev = images[getPrev(currIndex)]
+      if(prev)hideLast(prev.layer+1)
+        
       wipeImages();
     }
 
@@ -227,25 +235,7 @@ function( on
       }
     }
 
-/*
-splice in images...
-lastTarget..
-[2,5,9]
-[2,5,9,15]
-if not equal at index, splice in
 
- IMAGES[{2},{5},{9}]
-newTargs[2,6,9]
-
-check
-if equal, use, decrement count, increment imageIndex
-if lessthan, get new image, set onload, splice into images, increment imageIndex
-if greaterthan, get new img, set onload, images[imageIndex] this new img, increment imageIndex
-if images is undef, get new, set onload, images[imageIndex] = thisnewimg, increment
-
-
-
-*/
 
     function updateImages(targets){
       var count = targets.length;
@@ -336,6 +326,31 @@ if images is undef, get new, set onload, images[imageIndex] = thisnewimg, increm
 
 
 
+    function showCurrent(oid){
+      
+      var row = getRow(oid);
+      var multi = DOC.querySelector('span[data-oid="'+oid+'"]');
+
+      domClass.add(row.firstChild,"animHighlight");
+      if(multi){
+        multi.style.borderBottom="1px solid #a5b6e0";
+        multi.style.marginBottom="0"
+      }
+    }
+
+    function hideLast(oid){
+
+      var row = getRow(oid);
+      var multi = DOC.querySelector('span[data-oid="'+oid+'"]');
+
+      domClass.remove(row.firstChild,"animHighlight");
+      if(multi){
+        multi.style.borderBottom="";
+        multi.style.marginBottom="1px"
+      }
+
+    }
+
 
     function getPrev(index){
       console.log(images.length, images)
@@ -369,6 +384,8 @@ if images is undef, get new, set onload, images[imageIndex] = thisnewimg, increm
       next.style.opacity = 1;
       curr.style.opacity = 0;
 
+      hideLast(images[prevIndex].layer+1)
+      showCurrent(images[currIndex].layer+1);
       currIndex = nextIndex;
 
       loopHandle = setTimeout(animLoop, animDelay);

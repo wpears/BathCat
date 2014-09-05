@@ -637,7 +637,7 @@ function( BorderContainer
 		        window.clearTimeout(mouseDownTimeout);
 		        previousRecentTarget = et;
 		        mouseDownTimeout = W.setTimeout(nullPrevious, 400);
-		        attributes = outlines.graphics[oid-1].attributes;
+		        attributes = features[oid-1].attributes;
 
 		        //target is sole open
 		        if(geoSearch.isStored(oid)&&geoSearch.selected.length === 1){
@@ -1111,7 +1111,7 @@ function( BorderContainer
    			if (node.tagName === "STRONG") node = node.parentNode;
    			var oid = +node.getAttribute('data-oid');
    			node.style.cursor="default";
-   			geoSearch.clearAndSet(oid,outlines.graphics[oid-1].attributes);
+   			geoSearch.clearAndSet(oid,features[oid-1].attributes);
    		}
 
 
@@ -1398,7 +1398,11 @@ function( BorderContainer
 					case "DC":
 						return "Doughty Cut";
 				}
-			}	
+			}
+
+			function sortByDate(a,b){
+				return features[a-1].attributes.Date - features[b-1].attributes.Date;
+			}
 
 		  function setData (attr){
 		  	var sgCount = geoSearch.selected.length;
@@ -1406,8 +1410,9 @@ function( BorderContainer
 				if(!attr){
 					if(sgCount === 1){
 						oid = geoSearch.selected[0];
-						parseAttributes(outlines.graphics[oid-1].attributes,oid-1);
+						parseAttributes(features[oid-1].attributes,oid-1);
 					}else{
+						geoSearch.selected.sort(sortByDate);
 						var str ="<h2>"+sgCount+ " projects selected</h2><div id='multiSelectWrapper'>";
 						for(var i=0; i<geoSearch.selected.length;i++){
 							oid = geoSearch.selected[i];

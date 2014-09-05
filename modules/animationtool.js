@@ -149,7 +149,6 @@ function( on
 
 
     function checkForUpdate(){
-      console.log("CLICK")
       if(selectedChanged()){
         clearTimeout(loopHandle);
         startLoop = 0;
@@ -165,19 +164,17 @@ function( on
 
 
     function stopAnim(){
-      console.log("STOPPING");
       clearTimeout(loopHandle);
       startLoop = 0;
 
       var prev = images[getPrev(currIndex)]
       if(prev)hideLast(prev.layer+1)
-        
+
       wipeImages();
     }
 
 
     function restartAnim(){
-      console.log("RESTARTING")
       if(restartHandle){
         clearTimeout(restartHandle);
       }
@@ -212,13 +209,11 @@ function( on
 
 
     function makeImages(targets){
-      console.log("making new images",targets);
       var count = targets.length;
       startLoop = 1;
       releaseImages(count);
 
       function cb(){
-        console.log("onload",count)
         if(--count===0){
           if(startLoop)animLoop();
         }
@@ -246,11 +241,11 @@ function( on
           animLoop();
         }
       }
-      console.log(targets)
+
       for(var i=0; i<targets.length; i++){
         var layer = targets[i];
         var imgObj = images[imgIndex];
-        console.log(images);
+
         if(!imgObj){
           images[imgIndex] = getNewImage(layer,cb);
           imgIndex++;
@@ -260,13 +255,10 @@ function( on
         var dateOrder = featureDates(layer,imgObj.layer);
 
         if(dateOrder===0){
-          console.log("equal",layer);
           count--;
         }else if(dateOrder < 0){
-          console.log("less",layer)
           images.splice(imgIndex,0,getNewImage(layer,cb));
         }else{
-          console.log('more',layer);
           reclaim(images[imgIndex].img);
           images.splice(imgIndex,1);
           imgIndex--;
@@ -275,7 +267,6 @@ function( on
 
         imgIndex++;
       }
-      console.log(images,images.length)
       cleanImages(targets.length);
 
 
@@ -299,7 +290,6 @@ function( on
 
 
     function cleanImages(count){
-      console.log("CLEAING COUNT",count)
       for(var i = count; i<images.length; i++){
         if(images[i]){
           reclaim(images[i].img)
@@ -353,7 +343,6 @@ function( on
 
 
     function getPrev(index){
-      console.log(images.length, images)
       if(index === 0) return images.length-1;
       return index-1;
     }
@@ -367,8 +356,6 @@ function( on
 
 
     function animLoop(){
-      console.log("looping");
-
       if(!images.length) return loopHandle = setTimeout(animLoop, animDelay);
 
       var prevIndex = getPrev(currIndex);

@@ -258,10 +258,6 @@ function( splice
           break;
         }
 
-        if(oid === flaggedOID){
-          highlighter(oid,"", 1);
-          continue;
-        }
 
         //leave hidden things alone
         if(insideTimeBoundary[oid]){
@@ -288,6 +284,10 @@ function( splice
             }
           }
         }
+      }
+
+      if(mouseDown && currArr.length === 1 && currArr[0] === flaggedOID){
+          clearStoredOID(flaggedOID, 1, 0);
       }
 
       

@@ -28,7 +28,7 @@ h2{
   text-shadow: 1px 1px 1px #99ceff;
   color: #66aaff;
   font-family: Arial;
-  font-size:1.75em;
+  font-size:1.6em;
 }
 
 
@@ -928,14 +928,14 @@ th:active{
 
 
 #multiSelectWrapper{
-    width:80%;
+    width:90%;
     margin:0 auto;
 }
 
 
 .multiSelect{
   display:inline-block;
-  padding-left:10px;
+  padding-left:15px;
   text-indent:-10px;
   margin-bottom:1px;
   cursor:pointer;

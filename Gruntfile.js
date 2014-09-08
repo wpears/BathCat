@@ -40,10 +40,6 @@ module.exports = function(grunt){
             dest: buildDir
           },
           {
-            src:'fonts/*',
-            dest: buildDir
-          },
-          {
             src: 'buildfiles/web.config',
             dest: buildDir + 'web.config'
           }

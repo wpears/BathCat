@@ -32,17 +32,17 @@ require(["dijit/layout/BorderContainer"
   			,"esri/symbols/SimpleMarkerSymbol"
   			,"esri/geometry/Point"
 
-  			,"modules/geosearch.js"
+  			,"modules/geosearch"
   			,"modules/symbols"
 				,"modules/popup"
-				,"modules/animationtool.js"
-				,"modules/crosstool.js"
+				,"modules/animationtool"
+				,"modules/crosstool"
 				,"modules/identtool"
 				,"modules/measuretool"
 				,"modules/clearnode"
 				,"modules/tooltip"
 				,"modules/getdate"
-				,"modules/gridconnector.js"
+				,"modules/gridconnector"
 				,"modules/setvisiblerasters"
 				,"modules/basemap"
 				,"modules/zoomlevel"
@@ -1491,10 +1491,10 @@ function( BorderContainer
    	function setHeader(){
 			var wid = innerWidth;
 			var appTitle = setHeader.appTitle = setHeader.appTitle?setHeader.appTitle:dom.byId("appTitle");
-			if (wid < 700 && setHeader.fullText !== 0){
+			if (wid < 750 && setHeader.fullText !== 0){
 				appTitle.innerHTML = "Bathymetry";
 				setHeader.fullText = 0;
-			}else if(wid > 699 && setHeader.fullText === 0){
+			}else if(wid > 749 && setHeader.fullText === 0){
 				appTitle.innerHTML = "Delta Bathymetry Catalog"
 				setHeader.fullText = 1;
 			}

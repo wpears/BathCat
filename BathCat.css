@@ -1,16 +1,5 @@
 /*****Main stylesheet******/
 
-@font-face{
-  font-family: Harabara;
-  src: url("fonts/Harabara.ttf");
-}
-
-
-@font-face{
-  font-family:'Source Sans Pro';
-  src: url("fonts/SourceSansPro-Regular.ttf");
-}
-
 
 html, body { 
   height: 100%; width: 100%; margin: 0;
@@ -36,17 +25,15 @@ body{
 
 
 h2{
-  color: #99ceff;
-  text-shadow:1px 1px 1px #007FDE;
-  letter-spacing: 1px;
-  font-family: Harabara;
-  font-style:italic;
+  text-shadow: 1px 1px 1px #99ceff;
+  color: #66aaff;
+  font-family: Arial;
   font-size:1.75em;
 }
 
 
 a{
-  color: #5ADE6B;
+  color: #3acc4b;
   font-weight:900;
  -webkit-transition: background-color 0.1s ease, color 0.1s ease;
  -moz-transition: background-color 0.1s ease, color 0.1s ease;
@@ -56,15 +43,16 @@ a{
 
 
 strong{
-  color: #99ceff;
-  text-shadow:1px 1px 1px #007FDE;
+  color: #66aaff;
+  font-family:Arial;
   font-size:1.1em;
 }
 
 
 b{
-  text-shadow:1px 1px 1px #23ad35;
-  color:#5ADE6B;
+  font-family:Arial;
+  color:#3acc4b;
+  font-size:1.1em;
   cursor:default;
 }
 
@@ -158,17 +146,17 @@ b{
   padding:10px 3px;
   text-shadow:1px 1px 1px #007FDE;
   text-decoration:none;
-  font-family:Harabara;
-  font-size:35px; 
+  letter-spacing: 0px;
+  font-family:Arial;
+  font-size:36px; 
   font-style:italic;
   top:-2px;
   right:10px;
-  letter-spacing: 1px;
 }
 
 
 #appTitle:hover{
-  color: #5ADE6B;
+  color: #3acc4b;
   text-shadow:1px 1px 1px #23ad35;
 }
 
@@ -986,7 +974,7 @@ th:active{
 
 .downloadlink:hover{
   color:#fff;
-  background-color:#5ADE6B;
+  background-color:#3acc4b;
 }
 
 
@@ -1028,6 +1016,7 @@ th:active{
 #infoPaneTitle{
   font-size:1.5em;
   margin-bottom:0;
+  text-shadow: 1px 1px 1px #99ceff;
 }
 
 
@@ -1089,8 +1078,8 @@ th:active{
 
 
 .helpglow{
-  box-shadow:0 0 16px 6px #5ADE6B !important;
-  background-color:#5ADE6B;             
+  box-shadow:0 0 16px 6px #3acc4b !important;
+  background-color:#3acc4b;             
 }
 
 
@@ -1129,7 +1118,7 @@ box-shadow: 0 1px 2px 1px #a5b6e0,
 
 .export{
   font-size:15px;
-  color:#5ADE6B;
+  color:#3acc4b;
   cursor:pointer;
   position:absolute;
   right:45px;
@@ -1143,7 +1132,7 @@ box-shadow: 0 1px 2px 1px #a5b6e0,
 
 .export:hover{
   color:#fff;
-  background-color:#5ADE6B;
+  background-color:#3acc4b;
 }
 
 

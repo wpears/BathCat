@@ -1,11 +1,5 @@
 require(["esri/esri","dgrid/dgrid", "dojox/dojox","modules/modules"],function(){
-require(["dijit/layout/BorderContainer"
-				,"dijit/layout/ContentPane"
-
-				,"dojo/_base/declare"
-				,"dojo/parser"
-				,"dojo/dom-construct"
-				,"dojo/dom"
+require(["dojo/dom"
 				,"dojo/query"
 				,"dojo/dom-class"
 				,"dojo/on"
@@ -49,13 +43,7 @@ require(["dijit/layout/BorderContainer"
 
 				,"require"
 				],
-function( BorderContainer
-				, ContentPane
-
-				, declare
-				, parser
-				, construct
-				, dom
+function( dom
 				, dquery
 				, domClass
 				, on
@@ -413,14 +401,17 @@ function( BorderContainer
 			//TimeSlider instantiation
 			var timeSlider
 			  , tCount
+			  , sliderDiv = DOC.createElement('div')
 				, timeExtent = new TimeExtent(new Date("01/01/2010 UTC"), new Date("12/31/2014 UTC"))
 				;
+
 			map.setTimeExtent(timeExtent);
+			timeDiv.appendChild(sliderDiv);
 			timeSlider = new TimeSlider({                                            //create TimeSlider
 				style:"width:300px;",
 				id: "timeSlider",
 				intermediateChanges: true},
-				construct.create("div", null, timeDiv)
+				sliderDiv
 				);
 			timeSlider.setThumbCount(2);
 			timeSlider.createTimeStopsByTimeInterval(timeExtent, 2, "esriTimeUnitsMonths");

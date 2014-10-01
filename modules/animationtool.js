@@ -8,8 +8,8 @@ function( on
         , GetRasterUrl
         , ElementCache
         ){
-  return function(features, rastersShowing, geoSearch, rasterLayer, getRow, map){
-
+  return function(anchor, features, rasterLayer, rastersShowing, geoSearch,  getRow, map){
+    console.log(arguments);
     var getRasterUrl = GetRasterUrl(rasterLayer, map);
     var imgCache = ElementCache('img');
 
@@ -17,7 +17,7 @@ function( on
     var images = [];
 
     var DOC = document;
-    var playButton = DOC.getElementById("anim");
+
     var container;
     var animClass = "animationImage";
     var transClass = "animationImage animationTransition";
@@ -62,7 +62,7 @@ function( on
       var animating = 0;
 
       return function(){
-        domClass.toggle(playButton, animOn);
+        domClass.toggle(anchor, animOn);
 
         if(animating){
           freeze();
@@ -76,7 +76,7 @@ function( on
 
 
 
-    on(playButton,"mousedown", toggleAnimation);
+    on(anchor,"mousedown", toggleAnimation);
 
 
 

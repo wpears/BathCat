@@ -107,10 +107,10 @@ function( dom
    		, mapDiv = dom.byId("mapDiv")
    		, gridPane, gridNode, spl
    		, dataPane, dataCon, dataNode, dlLink, downloadNode
-   		, crossAnchor, identAnchor, measureAnchor, toolOffMessage
+   		, animAnchor, crossAnchor, identAnchor, measureAnchor, toolOffMessage
    		, zoomSlider, fullExtentButton, topo, sat, timeDiv
 
-   		, introText = "<p>The <strong>Delta Bathymetry Catalog</strong> houses the complete set of multibeam bathymetric data collected by the Bathymetry and Technical Support section of the California Department of Water Resources.</p><p>Click on a feature in the map or table to bring up its <strong>description</strong>. Double-click to view the <strong>raster image</strong>.</p> <p><strong>Download</strong> data as text files from the descrption pane.</p> <p><strong>Measure</strong> distances, <strong>identify</strong> raster elevations, and draw <strong>profile graphs</strong> with the tools at the top-right.</p> <p>Change what displays by <strong>collection date</strong> with the slider at bottom-right. <strong>Sort</strong> by date and name with the table's column headers.</p> <p>See the <strong>help</strong> below for further information.</p>"
+   		, introText = "<p>The <strong>Delta Bathymetry Catalog</strong> houses the complete set of multibeam bathymetric data collected by the Bathymetry and Technical Support section of the California Department of Water Resources.</p><p>Click on a feature in the map or table to bring up its <strong>description</strong>. Double-click to view the <strong>raster image</strong>.</p> <p><strong>Download</strong> data as text files from the descrption pane.</p> <p><strong>Measure</strong> distances, <strong>identify</strong> raster elevations, draw <strong>profile graphs</strong>, and <strong>animate</strong> selected rasters with the tools at the top-right.</p> <p>Change what displays by <strong>collection date</strong> with the slider at bottom-right. <strong>Sort</strong> by date and name with the table's column headers.</p> <p>See the <strong>help</strong> below for further information.</p>"
    		;
 
    	//UI split between desktop and mobile
@@ -530,7 +530,7 @@ function( dom
 
 
 
-		AnimationTool(features, rastersShowing, geoSearch, rasterLayer, gridObject.oidToRow, map)
+		AnimationTool(animAnchor, features, rasterLayer, rastersShowing, geoSearch,  gridObject.oidToRow, map)
 
 
 		tooltip = Tooltip(toolOffMessage);
@@ -981,7 +981,7 @@ function( dom
 
 		//call to wire up datapane functionality
    	function attachDataPaneHandlers(){
-		  var helpText = "<strong id = 'infoPaneTitle'>Help</strong><p>Zoom in and out with the <b>Zoom buttons</b> or the mousewheel. Shift and drag on the map to zoom to a selected area.</p><p>Go to the full extent of the data with the <b>Globe</b>.</p><p>Select map or satellite view with the <b>Basemap buttons</b>.</p><p>Browse through projects in the table. Sort the table with the column headers and collapse it with the <b>Slider</b>.</p><p>Turn on a raster by double-clicking it in the table or map, or checking its checkbox in the table.</p><ul>When a raster is displayed:<br/><li>With the <b>Identify</b> tool, click to display NAVD88 elevation at any point.</li><li>Draw a cross-section graph with the <b>Profile tool</b>. Click the start and end points of the line to generate a graph in a draggable window. Hover over points to display elevation.</li></ul><p>Use the <b>Measure tool</b> to calculate distance, area, or geographic location.</p><p>Project information and Identify results are displayed in the right pane. Toggle this pane with the <b>Arrow button</b>.</p><p>Use the <b>Time slider</b> to filter the display of features by date. Drag the start and end thumbs or click a year to only display data from that year.</p>"
+		  var helpText = "<strong id = 'infoPaneTitle'>Help</strong><p>Zoom in and out with the <b>Zoom buttons</b> or the mousewheel. Shift and drag on the map to zoom to a selected area.</p><p>Go to the full extent of the data with the <b>Globe</b>.</p><p>Select map or satellite view with the <b>Basemap buttons</b>.</p><p>Browse through projects in the table. Sort the table with the column headers and collapse it with the <b>Slider</b>.</p><p>Turn on a raster by double-clicking it in the table or map, or checking its checkbox in the table.</p><p>When a raster is displayed:<ul><li><b>Animate</b> selected rasters, with the currently shown raster underlined in the right pane and highlighted in the table.</li><li>Draw a cross-section graph with the <b>Profile tool</b>. Click the start and end points of the line to generate a graph in a draggable window. Hover over points to display elevation.</li><li>With the <b>Identify</b> tool, click to display NAVD88 elevation at any point.</li></ul><p>Use the <b>Measure tool</b> to calculate distance, area, or geographic location.</p><p>Project information and Identify results are displayed in the right pane. Toggle this pane with the <b>Arrow button</b>.</p><p>Use the <b>Time slider</b> to filter the display of features by date. Drag the start and end thumbs or click a year to only display data from that year.</p>"
 			, termText = "<strong id = 'infoPaneTitle'>Terms of Use</strong><p>The data displayed in this application is for qualitative purposes only. Do not use the data as displayed in rigorous analyses. If downloading the data, familiarize yourself with the metadata before use. Not for use as a navigation aid. The data reflects measurements taken at specific time periods and the Department of Water Resources makes no claim as to the current state of these channels, nor to the accuracy of the data as displayed. Do not share or publish this data without including proper attribution.</p>"
 			,	conText = "<strong id = 'infoPaneTitle'>Contact</strong><p>For information on scheduling new bathymetric surveys, contact  <a href = 'mailto:shawn.mayr@water.ca.gov?subject = Bathymetric Survey'>Shawn Mayr</a>, (916) 376-9664.</p><p>For information on this application or the data contained herein, contact  <a href = 'mailto:wyatt.pearsall@water.ca.gov?subject = Bathymetry Catalog'>Wyatt Pearsall</a>, (916) 376-9643.</p>"
 			,	infoPane = dom.byId("infopane")
@@ -1010,6 +1010,9 @@ function( dom
 		   				break;
 		   			case "Sli":
 		   				domClass.toggle(spl,"helpglow");
+		   				break;
+		   			case "Ani":
+		   				domClass.toggle(animAnchor,"helpglow");
 		   				break;
 		   			case "Ide":
 		   				domClass.toggle(identAnchor,"helpglow");
@@ -1448,6 +1451,7 @@ function( dom
 			gridNode = dom.byId("gridNode")
 			spl = dom.byId("lPSplitter")
 
+			animAnchor = dom.byId("anim")
 			crossAnchor = dom.byId("cros")
 			identAnchor = dom.byId("ident")
 			measureAnchor = dom.byId("mea")
@@ -1457,7 +1461,7 @@ function( dom
 			fullExtentButton = dom.byId("fullExtentButton")
 			topo = dom.byId("topo")
 			sat = dom.byId("sat")
-			timeDiv = dom.byId('timeDiv');
+			timeDiv = dom.byId('timeDiv')
 		}
 
 

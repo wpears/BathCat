@@ -1018,6 +1018,10 @@ th:active{
   text-shadow: 1px 1px 1px #99ceff;
 }
 
+#infopane ul{
+  margin-left:-20px;
+}
+
 
 #foot{
  -webkit-transform:translate3d(0,0,0);

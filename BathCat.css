@@ -198,8 +198,7 @@ b{
   width:32px;
   top:45px;
   right:192px;
-  border-radius:14px;
-  background-image:url(images/play32.png);
+  border-radius:16px;
 }
 
 
@@ -241,6 +240,16 @@ b{
  -moz-transition:    opacity 1s ease-in-out;
   transition:        opacity 1s ease-in-out;
  -o-transition:      opacity 1s ease-in-out;
+}
+
+#anim.animationOff{
+  background-image:url(images/play32.png);
+  background-color:#f6fdff;
+}
+
+#anim.animationOn{
+  background-image:url(images/pause32.png);
+  background-color:#42C0FB;
 }
 
 

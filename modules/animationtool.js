@@ -81,7 +81,7 @@ function( on
 
 
 
-    on(anchor,"mousedown", toggleAnimation);
+    on(anchor,"mouseup", toggleAnimation);
 
 
 

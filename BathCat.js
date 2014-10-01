@@ -530,7 +530,13 @@ function( dom
 
 
 
-		AnimationTool(animAnchor, features, rasterLayer, rastersShowing, geoSearch,  gridObject.oidToRow, map)
+		AnimationTool(animAnchor, geoSearch.selected, rasterLayer,
+			{ map:map
+			, rastersShowing:rastersShowing
+			, features:features
+			, getRow:gridObject.oidToRow
+			}
+		);
 
 
 		tooltip = Tooltip(toolOffMessage);

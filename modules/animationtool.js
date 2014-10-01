@@ -8,8 +8,13 @@ function( on
         , GetRasterUrl
         , ElementCache
         ){
-  return function(anchor, features, rasterLayer, rastersShowing, geoSearch,  getRow, map){
-    console.log(arguments);
+  return function(anchor, selected, rasterLayer, options){
+
+    var map = options.map || window.map || null;
+    var features = options.features || null;
+    var rastersShowing = options.rastersShowing || null;
+    var getRow = options.getRow || null;
+
     var getRasterUrl = GetRasterUrl(rasterLayer, map);
     var imgCache = ElementCache('img');
 
@@ -112,7 +117,7 @@ function( on
 
 
     function getTargets(){
-      return geoSearch.selected
+      return selected
               .filter(rastersOn)
               .map(oidsToLayers)
               .sort(featureDates)
@@ -120,7 +125,8 @@ function( on
     }
 
     function rastersOn(target){
-      return rastersShowing[target]
+      if(rastersShowing) return rastersShowing[target];
+      return 1;
     }
 
     function oidsToLayers(target){
@@ -128,7 +134,8 @@ function( on
     }
 
     function featureDates(a,b){
-      return +features[a].attributes.Date - +features[b].attributes.Date;
+      if(features) return +features[a].attributes.Date - +features[b].attributes.Date;
+      return a-b;
     }
 
 
@@ -318,22 +325,29 @@ function( on
 
     function showCurrent(oid){
       
-      var row = getRow(oid);
+      if(getRow){
+        var row = getRow(oid);
+        domClass.add(row.firstChild,"animHighlight");
+      }
+
       var multi = DOC.querySelector('span[data-oid="'+oid+'"]');
 
-      domClass.add(row.firstChild,"animHighlight");
       if(multi){
         multi.style.borderBottom="1px solid #a5b6e0";
         multi.style.marginBottom="0"
       }
+
     }
 
     function hideLast(oid){
 
-      var row = getRow(oid);
+      if(getRow){
+        var row = getRow(oid);
+        domClass.remove(row.firstChild,"animHighlight");
+      }
+
       var multi = DOC.querySelector('span[data-oid="'+oid+'"]');
 
-      domClass.remove(row.firstChild,"animHighlight");
       if(multi){
         multi.style.borderBottom="";
         multi.style.marginBottom="1px"

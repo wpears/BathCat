@@ -201,12 +201,9 @@ function( on
       var oldSrc = image.src;
 
       image.className = animClass;
-
       image.onload = cb;
-      
-      image.src= getRasterUrl.getUrl(layer);
-
       container.appendChild(image);
+      image.src= getRasterUrl.getUrl(layer);
 
       if(oldSrc === image.src)setTimeout(cb,0);
 

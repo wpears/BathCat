@@ -951,7 +951,7 @@ th:active{
  }
 
 
-.multiSelect:hover{
+.multiSelect:hover,.multiSelectCurrent{
   border-bottom: 1px solid #a5b6e0;
   margin-bottom:0;
 }

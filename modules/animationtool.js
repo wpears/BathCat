@@ -330,8 +330,7 @@ function( on
       var multi = DOC.querySelector('span[data-oid="'+oid+'"]');
 
       if(multi){
-        multi.style.borderBottom="1px solid #a5b6e0";
-        multi.style.marginBottom="0"
+        domClass.add(multi,"multiSelectCurrent");
       }
 
     }
@@ -346,8 +345,7 @@ function( on
       var multi = DOC.querySelector('span[data-oid="'+oid+'"]');
 
       if(multi){
-        multi.style.borderBottom="";
-        multi.style.marginBottom="1px"
+        domClass.remove(multi,"multiSelectCurrent");
       }
 
     }

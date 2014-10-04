@@ -45,6 +45,7 @@ function( Grid
       , oidArray = new Array(gridLength - 1)
       , gridSorter
       , setVisibleRasters
+      , oldIE = !!document.all
       ;
 
 
@@ -138,7 +139,17 @@ function( Grid
 
       for(var i = 0; i<gridLength; i++){
         nodeIndex = gridData[i].OBJECTID-1;
-        frag.appendChild(currentNodes[lastNodePos[nodeIndex]].cloneNode(true));
+        var node = currentNodes[lastNodePos[nodeIndex]];
+        var clone = node.cloneNode(true);
+
+        if(oldIE){ /*old IE doesn't stay checked across clones*/
+          var ed = node.firstChild.firstChild.children[3];
+          if(ed&&ed.firstChild.checked){
+            clone.firstChild.firstChild.children[3].firstChild.checked = true;
+          }
+        }
+
+        frag.appendChild(clone);
         lastNodePos[nodeIndex] = i;
       }
       newContent = gridContent.cloneNode(false);

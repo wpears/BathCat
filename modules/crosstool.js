@@ -23,6 +23,7 @@ define( ['modules/addsymbol'
         ,'esri/tasks/geometry'
         ,'esri/geometry/Polyline'
         ,'esri/geometry/Point'
+        ,'esri/geometry/ScreenPoint'
         ,'esri/symbols/SimpleLineSymbol'
         ,'esri/symbols/SimpleMarkerSymbol'
 
@@ -52,6 +53,7 @@ function( addSymbol
         , geo
         , Polyline
         , Point
+        , ScreenPoint
         , SimpleLine
         , SimpleMarker
 
@@ -169,7 +171,10 @@ function( addSymbol
         var profile = new Profile(e1)
           , mapPoint = e1.mapPoint
           , idArray
+          , xOffset = 0
           ;
+
+        if(!ie9) xOffset = +map.container.style.transform.match(/\((\d+)px/)[1];
 
         profiles.push(profile);
 
@@ -177,10 +182,21 @@ function( addSymbol
         mouseLine = addSymbol(map, null, lineSymbol, profile.graphics);
 
         self.handlers[1].remove();
-        self.handlers[2] = map.on("mouse-move", function(e){
-          moveLine(mapPoint, e.mapPoint)
-        });
 
+        if(ie9){
+          self.handlers[2] = map.on("mouse-move",function(e){moveLine(mapPoint,e.mapPoint)})
+        }else{
+          self.handlers[2] = on(DOC.documentElement,"mousemove", function(e){
+            moveLine(mapPoint, map.toMap(
+              new ScreenPoint( {"x":e.pageX-xOffset
+                               ,"y":e.pageY
+                               ,"spatialReference":102100
+                               }
+                             )
+              )
+            );
+          });
+        }
         self.handlers[3] = map.on("mouse-up", function(e2){
           if(e2.button == 2){
             on.once(DOC.body,"contextmenu",blockEvent);

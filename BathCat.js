@@ -442,10 +442,10 @@ function( dom
 				tsLinks.push(elem);
 				elem.className = "tsLabel";
 				if(startDate === endDate){
-					elem.innerText = "All";
+					elem.textContent = "All";
 					currNode = elem;
 				}
-				else elem.innerText = startDate;
+				else elem.textContent = startDate;
 				labelCon.appendChild(elem);
 			}
 			mapDiv.appendChild(labelCon);
@@ -1305,7 +1305,7 @@ function( dom
 
    		function setIntro(){
 				//dataNode.style.marginTop = 0;
-				dataTab.firstElementChild.innerText="Info";
+				dataTab.firstElementChild.textContent="Info";
 				clearNode(dataNode);
 				dataNode.innerHTML = introText;
 			}
@@ -1315,7 +1315,7 @@ function( dom
    				setIntro();
 					return hideView(dataPane);
 				}
-				dataTab.firstElementChild.innerText="Data";
+				dataTab.firstElementChild.textContent="Data";
    			setData(attr);
    			if(gridShowing&&!dataDisplayed) return;
    			showView(dataPane, dataTrans)

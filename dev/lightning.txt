@@ -17,6 +17,8 @@ Slowly.
   Much convoluted code to stagger requests, both for server and client
   Very spikey server interactions...Better increase minimum number of instances to ~6+ to support a single user.
 
+
+
 A better way!
   raster's represent values via their color ramp... this is kinda the whole point of using them
     over hundreds of thousands of points
@@ -38,6 +40,7 @@ How to query from color ramps?
     
    for any x,y point, canvas context's getImageData(x, y, 1, 1)
       grab screen points of a profile, get their image data for every pixel and make cool graphs
+  Generate data with every possible depth.. run identifies 
    [[IMAGE//DEMO]] 
    
    github.com/wpears

@@ -1,0 +1,45 @@
+Bathymetrygroup at DWR
+  underwater topography. shoot sonar at a river bottom and use GPS and a motion correction unit to get XYZ
+  millions of points in a grid
+  [[IMAGE]]better displayed as rasters, cell per point on the grid
+
+Quest for Profile
+  draw a line over a raster, get a cross-section of the elevations along the line
+  [[IMAGE]]
+
+Identify operation of the ArcGIS Server [[IMAGE]]
+What happens when you identify on a raster --> pass a point, get a pixel value
+Pass a multipoint? Get a pixel value (different than if you passed a multipoint to an I sent on a census tract)
+So this means many requests, all at once.
+
+And this works...
+Slowly.
+  Much convoluted code to stagger requests, both for server and client
+  Very spikey server interactions...Better increase minimum number of instances to ~6+ to support a single user.
+
+A better way!
+  raster's represent values via their color ramp... this is kinda the whole point of using them
+    over hundreds of thousands of points
+  by displaying certain colors you are already displaying the answer to the query
+  if we could speak the language of the color ramp, we wouldn't have to talk to the server
+
+Color ramps [[IMAGE]]
+  color ramps contain 256 colors.
+  bins for finer decimal precision
+  so depending on the range of your values you might have pretty poor resolution in your ramp
+  5ft -68ft ~0.25ft
+
+How to query from color ramps?
+  [[IMAGE]] DynamicMapServiceLayer.. when you pan around the map.. you get an image..
+    width and heighth of the viewport
+  [[IMAGE]] image is constructed with parameters based on extent, layers shown etc... things you can track and mimic
+      (or monkey patch)
+    canvas context's drawImage(image, 0, 0)
+    
+   for any x,y point, canvas context's getImageData(x, y, 1, 1)
+      grab screen points of a profile, get their image data for every pixel and make cool graphs
+   [[IMAGE//DEMO]] 
+   
+   github.com/wpears
+
+

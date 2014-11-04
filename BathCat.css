@@ -152,6 +152,7 @@ b{
   font-style:italic;
   top:-2px;
   right:10px;
+  font-weight:600;
 }
 
 
@@ -1502,6 +1503,10 @@ padding:0;
   display:none;
 }
 
+/* Hack for chart title. dojox is a pretty bad charting library */
+i{
+  letter-spacing: 0;
+}
 
 
 /*Scalebar*/

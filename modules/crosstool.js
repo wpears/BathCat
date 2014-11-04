@@ -485,11 +485,10 @@ function( addSymbol
                       });
         chart.addAxis("y", {vertical: true, min:-30, max:5, title:"(ft)", titleGap:8});
 
-        chart.title = "Profile "+profile.chartNumber+ ": "+ profile.chartName;
-        chart.titleFont = "italic bold normal 24px Harabara";
+        chart.title = "<i>Profile "+profile.chartNumber+ ": "+ profile.chartName +"</i>";
+        chart.titleFont = "italic bold normal 23px Arial";
         chart.titleFontColor = "#99ceff" 
         chart.setTheme(chartTheme);
-
         profile.chart = chart;
         profile.chartContainer = chartContainer;
         

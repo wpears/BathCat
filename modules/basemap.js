@@ -66,7 +66,7 @@ function( domClass
 
 
     return function (){
-      return activeMap;
+      return activeMap||'topo';
     }
   }
 })

@@ -34,7 +34,7 @@ function( domClass
         ;
 
       //extend topo to 18, 19 with satellite
-      if(lev > 17 && previousLevel<18 &&activeMap !== 'sat'){
+      if(lev > 17 && previousLevel<18 &&activeMap === 'topo'){
         activeMap = 'sat';
         toggleBasemaps();
       }

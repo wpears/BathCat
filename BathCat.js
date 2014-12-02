@@ -131,8 +131,8 @@ function( dom
 
 
  		var rasterUrl = isStaging
- 		 							? origin+"/arcgis/rest/services/Public/bathymetry_rasters/MapServer"
- 		 							: origin+"/arcgis/rest/services/cadre/bathymetry_rasters/MapServer"
+ 									? origin+"/arcgis/rest/services/cadre/bathymetry_rasters/MapServer"
+ 		 							: origin+"/arcgis/rest/services/Public/bathymetry_rasters/MapServer"
  		 							;
  		var topoUrl = protocol+"//services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer";
 

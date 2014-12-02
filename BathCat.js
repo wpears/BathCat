@@ -95,6 +95,7 @@ function( dom
    		, protocol = DOC.location.protocol
    		, host = DOC.location.host
    		, origin = protocol +'//' + host
+   		, isStaging = host.slice(0,4) === 'darc'
    		, touch = has("touch")
    		, ie9 = (DOC.all&&DOC.addEventListener&&!W.atob) ? true : false
    		, fx = ie9 ? require("dojo/_base/fx", function(fx){return fx}) : null
@@ -129,7 +130,10 @@ function( dom
     Config.defaults.geometryService = new GeometryService(protocol+"//sampleserver3.arcgisonline.com/arcgis/rest/services/Geometry/GeometryServer"); 	
 
 
- 		var rasterUrl = origin+"/arcgis/rest/services/Public/bathymetry_rasters/MapServer" 
+ 		var rasterUrl = isStaging
+ 		 							? origin+"/arcgis/rest/services/Public/bathymetry_rasters/MapServer"
+ 		 							: origin+"/arcgis/rest/services/cadre/bathymetry_rasters/MapServer"
+ 		 							;
  		var topoUrl = protocol+"//services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer";
 
 

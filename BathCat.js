@@ -114,6 +114,10 @@ function( dom
    		, introText = "<p>The <strong>Delta Bathymetry Catalog</strong> houses the complete set of multibeam bathymetric data collected by the Bathymetry and Technical Support section of the California Department of Water Resources.</p><p>Click on a feature in the map or table to bring up its <strong>description</strong>. Double-click to view the <strong>raster image</strong>.</p> <p><strong>Download</strong> data as text files from the descrption pane.</p> <p><strong>Measure</strong> distances, <strong>identify</strong> raster elevations, draw <strong>profile graphs</strong>, and <strong>animate</strong> selected rasters with the tools at the top-right.</p> <p>Change what displays by <strong>collection date</strong> with the slider at bottom-right. <strong>Sort</strong> by date and name with the table's column headers.</p> <p>See the <strong>help</strong> below for further information.</p>"
    		;
 
+   	//requires https because the GIS server only allows https access
+   	//this would create a cross domain error when using the profile tool
+   	if(protocol==="http:") DOC.location.href = "https://" + host + DOC.location.pathname;
+
    	//UI split between desktop and mobile
    	makePeripherals();
    	makeViews();
@@ -127,14 +131,14 @@ function( dom
    	//API tweaks
     Config.defaults.io.corsDetection = false;
     Config.defaults.io.corsEnabledServers.push(origin);//enable cors for quicker queries
-    Config.defaults.geometryService = new GeometryService(protocol+"//sampleserver3.arcgisonline.com/arcgis/rest/services/Geometry/GeometryServer"); 	
+    Config.defaults.geometryService = new GeometryService("https://sampleserver3.arcgisonline.com/arcgis/rest/services/Geometry/GeometryServer"); 	
 
 
  		var rasterUrl = isStaging
  									? origin+"/arcgis/rest/services/cadre/bathymetry_rasters/MapServer"
  		 							: origin+"/arcgis/rest/services/Public/bathymetry_rasters/MapServer"
  		 							;
- 		var topoUrl = protocol+"//services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer";
+ 		var topoUrl = "https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer";
 
 
  		var spatialRef = new SpatialReference(102100);

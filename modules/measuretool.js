@@ -12,7 +12,7 @@ return function(anchor, line, point, options){
   options=options?options:{};
 
   var measure
-    , currentMeaTool
+    , currentMeaTool = 'distance'
     , lastUnits={}
     , map = options.map||window.esri.map
     , eventFeatures=options.eventFeatures||[]
@@ -33,9 +33,10 @@ return function(anchor, line, point, options){
           container = DOC.getElementById("measur"); //retain reference
           domClass.add(container,"atop selectable");
 
-
           tools.toggle(e, meaTool);
+
           on(anchor,"mousedown", function(e){tools.toggle(e, meaTool)});
+
           aspect.after(measure, "setTool", function(tool, flag){
             if(flag!== false){
               currentMeaTool = tool;
@@ -47,32 +48,30 @@ return function(anchor, line, point, options){
               }
             }
           }, true);
+
           aspect.after(measure, "_switchUnit", function(unit){
-            if(currentMeaTool){
-              lastUnits[currentMeaTool]=unit;
-            }
+            lastUnits[currentMeaTool]=unit;
           },true);
+
         },
 
         start:function(){
-            measure.show();
+          measure.show();
+          measure.setTool(currentMeaTool, true);
         },
 
         idle:function(){
           featureEvents.enable(eventFeatures);
-          if(currentMeaTool)
-           measure.setTool(currentMeaTool, false);
+          measure.setTool(currentMeaTool, false);
         },
 
         revive:function(){
-          if(currentMeaTool)
-            measure.setTool(currentMeaTool, true);
+          measure.setTool(currentMeaTool, true);
         },
 
         stop:function(){
           this.idle();
           measure.clearResult();
-          currentMeaTool = null;
           measure.hide();
         }
       }

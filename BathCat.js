@@ -131,7 +131,7 @@ function( dom
    	//API tweaks
     Config.defaults.io.corsDetection = false;
     Config.defaults.io.corsEnabledServers.push(origin);//enable cors for quicker queries
-    Config.defaults.geometryService = new GeometryService("https://sampleserver3.arcgisonline.com/arcgis/rest/services/Geometry/GeometryServer"); 	
+    Config.defaults.geometryService = new GeometryService("https://tasks.arcgisonline.com/ArcGIS/rest/services/Geometry/GeometryServer"); 	
 
 
  		var rasterUrl = isStaging

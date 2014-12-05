@@ -14,6 +14,7 @@ return function(anchor, line, point, options){
   var measure
     , currentMeaTool = 'distance'
     , lastUnits={}
+    , lastTool = null
     , map = options.map||window.esri.map
     , eventFeatures=options.eventFeatures||[]
     , meaTool={
@@ -38,35 +39,53 @@ return function(anchor, line, point, options){
           on(anchor,"mousedown", function(e){tools.toggle(e, meaTool)});
 
           aspect.after(measure, "setTool", function(tool, flag){
+            console.log("!!");
+            console.log(tool,lastTool);
             if(flag!== false){
+              if(lastTool === tool){
+                console.log('lastTool === tool. enabling. If in error, need to clear better');
+                featureEvents.enable(eventFeatures);
+                lastTool = null;
+                currentMeaTool = null;
+                return;
+              }
+
+              lastTool = tool;
+
               currentMeaTool = tool;
               if(lastUnits[tool]) measure._switchUnit(lastUnits[tool]);
               featureEvents.disable(eventFeatures);
               if(domClass.contains(anchor,"idle")){
-                domClass.replace(anchor,"activeTool","idle");
-                meaTool.revive();
+                tools.toggle({target:anchor}, meaTool)
               }
+            }else{
+              lastTool = null;
             }
+            console.log("Last tool:",lastTool)
           }, true);
 
           aspect.after(measure, "_switchUnit", function(unit){
-            lastUnits[currentMeaTool]=unit;
+            if(currentMeaTool) lastUnits[currentMeaTool]=unit;
           },true);
 
         },
 
         start:function(){
           measure.show();
-          measure.setTool(currentMeaTool, true);
+          console.log(currentMeaTool,"start")
+          if(currentMeaTool) setTimeout(function(){measure.setTool(currentMeaTool, true);},0)
         },
 
         idle:function(){
-          featureEvents.enable(eventFeatures);
-          measure.setTool(currentMeaTool, false);
+          console.log(currentMeaTool,"idle");
+
+          if(currentMeaTool) measure.setTool(currentMeaTool, false);
         },
 
         revive:function(){
-          measure.setTool(currentMeaTool, true);
+          console.log(currentMeaTool,"revive");
+                    measure.clearResult();
+          if(currentMeaTool && !lastTool) measure.setTool(currentMeaTool, true);
         },
 
         stop:function(){

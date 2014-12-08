@@ -80,6 +80,8 @@ return function(anchor, line, point, options){
 
         idle:function(){
           if(currentMeaTool) measure.setTool(currentMeaTool, false);
+          featureEvents.enable(eventFeatures);
+
         },
 
         revive:function(){

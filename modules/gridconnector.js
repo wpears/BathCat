@@ -7,7 +7,7 @@ define( ["dgrid/Grid"
         ,"dojo/dom-class"
         ,"dojo/on"
 
-        //,"modules/gridcategory"
+      //,"modules/gridcategory"
         ,"modules/gridsorter"
         ,"modules/setvisiblerasters"
         ,"modules/splice"
@@ -19,7 +19,7 @@ function( Grid
         , domClass
         , on
 
-        //, gridCategory
+      //, gridCategory
         , GridSorter
         , SetVisibleRasters
         , splice
@@ -40,14 +40,13 @@ function( Grid
       , gridContent
       , scroller
       , toggleCount = 0
-      , gridLength = gridData.length + 1
-      , lastNodePos =new Array(gridLength)
-      , oidArray = new Array(gridLength - 1)
+      , gridLength = gridData.length
+      , lastNodePos =new Array(gridLength + 1)
+      , oidArray = new Array(gridLength)
       , gridSorter
       , setVisibleRasters
       , oldIE = !!document.all
       ;
-
 
 
     grid = new Grid({bufferRows:Infinity,
@@ -80,29 +79,24 @@ function( Grid
     headerNodes[3].title = "Turn images on or off";
     scroller.style.overflowY="scroll";
     
-
-
     //lastNodePos tracks objectIds when sorting the grid
     //oidArray is simply an array of the objectIds
-    for(var i = 0, j=gridLength-1; i<j; i++){
+    for(var i = 0; i<gridLength; i++){
       var i1 = i+1;
-      lastNodePos[i] = i1;
+      lastNodePos[i] = i;
       oidArray[i] = i1;
     }
-    lastNodePos[j]=0;
-
-
+    lastNodePos[gridLength]=0;
 
 
     // initialize other modules
-    sedToggle = gridCategory(grid, gridData, "Project","Soil Sed.", gridNode, lastNodePos);
-    toggleCount++;
+    //sedToggle = gridCategory(grid, gridData, "Project","Soil Sed.", gridNode, lastNodePos);
+    //toggleCount++;
 
     gridSorter = GridSorter(renderSort);
     
     //already passed arguments in BathCat.js, just get a reference to the function
     setVisibleRasters = SetVisibleRasters();
-
 
 
     //O(1) object id lookup
@@ -131,12 +125,10 @@ function( Grid
         , nodeIndex
         , newContent
         , frag = document.createDocumentFragment()
-        , toggleRow = gridData.shift()
+  //    , toggleRow = gridData.shift()
         ; 
-         
       gridData.sort(sorter);
-      gridData.unshift(toggleRow);
-
+  //  gridData.unshift(toggleRow);
       for(var i = 0; i<gridLength; i++){
         nodeIndex = gridData[i].OBJECTID-1;
         var node = currentNodes[lastNodePos[nodeIndex]];
@@ -157,7 +149,7 @@ function( Grid
       gridContent.parentNode.replaceChild(newContent, gridContent);
       gridContent = newContent;
       frag = null;
-      sedToggle.setNode();
+      //sedToggle.setNode();
     }
 
 
@@ -367,7 +359,7 @@ function( Grid
            , scrollToRow:scrollToRow
            , checkImageInputs:checkImageInputs
            , expand:triggerExpand
-           , sedToggle:sedToggle
+        //   , sedToggle:sedToggle
            , makeViewable:makeViewable
            };
   }

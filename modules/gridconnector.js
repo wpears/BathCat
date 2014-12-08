@@ -7,7 +7,7 @@ define( ["dgrid/Grid"
         ,"dojo/dom-class"
         ,"dojo/on"
 
-        ,"modules/gridcategory"
+        //,"modules/gridcategory"
         ,"modules/gridsorter"
         ,"modules/setvisiblerasters"
         ,"modules/splice"
@@ -19,7 +19,7 @@ function( Grid
         , domClass
         , on
 
-        , gridCategory
+        //, gridCategory
         , GridSorter
         , SetVisibleRasters
         , splice
@@ -67,7 +67,7 @@ function( Grid
 
 
     //add collapsing row tab to data
-    gridData.unshift({"__Date":1315008000000,Date:"Various",Project:"Soil Sedimentation",OBJECTID:gridData.length+1});
+    //gridData.unshift({"__Date":1315008000000,Date:"Various",Project:"Soil Sedimentation",OBJECTID:gridData.length+1});
     
     grid.renderArray(gridData);
 

@@ -1,4 +1,4 @@
-require(["esri/esri","dgrid/dgrid", "dojox/dojox","modules/modules"],function(){
+require(["esri/esri","dgrid/dgrid", "dojox/dojox","/app/bathymetry/js/modules.js"],function(){
 require(["dojo/dom"
 				,"dojo/query"
 				,"dojo/dom-class"

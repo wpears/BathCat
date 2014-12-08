@@ -78,6 +78,7 @@ function( Grid
     headerNodes[1].title = "Sort by Date";         
     headerNodes[3].title = "Turn images on or off";
     scroller.style.overflowY="scroll";
+    scroller.style.height = "auto";
     
     //lastNodePos tracks objectIds when sorting the grid
     //oidArray is simply an array of the objectIds

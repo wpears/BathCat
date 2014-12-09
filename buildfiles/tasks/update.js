@@ -19,8 +19,10 @@ module.exports = function(grunt){
       var bcSrc = bcBuildDir + '/BathCat.min.js';
       var bcHref = bcBuildDir + '/BathCat.min.css';
       var dojoSrc = dojoBuildDir;
+      var dojoDest = '../dojo/built'
 
-      fs.renameSync(dojoSrc,'../dojo/built');
+      if(fs.existsSync(dojoDest))fs.renameSync(dojoDest,'../dojo/build'+((Date.now())/100000 >>0).toString())
+      fs.renameSync(dojoSrc,dojoDest);
 
       fs.readFile('index.html',function(err,data){
         if(err){

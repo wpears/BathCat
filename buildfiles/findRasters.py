@@ -1,25 +1,22 @@
 import arcpy
 arcpy.env.workspace=r"\\nasgisnp\EntGIS\Cadre\Bathymetry\Bathymetry.gdb"
 
-mxd = arcpy.mapping.MapDocument(r"\\nasgisnp\EntGIS\Cadre\Bathymetry\bathymetry_rasters.mxd")
+mxd = arcpy.mapping.MapDocument("Current")
 layers = arcpy.mapping.ListLayers(mxd)
+df = arcpy.mapping.ListDataFrames(mxd)[0]
 
-newRasters = []
-oldRasters = []
-
-for layer in layers:
-  if arcpy.Describe(layer).spatialReference.name != 'WGS_1984_Web_Mercator_Auxiliary_Sphere':
-    newRasters.append(layer)
-  else:
-    oldRasters.append(layer)
- 
+newRasters = [layer for layer in layers if arcpy.Describe(layer).spatialReference.name != 'WGS_1984_Web_Mercator_Auxiliary_Sphere']
 
 for raster in newRasters:
-  arcpy.ProjectRaster_management(
+  newRaster = arcpy.ProjectRaster_management(
     raster.name,
     raster.name,
-    oldRasters[0].datasetName,
+    df.spatialReference,
     "BILINEAR",
     "",
     "NAD_1983_To_WGS_1984_5"
   )
+  arcpy.mapping.RemoveLayer(df, raster)
+
+
+

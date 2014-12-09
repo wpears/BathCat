@@ -1,4 +1,11 @@
+#Modify the import path to look in the buildfiles directory first
+import sys
+sys.path.insert(0,r"\\mrsbmapp21161\giswebapps\bathymetry\buildfiles")
+
 import arcpy
+from rasterToXYZ import RasterToXYZ
+from zipXYZ import ZipXYZ
+
 arcpy.env.workspace=r"\\nasgisnp\EntGIS\Cadre\Bathymetry\Bathymetry.gdb"
 
 mxd = arcpy.mapping.MapDocument("Current")
@@ -17,6 +24,7 @@ for raster in newRasters:
     "NAD_1983_To_WGS_1984_5"
   )
   arcpy.mapping.RemoveLayer(df, raster)
+  ZipXYZ(RasterToXYZ(newRaster))
 
 
 

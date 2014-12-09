@@ -1,16 +1,24 @@
 import arcpy
 
 mxd = arcpy.mapping.MapDocument("\\\\nasgisnp\\EntGIS\\Cadre\\Bathymetry\\bathymetry_rasters.mxd")
+layers = arcpy.mapping.ListLayers(mxd)
 
-newRasters = [ layer for layer in arcpy.mapping.ListLayers(mxd) if layer.spatialReference.name != 'WGS_1984_Web_Mercator_Auxiliary_Sphere']
+newRasters = []
+oldRasters = []
+
+for layer in layers:
+  if arcpy.Describe(layer).spatialReference.name != 'WGS_1984_Web_Mercator_Auxiliary_Sphere':
+    newRasters.append(layer)
+  else:
+    oldRasters.append(layer)
+ 
 
 for raster in newRasters:
   arcpy.ProjectRaster_management(
-    raster,
+    raster.name,
     "\\\\nasgisnp\\EntGIS\\Cadre\\Bathymetry\\Bathymetry.gdb\\"+raster.name,
-    r"Coordinate Systems/Projected Coordinate Systems/World/WGS 1984 Web Mercator (Auxiliary Sphere).prj",
+    oldRasters[0].datasetName,
     "BILINEAR",
     "",
-    "NAD_1983_to_WGS_1984_5"
+    "NAD_1983_To_WGS_1984_5"
   )
-

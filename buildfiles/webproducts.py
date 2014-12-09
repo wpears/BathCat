@@ -8,7 +8,7 @@ env.workspace=r"\\nasgisnp\NCRO\BATH\Testgeo.gdb"
 def webProducts (rast, project=True, method="POINT_REMOVE", tolerance=15, minimumArea=3000 ):
   rastName=arcpy.Describe(rast).baseName
   if project:
-    arcpy.ProjectRaster_management(rastName,"WEB"+rastName,r"Coordinate Systems/Projected Coordinate Systems/World/WGS 1984 Web Mercator (Auxiliary Sphere).prj","BILINEAR","","NAD_1983_to_WGS_1984_5")
+    arcpy.ProjectRaster_management(rastName,"WEB"+rastName,r"Coordinate Systems/Projected Coordinate Systems/World/WGS 1984 Web Mercator (Auxiliary Sphere).prj","BILINEAR","","NAD_1983_To_WGS_1984_5")
     raster = "WEB"+rastName
   q=arcpy.RasterDomain_3d(raster, raster+"q", "POLYGON")
   qq=arcpy.Union_analysis(q,raster+"qq","ALL",0.1,"NO_GAPS")

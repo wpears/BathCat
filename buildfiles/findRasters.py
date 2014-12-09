@@ -1,6 +1,7 @@
 import arcpy
+arcpy.env.workspace=r"\\nasgisnp\EntGIS\Cadre\Bathymetry\Bathymetry.gdb"
 
-mxd = arcpy.mapping.MapDocument("\\\\nasgisnp\\EntGIS\\Cadre\\Bathymetry\\bathymetry_rasters.mxd")
+mxd = arcpy.mapping.MapDocument(r"\\nasgisnp\EntGIS\Cadre\Bathymetry\bathymetry_rasters.mxd")
 layers = arcpy.mapping.ListLayers(mxd)
 
 newRasters = []
@@ -16,7 +17,7 @@ for layer in layers:
 for raster in newRasters:
   arcpy.ProjectRaster_management(
     raster.name,
-    "\\\\nasgisnp\\EntGIS\\Cadre\\Bathymetry\\Bathymetry.gdb\\"+raster.name,
+    raster.name,
     oldRasters[0].datasetName,
     "BILINEAR",
     "",

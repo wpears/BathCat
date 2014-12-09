@@ -18,7 +18,9 @@ module.exports = function(grunt){
 
       var bcSrc = bcBuildDir + '/BathCat.min.js';
       var bcHref = bcBuildDir + '/BathCat.min.css';
-      var dojoSrc = dojoBuildDir + '/dojo/dojo.js';
+      var dojoSrc = dojoBuildDir;
+
+      fs.renameSync(dojoSrc,'../dojo/built');
 
       fs.readFile('index.html',function(err,data){
         if(err){
@@ -30,7 +32,6 @@ module.exports = function(grunt){
 
         $('#bcScript').attr('src',bcSrc);
         $('#bcLink').attr('href',bcHref);
-        $('#dojoScript').attr('src',dojoSrc);
 
 
         fs.writeFile('index.html',$.html(),function(err){

@@ -900,7 +900,7 @@ th:active{
 .splitterThumb{
   overflow:hidden;
   position:absolute;
-  top:48%;
+  top:45%;
   background:#b0b0b0 none;
   height:19px;
   left:2px;

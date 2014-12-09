@@ -15,7 +15,10 @@ df = arcpy.mapping.ListDataFrames(mxd)[0]
 newRasters = [layer for layer in layers if arcpy.Describe(layer).spatialReference.name != 'WGS_1984_Web_Mercator_Auxiliary_Sphere']
 
 for raster in newRasters:
-  newRaster = arcpy.ProjectRaster_management(
+
+  print(str.format("Projecting {0}...",raster.name))
+
+  output = arcpy.ProjectRaster_management(
     raster.name,
     raster.name,
     df.spatialReference,
@@ -23,8 +26,19 @@ for raster in newRasters:
     "",
     "NAD_1983_To_WGS_1984_5"
   )
-  arcpy.mapping.RemoveLayer(df, raster)
-  ZipXYZ(RasterToXYZ(newRaster))
+  print("Raster projected")
 
+  newRaster = output.getOutput(0)
+
+  arcpy.mapping.RemoveLayer(df, raster)
+  xyz = RasterToXYZ(newRaster)
+  zipped = ZipXYZ(xyz)
+
+  print("Zipped XYZ created, removing XYZ textfile...")
+
+  arcpy.Delete_management(xyz)
+  del xyz
+
+  print("XYZ textfile removed")
 
 

@@ -1,41 +1,38 @@
-import arcpy, os, zipfile
+import arcpy
+from os import path
 from addheader import addHeader
-
 arcpy.CheckOutExtension('3D')
 
-rast = arcpy.GetParameterAsText(0)
-outLoc = arcpy.GetParameterAsText(1)
-outName = arcpy.GetParameterAsText(2)
 
-if not '.' in outName:
-  outName+=".txt"
+def RasterToXYZ(rastPath, outLocation=r"\\mrsbmapp21161\giswebapps\bathymetry\zips"):
 
-outPath = os.path.join(outLoc,outName)
-outZip = os.path.join(outLoc,outName.split('.')[0]+'.zip')
+  print("Creating XYZ file...")
+  outName = path.basename(rastPath) + '.txt'
+  outPath = path.join(outLocation, outName)
 
-arcpy.AddMessage("Running Raster to Point...")
-point = arcpy.RasterToPoint_conversion(rast, r"in_memory\TEMPPOINT", "VALUE")
-arcpy.AddMessage("Point feature created")
 
-arcpy.AddMessage("Converting to 3D by Attribute...")
-threed = arcpy.FeatureTo3DByAttribute_3d(point, r"in_memory\TEMPPOIINT3D","grid_code")
-arcpy.Delete_management(r"in_memory\TEMPPOINT")
-arcpy.AddMessage("3D conversion complete")
+  print("Running Raster to Point...")
+  point = arcpy.RasterToPoint_conversion(rastPath, r"in_memory\TEMPPOINT", "VALUE")
+  print("Point feature created")
 
-arcpy.AddMessage("Creating XYZ...")
-xyz = arcpy.FeatureClassZToASCII_3d(threed,outLoc,outName,"XYZ","COMMA","FIXED",2)
-arcpy.Delete_management(r"in_memory\TEMPPOINT3D")
-arcpy.AddMessage("XYZ created")
+  print("Converting to 3D by Attribute...")
+  threed = arcpy.FeatureTo3DByAttribute_3d(point, r"in_memory\TEMPPOINT3D", "grid_code")
+  print("3D conversion complete")
+  del point
+  arcpy.Delete_management(r"TEMPPOINT")
 
-arcpy.AddMessage("Adding header...")
-addHeader(outPath)
-arcpy.AddMessage("Header added")
+  print("Creating XYZ...")
+  arcpy.FeatureClassZToASCII_3d(threed, outLocation, outName, "XYZ", "COMMA", "FIXED", 2)
+  del threed
+  arcpy.Delete_management(r"TEMPPOINT3D")
+  print("XYZ created")
 
-arcpy.AddMessage("Zipping...")
-with zipfile.ZipFile(outZip, 'w') as newzip:
-  newzip.write(outPath, outName, zipfile.ZIP_DEFLATED)
-arcpy.AddMessage("Zipped")
+  print("Adding header...")
+  xyz = addHeader(outPath)
+  print("Header added")
 
-arcpy.AddMessage("Clearing in-memory workspace...")
-arcpy.Delete_management("in_memory")
-arcpy.AddMessage("In-memory workspace cleared")
+  print("Clearing in-memory workspace...")
+  arcpy.Delete_management("in_memory")
+  print("In-memory workspace cleared")
+
+  return xyz

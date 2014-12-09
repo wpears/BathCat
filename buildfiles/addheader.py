@@ -14,5 +14,5 @@ def addHeader(file,header='x y z\n'):
         out.write(line)
   try: os.unlink(temp)
   except OSError: pass
-  print "\nHeader added.\n"
+
   return file  

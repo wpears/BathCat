@@ -7,3 +7,4 @@ def ZipXYZ (xyz, dir='\\\\mrsbmapp21161\\giswebapps\\bathymetry\\zips'):
 
   with ZipFile(path.join(dir, path.splitext(file_name)[0] + '.zip'),'w') as zippedXYZ:
     zippedXYZ.write(xyz, file_name)
+    return zippedXYZ

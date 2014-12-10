@@ -8,6 +8,7 @@ from rasterToXYZ import RasterToXYZ
 from zipXYZ import ZipXYZ
 
 arcpy.env.workspace=r"\\nasgisnp\EntGIS\Cadre\Bathymetry\Bathymetry.gdb"
+arcpy.env.addOutputsToMap = False
 
 mxd = arcpy.mapping.MapDocument("Current")
 layers = arcpy.mapping.ListLayers(mxd)
@@ -39,19 +40,24 @@ for raster in newRasters:
   del metadata
   print("text and XML files removed")
 
-  print(str.format("Projecting {0}...",raster.name))
+  rasterName = raster.name
+
+  print(str.format("Projecting {0}...",rasterName))
 
   newRaster = arcpy.ProjectRaster_management(
-    raster.name,
-    raster.name,
+    rasterName,
+    rasterName,
     df.spatialReference,
     "BILINEAR",
     "",
     "NAD_1983_To_WGS_1984_5"
   ).getOutput(0)
 
-  print("Raster projected")
+  print("Raster projected. Swapping with archived raster...")
   arcpy.mapping.RemoveLayer(df, raster)
+  arcpy.MakeRasterLayer_management(newRaster, "rastlayer")
+  arcpy.mapping.AddLayer(df, "rastlayer")
+  print("Projected Raster added to map")
 
   
  

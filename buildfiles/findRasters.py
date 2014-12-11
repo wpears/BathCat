@@ -57,6 +57,7 @@ for raster in newRasters:
 
   print("Raster projected. Removing archived raster...")
   arcpy.mapping.RemoveLayer(df, raster)
+  arcpy.Delete_management("in_memory")
   print("Archived raster removed")
 
   newRaster = arcpy.mapping.ListLayers(mxd)[0]
@@ -65,6 +66,7 @@ for raster in newRasters:
   print("Setting new raster symbology...")
   arcpy.mapping.UpdateLayer(df, newRaster, symLayer, True)
   print("Raster symbology set")
+  
  
 
   

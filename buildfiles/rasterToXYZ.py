@@ -19,12 +19,12 @@ def RasterToXYZ(rastPath, outLocation=r"\\mrsbmapp21161\giswebapps\bathymetry\zi
   threed = arcpy.FeatureTo3DByAttribute_3d(point, r"in_memory\TEMPPOINT3D", "grid_code")
   print("3D conversion complete")
   del point
-  arcpy.Delete_management(r"in_memory\TEMPPOINT")
+  arcpy.Delete_management("TEMPPOINT")
 
   print("Creating XYZ...")
   arcpy.FeatureClassZToASCII_3d(threed, outLocation, outName, "XYZ", "COMMA", "FIXED", 2)
   del threed
-  arcpy.Delete_management(r"in_memory\TEMPPOINT3D")
+  arcpy.Delete_management("TEMPPOINT3D")
   print("XYZ created")
 
   print("Adding header...")

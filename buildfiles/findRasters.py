@@ -8,7 +8,7 @@ from rasterToXYZ import RasterToXYZ
 from zipXYZ import ZipXYZ
 
 arcpy.env.workspace=r"\\nasgisnp\EntGIS\Cadre\Bathymetry\Bathymetry.gdb"
-arcpy.env.addOutputsToMap = False
+arcpy.env.addOutputsToMap = True
 
 mxd = arcpy.mapping.MapDocument("Current")
 layers = arcpy.mapping.ListLayers(mxd)
@@ -34,6 +34,7 @@ for raster in newRasters:
 
   print("Zipped XYZ and metadata created, removing XYZ textfile and XML metadata")
 
+  arcpy.mapping.RemoveTableView(df, arcpy.mapping.ListTableViews(mxd)[0])
   arcpy.Delete_management(xyz)
   del xyz
   arcpy.Delete_management(metadata)
@@ -53,11 +54,9 @@ for raster in newRasters:
     "NAD_1983_To_WGS_1984_5"
   ).getOutput(0)
 
-  print("Raster projected. Swapping with archived raster...")
+  print("Raster projected. Removing archived raster...")
   arcpy.mapping.RemoveLayer(df, raster)
-  arcpy.MakeRasterLayer_management(newRaster, "rastlayer")
-  arcpy.mapping.AddLayer(df, "rastlayer")
-  print("Projected Raster added to map")
+  print("Archived raster removed")
 
   
  

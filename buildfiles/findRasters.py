@@ -1,6 +1,7 @@
 #Modify the import path to look in the buildfiles directory first
+buildDir = r"\\mrsbmapp21161\giswebapps\bathymetry\buildfiles"
 import sys
-sys.path.insert(0,r"\\mrsbmapp21161\giswebapps\bathymetry\buildfiles")
+sys.path.insert(0, buildDir)
 
 import arcpy
 from os import path
@@ -45,20 +46,25 @@ for raster in newRasters:
 
   print(str.format("Projecting {0}...",rasterName))
 
-  newRaster = arcpy.ProjectRaster_management(
+  arcpy.ProjectRaster_management(
     rasterName,
     rasterName,
     df.spatialReference,
     "BILINEAR",
     "",
     "NAD_1983_To_WGS_1984_5"
-  ).getOutput(0)
+  )
 
   print("Raster projected. Removing archived raster...")
   arcpy.mapping.RemoveLayer(df, raster)
   print("Archived raster removed")
 
-  
+  newRaster = arcpy.mapping.ListLayers(mxd)[0]
+  symLayer = arcpy.mapping.Layer(path.join(buildDir,"symbology.lyr"))
+
+  print("Setting new raster symbology...")
+  arcpy.mapping.UpdateLayer(df, newRaster, symLayer, True)
+  print("Raster symbology set")
  
 
   

@@ -7,6 +7,7 @@ import arcpy
 from os import path
 from rasterToXYZ import RasterToXYZ
 from zipXYZ import ZipXYZ
+from webproducts import WebProducts
 
 arcpy.env.workspace=r"\\nasgisnp\EntGIS\Cadre\Bathymetry\Bathymetry.gdb"
 arcpy.env.addOutputsToMap = True
@@ -66,11 +67,5 @@ for raster in newRasters:
   print("Setting new raster symbology...")
   arcpy.mapping.UpdateLayer(df, newRaster, symLayer, True)
   print("Raster symbology set")
-  
- 
 
-  
-
-
-
-
+  WebProducts(newRaster, mxd)

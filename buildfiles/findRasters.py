@@ -68,4 +68,6 @@ for raster in newRasters:
   arcpy.mapping.UpdateLayer(df, newRaster, symLayer, True)
   print("Raster symbology set")
 
-  WebProducts(newRaster, mxd)
+  WebProducts(newRaster, mxd, df)
+
+  mxd.save()

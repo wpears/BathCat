@@ -7,7 +7,7 @@ env.outputMFlag="Disabled"
 
 
 
-def WebProducts (raster, mxd, method="POINT_REMOVE", tolerance=10, minimumArea=3000 ):
+def WebProducts (raster, mxd, df, method="POINT_REMOVE", tolerance=10, minimumArea=3000 ):
 
   rastName=arcpy.Describe(raster).baseName
   tempPath = path.join("in_memory", rastName) + "TEMP"
@@ -41,7 +41,7 @@ def WebProducts (raster, mxd, method="POINT_REMOVE", tolerance=10, minimumArea=3
   print("Products created. Deleting intermediate files.")
 
   for layer in arcpy.mapping.ListLayers(mxd)[:4]:
-    arcpy.mapping.RemoveLayer(layer)
+    arcpy.mapping.RemoveLayer(df, layer)
 
   del tempPath
   del temp2Path

@@ -35,7 +35,7 @@ def main(argv=None):
   username = raw_input("Enter user name: ") or 'wpearsal'
   password = getpass.getpass("Enter password: ")
 
-  stagingName = raw_input("Enter Staging Server name (mrsbmapp...): ") or 'mrsbmapp21158'
+  stagingName = raw_input("Enter Staging Server name (mrsbmapp...): ") or 'mrsbmapp21169'
   stagingFolder = raw_input("Enter Staging Folder: ") or "cadre"
 
   prodName = raw_input("Enter Production Server name (mrsbmapp...: ") or 'mrsbmapp21188'
@@ -61,7 +61,7 @@ def main(argv=None):
   folderPath = path.abspath(raw_input("Enter the path to the folder of MXDs: ") or '.')
   matchParam = raw_input("Enter filter for MXD names (or nothing for all MXDs): ")
 
-  gisConnection = raw_input("Enter name of GIS Server connection: ") or "prod"
+  gisConnection = raw_input("Enter name of GIS Server connection: ") or "production"
   overrideProps = raw_input("Enter JSON updates to service properties: ")
 
   arcpy.env.overwriteOutput = True

@@ -32,7 +32,7 @@ def main(argv=None):
 
 
 
-  username = raw_input("Enter user name: ") or 'wpearsal'
+  username = raw_input("Enter user name: ")
   password = getpass.getpass("Enter password: ")
 
   stagingName = raw_input("Enter Staging Server name (mrsbmapp...): ") or 'mrsbmapp21169'

@@ -70,4 +70,4 @@ for raster in newRasters:
 
   WebProducts(newRaster, mxd, df)
 
-  mxd.save()
+  #mxd.save()

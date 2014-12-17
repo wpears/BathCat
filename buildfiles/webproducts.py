@@ -24,23 +24,29 @@ def WebProducts (raster, mxd, df, method="POINT_REMOVE", tolerance=10, minimumAr
   dissolve = arcpy.Dissolve_management(union, temp3Path)
 
   print("Dissolve finished. Running Simplify...")
-  simp = arcpy.cartography.SimplifyPolygon(dissolve, rastName+"_tight", method, tolerance, minimumArea, "NO_CHECK", "NO_KEEP")
+  simp = arcpy.cartography.SimplifyPolygon(dissolve, rastName+"_tight", method, tolerance, minimumArea, "NO_CHECK", "NO_KEEP").getOutput(0)
 
   print("Simplify finished. Saving to bathymetry_tight_outlines...")
   tight_mxd = arcpy.mapping.MapDocument(r"\\nasgisnp\EntGIS\Cadre\Bathymetry\bathymetry_tight_outlines.mxd")
-  #event_mxd = arcpy.mapping.MapDocument(r"\\nasgisnp\EntGIS\Cadre\Bathymetry\bathymetry_event_outlines.mxd")
-
   tight_df = arcpy.mapping.ListDataFrames(tight_mxd)[0]
-  #event_df = arcpy.mapping.ListDataFrames(event_mxd)[0]
 
-  tight_layer = arcpy.mapping.Layer(simp.getOutput(0))
+  tight_layer = arcpy.mapping.Layer(simp)
   arcpy.mapping.AddLayer(tight_df, tight_layer)
   tight_mxd.save()
 
-  #arcpy.Buffer_analysis(simp, "out_"+rastName, "30 Feet", "FULL", "", "NONE")
-  print("Products created. Deleting intermediate files.")
 
-  for layer in arcpy.mapping.ListLayers(mxd)[:4]:
+  print("Tight outlines saved. Creating buffer...")
+  event_mxd = arcpy.mapping.MapDocument(r"\\nasgisnp\EntGIS\Cadre\Bathymetry\bathymetry_event_outlines.mxd")
+  event_df = arcpy.mapping.ListDataFrames(event_mxd)[0]
+
+  buff = arcpy.Buffer_analysis(simp, rastName+"_event", "30 Feet", "FULL", "", "NONE").getOutput(0)
+
+  print("Buffer created. Saving to bathymetry_event_outlines")
+  event_layer = arcpy.mapping.Layer(buff)
+  arcpy.mapping.AddLayer(event_df, event_layer)
+  event_mxd.save()
+
+  for layer in arcpy.mapping.ListLayers(mxd)[:5]:
     arcpy.mapping.RemoveLayer(df, layer)
 
   del tempPath
@@ -50,7 +56,9 @@ def WebProducts (raster, mxd, df, method="POINT_REMOVE", tolerance=10, minimumAr
   del union
   del dissolve
   del simp
+  del buff
+  del tight_layer
+  del event_layer
   del tight_mxd
+  del event_mxd
   arcpy.Delete_management("in_memory")
-
-  #tight_mxd saving trouble. Works from console but not from this fn.. Might call out to other fn..

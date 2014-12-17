@@ -7,7 +7,7 @@ env.outputMFlag="Disabled"
 
 
 
-def WebProducts (raster, mxds, dfs, method="POINT_REMOVE", tolerance=10, minimumArea=3000 ):
+def WebProducts (raster, mxds, dfs, method="BEND_SIMPLIFY", tolerance=1, minimumArea=3000 ):
 
   mxd = mxds[0]
   df = dfs[0]

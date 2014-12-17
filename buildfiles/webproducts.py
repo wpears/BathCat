@@ -39,7 +39,9 @@ def WebProducts (raster, mxd, df, method="POINT_REMOVE", tolerance=10, minimumAr
   event_mxd = arcpy.mapping.MapDocument(r"\\nasgisnp\EntGIS\Cadre\Bathymetry\bathymetry_event_outlines.mxd")
   event_df = arcpy.mapping.ListDataFrames(event_mxd)[0]
 
-  buff = arcpy.Buffer_analysis(simp, rastName+"_event", "30 Feet", "FULL", "", "NONE").getOutput(0)
+  extent = raster.getExtent()
+  bufferDistance = (extent.width + extent.height) / 2 / 5
+  buff = arcpy.Buffer_analysis(simp, rastName+"_event", str(bufferDistance)+ " Feet", "FULL", "", "NONE").getOutput(0)
 
   print("Buffer created. Saving to bathymetry_event_outlines")
   event_layer = arcpy.mapping.Layer(buff)

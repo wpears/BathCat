@@ -16,6 +16,12 @@ mxd = arcpy.mapping.MapDocument("Current")
 layers = arcpy.mapping.ListLayers(mxd)
 df = arcpy.mapping.ListDataFrames(mxd)[0]
 
+tight_mxd = arcpy.mapping.MapDocument(r"\\nasgisnp\EntGIS\Cadre\Bathymetry\bathymetry_tight_outlines.mxd")
+tight_df = arcpy.mapping.ListDataFrames(tight_mxd)[0]
+
+event_mxd = arcpy.mapping.MapDocument(r"\\nasgisnp\EntGIS\Cadre\Bathymetry\bathymetry_event_outlines.mxd")
+event_df = arcpy.mapping.ListDataFrames(event_mxd)[0]
+
 zipDir = r'\\mrsbmapp21161\giswebapps\bathymetry\zips'
 translator = path.join(arcpy.GetInstallInfo("desktop")["InstallDir"], r"Metadata\Translator\ARCGIS2FGDC.xml")
 
@@ -34,7 +40,7 @@ for raster in newRasters:
   print("Metadata Retrieved. Zipping together with XYZ...")
   zipped = ZipXYZ(xyz, metadata, zipDir)
 
-  print("Zipped XYZ and metadata created, removing XYZ textfile and XML metadata")
+  print("\nZipped XYZ and metadata created\nRemoving XYZ textfile and XML metadata from map...")
 
   arcpy.mapping.RemoveTableView(df, arcpy.mapping.ListTableViews(mxd)[0])
   arcpy.Delete_management(xyz)
@@ -56,7 +62,7 @@ for raster in newRasters:
     "NAD_1983_To_WGS_1984_5"
   )
 
-  print("Raster projected. Removing archived raster...")
+  print("Raster projected.\nRemoving archived raster...")
   arcpy.mapping.RemoveLayer(df, raster)
   arcpy.Delete_management("in_memory")
   print("Archived raster removed")
@@ -66,8 +72,9 @@ for raster in newRasters:
 
   print("Setting new raster symbology...")
   arcpy.mapping.UpdateLayer(df, newRaster, symLayer, True)
-  print("Raster symbology set")
+  print("\nRaster symbology set\n")
 
-  WebProducts(newRaster, mxd, df)
+  WebProducts(newRaster, (mxd,tight_mxd,event_mxd), (df,tight_df,event_df))
 
-  #mxd.save()
+  mxd.save()
+

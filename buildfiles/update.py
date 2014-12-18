@@ -5,21 +5,22 @@ sys.path.insert(0, buildDir)
 
 import arcpy
 from os import path
+from passwordPrompt import PasswordPrompt
 from rasterToXYZ import RasterToXYZ
 from zipXYZ import ZipXYZ
 from webproducts import WebProducts
+from makeService import MakeService
 
 arcpy.env.workspace=r"\\nasgisnp\EntGIS\Cadre\Bathymetry\Bathymetry.gdb"
 arcpy.env.addOutputsToMap = True
 
 username = arcpy.GetParameterAsText(0)
-password = arcpy.GetParameterAsText(1)
-server = arcpy.GetParameterAsText(2)
-folder = arcpy.GetParameterAsText(3)
-gisConnection = arcpy.GetParameterAsText(4)
+server = arcpy.GetParameterAsText(1)
+folder = arcpy.GetParameterAsText(2)
+gisConnection = arcpy.GetParameterAsText(3)
 
+password = PasswordPrompt()
 mxd = arcpy.mapping.MapDocument("Current")
-
 
 layers = arcpy.mapping.ListLayers(mxd)
 df = arcpy.mapping.ListDataFrames(mxd)[0]
@@ -32,6 +33,7 @@ event_df = arcpy.mapping.ListDataFrames(event_mxd)[0]
 
 zipDir = r'\\mrsbmapp21161\giswebapps\bathymetry\zips'
 translator = path.join(arcpy.GetInstallInfo("desktop")["InstallDir"], r"Metadata\Translator\ARCGIS2FGDC.xml")
+
 
 newRasters = [layer for layer in layers if arcpy.Describe(layer).spatialReference.name != 'WGS_1984_Web_Mercator_Auxiliary_Sphere']
 
@@ -84,5 +86,7 @@ for raster in newRasters:
 
   WebProducts(newRaster, (mxd,tight_mxd,event_mxd), (df,tight_df,event_df))
 
-  mxd.save()
+arcpy.AddMessage("Merging web products to create services")
 
+
+#MakeService(tight_mxd,username,password)

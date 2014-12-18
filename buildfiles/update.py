@@ -5,7 +5,6 @@ sys.path.insert(0, buildDir)
 
 import arcpy
 import xml.etree.ElementTree as ET
-import re
 from os import path
 from passwordPrompt import PasswordPrompt
 from rasterToXYZ import RasterToXYZ
@@ -51,7 +50,7 @@ for raster in newRasters:
     ).getOutput(0)
 
   abstract = ET.parse(metadata).iter('abstract').next().text
-  timestamp = GetDate(raster.name)
+  unixtime = GetDate(raster.name)
 
 
 

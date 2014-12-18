@@ -49,8 +49,8 @@ for raster in newRasters:
     path.join(zipDir,'TEMPmetadata.xml')
     ).getOutput(0)
 
-  abstract = ET.parse(metadata).iter('abstract').next().text
-  unixtime = GetDate(raster.name)
+  #abstract = ET.parse(metadata).iter('abstract').next().text
+  #unixtime = GetDate(raster.name)
 
 
 

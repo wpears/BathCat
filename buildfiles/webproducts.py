@@ -63,10 +63,10 @@ def WebProducts (raster, mxds, dfs, method="POINT_REMOVE", tolerance=3, minimumA
   del dissolve
   del simp
   del tight_buff
-  del buff
   del tight_layer
   del event_layer
 
   arcpy.Delete_management("in_memory")
 
   arcpy.AddMessage("\nWeb Products created\n")
+  return buff

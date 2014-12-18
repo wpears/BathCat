@@ -30,7 +30,10 @@ def WebProducts (raster, mxds, dfs, method="POINT_REMOVE", tolerance=3, minimumA
   simp = arcpy.cartography.SimplifyPolygon(dissolve, temp4Path, method, tolerance, minimumArea, "NO_CHECK", "NO_KEEP").getOutput(0)
   tight_buff = arcpy.Buffer_analysis(simp, rastName+"_tight", "10 Feet", "FULL", "", "NONE").getOutput(0)
 
-  arcpy.AddMessage("Tight outline created. Saving to bathymetry_tight_outlines...")
+  arcpy.AddMessage("Tight outline created. Cleaning up fields...")
+  arcpy.DeleteField_management(tight_buff,["BUFF_DIST"])
+
+  arcpy.AddMessage("Fields cleaned.  Saving to bathymetry_tight_outlines...")
   tight_mxd = mxds[1]
   tight_df = dfs[1]
   tight_layer = arcpy.mapping.Layer(tight_buff)
@@ -43,7 +46,10 @@ def WebProducts (raster, mxds, dfs, method="POINT_REMOVE", tolerance=3, minimumA
   bufferDistance = (extent.width + extent.height) / 2 / 5
   buff = arcpy.Buffer_analysis(simp, rastName+"_event", str(bufferDistance)+ " Feet", "FULL", "", "NONE").getOutput(0)
 
-  arcpy.AddMessage("Buffer created. Saving to bathymetry_event_outlines...")
+  arcpy.AddMessage("Buffer created.  Cleaning up fields...")
+  arcpy.DeleteField_management(buff,["BUFF_DIST"])
+
+  arcpy.AddMessage("Fields cleaned.Saving to bathymetry_event_outlines...")
   event_mxd = mxds[2]
   event_df = dfs[2]
   event_layer = arcpy.mapping.Layer(buff)

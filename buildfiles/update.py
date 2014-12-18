@@ -5,9 +5,11 @@ sys.path.insert(0, buildDir)
 
 import arcpy
 import xml.etree.ElementTree as ET
+import re
 from os import path
 from passwordPrompt import PasswordPrompt
 from rasterToXYZ import RasterToXYZ
+from getDate import GetDate
 from zipXYZ import ZipXYZ
 from webproducts import WebProducts
 from makeService import MakeService
@@ -47,6 +49,11 @@ for raster in newRasters:
     translator,
     path.join(zipDir,'TEMPmetadata.xml')
     ).getOutput(0)
+
+  abstract = ET.parse(metadata).iter('abstract').next().text
+  timestamp = GetDate(raster.name)
+
+
 
   arcpy.AddMessage("Metadata Retrieved. Zipping together with XYZ...")
   zipped = ZipXYZ(xyz, metadata, zipDir)

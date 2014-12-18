@@ -4,6 +4,7 @@ import sys
 sys.path.insert(0, buildDir)
 
 import arcpy
+import xml.etree.ElementTree as ET
 from os import path
 from passwordPrompt import PasswordPrompt
 from rasterToXYZ import RasterToXYZ
@@ -25,10 +26,10 @@ mxd = arcpy.mapping.MapDocument("Current")
 layers = arcpy.mapping.ListLayers(mxd)
 df = arcpy.mapping.ListDataFrames(mxd)[0]
 
-tight_mxd = arcpy.mapping.MapDocument(r"\\nasgisnp\EntGIS\Cadre\Bathymetry\bathymetry_tight_outlines.mxd")
+tight_mxd = arcpy.mapping.MapDocument(r"\\nasgisnp\EntGIS\Cadre\Bathymetry\tight_collection.mxd")
 tight_df = arcpy.mapping.ListDataFrames(tight_mxd)[0]
 
-event_mxd = arcpy.mapping.MapDocument(r"\\nasgisnp\EntGIS\Cadre\Bathymetry\bathymetry_event_outlines.mxd")
+event_mxd = arcpy.mapping.MapDocument(r"\\nasgisnp\EntGIS\Cadre\Bathymetry\event_collection.mxd")
 event_df = arcpy.mapping.ListDataFrames(event_mxd)[0]
 
 zipDir = r'\\mrsbmapp21161\giswebapps\bathymetry\zips'
@@ -86,7 +87,7 @@ for raster in newRasters:
 
   WebProducts(newRaster, (mxd,tight_mxd,event_mxd), (df,tight_df,event_df))
 
-arcpy.AddMessage("Merging web products to create services")
+arcpy.AddMessage("Merging web products to create services...")
 
 
 #MakeService(tight_mxd,username,password)

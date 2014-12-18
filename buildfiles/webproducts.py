@@ -17,20 +17,20 @@ def WebProducts (raster, mxds, dfs, method="POINT_REMOVE", tolerance=3, minimumA
   temp3Path = tempPath + "3"
   temp4Path = tempPath + "4"
 
-  print("Running Raster Domain...")
+  arcpy.AddMessage("Running Raster Domain...")
   domain = arcpy.RasterDomain_3d(raster, tempPath, "POLYGON")
 
-  print("Raster Domain finished. Running Union...")
+  arcpy.AddMessage("Raster Domain finished. Running Union...")
   union = arcpy.Union_analysis(domain, temp2Path, "ALL", 0.1, "NO_GAPS")
 
-  print("Union finished. Running Dissolve...")
+  arcpy.AddMessage("Union finished. Running Dissolve...")
   dissolve = arcpy.Dissolve_management(union, temp3Path)
 
-  print("Dissolve finished. Running Simplify and slight buffer...")
+  arcpy.AddMessage("Dissolve finished. Running Simplify and slight buffer...")
   simp = arcpy.cartography.SimplifyPolygon(dissolve, temp4Path, method, tolerance, minimumArea, "NO_CHECK", "NO_KEEP").getOutput(0)
   tight_buff = arcpy.Buffer_analysis(simp, rastName+"_tight", "10 Feet", "FULL", "", "NONE").getOutput(0)
 
-  print("Tight outline created. Saving to bathymetry_tight_outlines...")
+  arcpy.AddMessage("Tight outline created. Saving to bathymetry_tight_outlines...")
   tight_mxd = mxds[1]
   tight_df = dfs[1]
   tight_layer = arcpy.mapping.Layer(tight_buff)
@@ -38,19 +38,19 @@ def WebProducts (raster, mxds, dfs, method="POINT_REMOVE", tolerance=3, minimumA
   tight_mxd.save()
 
 
-  print("Tight outlines saved. Creating buffer for event outlines...")
+  arcpy.AddMessage("Tight outlines saved. Creating buffer for event outlines...")
   extent = raster.getExtent()
   bufferDistance = (extent.width + extent.height) / 2 / 5
   buff = arcpy.Buffer_analysis(simp, rastName+"_event", str(bufferDistance)+ " Feet", "FULL", "", "NONE").getOutput(0)
 
-  print("Buffer created. Saving to bathymetry_event_outlines...")
+  arcpy.AddMessage("Buffer created. Saving to bathymetry_event_outlines...")
   event_mxd = mxds[2]
   event_df = dfs[2]
   event_layer = arcpy.mapping.Layer(buff)
   arcpy.mapping.AddLayer(event_df, event_layer)
   event_mxd.save()
 
-  print("Event outlines saved. Removing excess layers...")
+  arcpy.AddMessage("Event outlines saved. Removing excess layers...")
   for layer in arcpy.mapping.ListLayers(mxd)[:6]:
     arcpy.mapping.RemoveLayer(df, layer)
 
@@ -69,4 +69,4 @@ def WebProducts (raster, mxds, dfs, method="POINT_REMOVE", tolerance=3, minimumA
 
   arcpy.Delete_management("in_memory")
 
-  print("\nWeb Products created\n")
+  arcpy.AddMessage("\nWeb Products created\n")

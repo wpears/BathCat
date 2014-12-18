@@ -12,7 +12,15 @@ from webproducts import WebProducts
 arcpy.env.workspace=r"\\nasgisnp\EntGIS\Cadre\Bathymetry\Bathymetry.gdb"
 arcpy.env.addOutputsToMap = True
 
+username = arcpy.GetParameterAsText(0)
+password = arcpy.GetParameterAsText(1)
+server = arcpy.GetParameterAsText(2)
+folder = arcpy.GetParameterAsText(3)
+gisConnection = arcpy.GetParameterAsText(4)
+
 mxd = arcpy.mapping.MapDocument("Current")
+
+
 layers = arcpy.mapping.ListLayers(mxd)
 df = arcpy.mapping.ListDataFrames(mxd)[0]
 
@@ -31,27 +39,27 @@ for raster in newRasters:
 
   xyz = RasterToXYZ(raster.dataSource)
 
-  print("Getting Metadata...")
+  arcpy.AddMessage("Getting Metadata...")
   metadata = arcpy.ExportMetadata_conversion(raster,
     translator,
     path.join(zipDir,'TEMPmetadata.xml')
     ).getOutput(0)
 
-  print("Metadata Retrieved. Zipping together with XYZ...")
+  arcpy.AddMessage("Metadata Retrieved. Zipping together with XYZ...")
   zipped = ZipXYZ(xyz, metadata, zipDir)
 
-  print("\nZipped XYZ and metadata created\nRemoving XYZ textfile and XML metadata from map...")
+  arcpy.AddMessage("\nZipped XYZ and metadata created\nRemoving XYZ textfile and XML metadata from map...")
 
   arcpy.mapping.RemoveTableView(df, arcpy.mapping.ListTableViews(mxd)[0])
   arcpy.Delete_management(xyz)
   del xyz
   arcpy.Delete_management(metadata)
   del metadata
-  print("text and XML files removed")
+  arcpy.AddMessage("text and XML files removed")
 
   rasterName = raster.name
 
-  print(str.format("Projecting {0}...",rasterName))
+  arcpy.AddMessage(str.format("Projecting {0}...",rasterName))
 
   arcpy.ProjectRaster_management(
     rasterName,
@@ -62,17 +70,17 @@ for raster in newRasters:
     "NAD_1983_To_WGS_1984_5"
   )
 
-  print("Raster projected.\nRemoving archived raster...")
+  arcpy.AddMessage("Raster projected.\nRemoving archived raster...")
   arcpy.mapping.RemoveLayer(df, raster)
   arcpy.Delete_management("in_memory")
-  print("Archived raster removed")
+  arcpy.AddMessage("Archived raster removed")
 
   newRaster = arcpy.mapping.ListLayers(mxd)[0]
   symLayer = arcpy.mapping.Layer(path.join(buildDir,"symbology.lyr"))
 
-  print("Setting new raster symbology...")
+  arcpy.AddMessage("Setting new raster symbology...")
   arcpy.mapping.UpdateLayer(df, newRaster, symLayer, True)
-  print("\nRaster symbology set\n")
+  arcpy.AddMessage("\nRaster symbology set\n")
 
   WebProducts(newRaster, (mxd,tight_mxd,event_mxd), (df,tight_df,event_df))
 

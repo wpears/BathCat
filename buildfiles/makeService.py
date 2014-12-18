@@ -15,8 +15,8 @@ def MakeService(mxd, username, password, serverName="mrsbmapp21169", gisConnecti
     print("Could not generate valid tokens with the username and password provided.")
     return
 
-  stagingParams = urllib.urlencode({'token': token, 'f': 'json'})
-  headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
+  #params = urllib.urlencode({'token': token, 'f': 'json'})
+  #headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
   mxdPath = mxd.filePath
 
   print("Processing map: {}\n".format(mxd))
@@ -43,57 +43,19 @@ def MakeService(mxd, username, password, serverName="mrsbmapp21169", gisConnecti
     print("Service Definition created.\n")
   else:
     print("Errors creating service definition",analysis['errors'])
-    continue
 
-  url = "/arcgis/admin/services/" + serverFolder + "/" + name + ".MapServer"
-
+  #url = "/arcgis/admin/services/" + serverFolder + "/" + name + ".MapServer"
 
 
-  print("Getting service parameters.\n")             
-  data = doRequest(stagingName, stagingURL, stagingParams)
-  if not data:
-    continue
+  print("Publishing Service.\n")
+  arcpy.UploadServiceDefinition_server(sd, "GIS Servers/"+gisConnection)
+  print("{} published to {} folder on {}\n".format(name, serverFolder, serverName))
+
+#read service properties read and update the service with edit endpoint
 
 
-
-  if overrideProps != "":
-    overrideJSON = json.loads(overrideProps)
-    dataJSON = json.loads(data)
-    for key in overrideJSON:
-      dataJSON[key] = overrideJSON[key]
-    data = json.dumps(dataJSON)
-  print("Service Parameters saved.\n")
-
-
-
-  print("Removing old service.\n")
-  try:
-    doRequest(prodName, prodURL + "/delete", prodParams)
-    print("Service Removed.\n")
-  except:
-    print("No service at {}. This must be the first time it's been published. Make sure you've analyzed it in ArcMap.\n".format(prodURL))
-
-
-
-  print("Publishing new service.\n")
-  arcpy.UploadServiceDefinition_server(sd,"GIS Servers/"+gisConnection)
-  print("{} published to {} folder on {}\n".format(name,prodFolder,prodName))
-
-
-
-  print("Adding saved properties.\n")
-  if not doRequest(prodName, prodURL+"/edit", urllib.urlencode({'token': prodToken, 'service':data, 'f': 'json'})):
-    continue
-  print("Properties added.\n")
-
-
-
-  print("{} successfully updated.\n".format(name))
-
-
-
-def doRequest(name, url, params, headers):
-  httpConn = httplib.HTTPConnection(name,serverPort)
+def doRequest(name, port, url, params, headers):
+  httpConn = httplib.HTTPConnection(name, serverPort)
   httpConn.request("POST", url, params, headers)
 
   response = httpConn.getresponse()
@@ -141,3 +103,27 @@ def assertJsonSuccess(data):
     return False
   else:
     return True
+
+    '''
+
+  print("Getting service parameters.\n")             
+  data = doRequest(serverName, serverPort, url, params, headers)
+  if not data:
+    continue
+
+
+  if overrideProps != "":
+    overrideJSON = json.loads(overrideProps)
+    dataJSON = json.loads(data)
+    for key in overrideJSON:
+      dataJSON[key] = overrideJSON[key]
+    data = json.dumps(dataJSON)
+  print("Service Parameters saved.\n")
+
+
+
+  print("Adding saved properties.\n")
+  if not doRequest(serverName, serverPort, url+"/edit", urllib.urlencode({'token': token, 'service':data, 'f': 'json'})):
+    continue
+  print("Properties added.\n")
+'''

@@ -94,7 +94,7 @@ for raster in newRasters:
   event_layer = WebProducts(newRaster, (mxd,tight_mxd,event_mxd), (df,tight_df,event_df))
 
   arcpy.AddMessage("Adding fields for right pane...")
-  arcpy.AddField_management(event_layer,"Project","TEXT")
+  arcpy.AddField_management(event_layer,"Project","TEXT",field_length=50)
   arcpy.AddField_management(event_layer,"Completed","FLOAT")
   arcpy.AddField_management(event_layer,"Abstract","TEXT",field_length=1200)
 

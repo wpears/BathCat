@@ -56,9 +56,7 @@ def WebProducts (raster, mxds, dfs, method="POINT_REMOVE", tolerance=3, minimumA
   arcpy.mapping.AddLayer(event_df, event_layer)
   event_mxd.save()
 
-  arcpy.AddMessage("Event outlines saved. Removing excess layers...")
-  for layer in arcpy.mapping.ListLayers(mxd)[:6]:
-    arcpy.mapping.RemoveLayer(df, layer)
+  arcpy.AddMessage("Event outlines saved.")
 
   del tempPath
   del temp2Path

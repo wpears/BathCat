@@ -94,8 +94,8 @@ for raster in newRasters:
   event_layer = WebProducts(newRaster, (mxd,tight_mxd,event_mxd), (df,tight_df,event_df))
 
   arcpy.AddMessage("Adding fields for right pane...")
-  arcpy.AddField_Management(event_layer,"Completed","DATE")
-  arcpy.AddField_Management(event_layer,"Abstract","TEXT",field_length=1200)
+  arcpy.AddField_management(event_layer,"Completed","FLOAT")
+  arcpy.AddField_management(event_layer,"Abstract","TEXT",field_length=1200)
 
   arcpy.AddMessage("Fields added. Populating from metadata...")
 
@@ -105,7 +105,11 @@ for raster in newRasters:
       row[1] = abstract
       cursor.updateRow(row)
 
-  arcpy.AddMessage("Data applied.")   
+  arcpy.AddMessage("Data applied. Removing excess layers...")
+  for layer in arcpy.mapping.ListLayers(mxd)[:6]:
+    arcpy.mapping.RemoveLayer(df, layer)
+  del event_layer
+  
 arcpy.AddMessage("Merging web products to create services...")
 
 

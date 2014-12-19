@@ -126,4 +126,8 @@ arcpy.AddMessage("Merged. Removing products from map...")
 for layer in arcpy.mapping.ListLayers(mxd)[:2]:
   arcpy.mapping.RemoveLayer(df, layer)
 
-#MakeService(tight_mxd,username,password)
+tight_outlines = arcpy.mapping.MapDocument(r"\\nasgisnp\EntGIS\Cadre\Bathymetry\bathymetry_tight_outlines.mxd")
+event_outlines = arcpy.mapping.MapDocument(r"\\nasgisnp\EntGIS\Cadre\Bathymetry\bathymetry_event_outlines.mxd")
+
+MakeService(tight_outlines, username, password)
+MakeService(event_outlines, username, password)

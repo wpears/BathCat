@@ -94,15 +94,17 @@ for raster in newRasters:
   event_layer = WebProducts(newRaster, (mxd,tight_mxd,event_mxd), (df,tight_df,event_df))
 
   arcpy.AddMessage("Adding fields for right pane...")
+  arcpy.AddField_management(event_layer,"Project","TEXT")
   arcpy.AddField_management(event_layer,"Completed","FLOAT")
   arcpy.AddField_management(event_layer,"Abstract","TEXT",field_length=1200)
 
   arcpy.AddMessage("Fields added. Populating from metadata...")
 
-  with arcpy.da.UpdateCursor(event_layer,['Completed','Abstract']) as cursor:
+  with arcpy.da.UpdateCursor(event_layer,['Project','Completed','Abstract']) as cursor:
     for row in cursor:
-      row[0] = unixtime
-      row[1] = abstract
+      row[0] = rasterName[:-10].replace("_", " ")
+      row[1] = unixtime
+      row[2] = abstract
       cursor.updateRow(row)
 
   arcpy.AddMessage("Data applied. Removing excess layers...")

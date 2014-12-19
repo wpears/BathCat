@@ -49,10 +49,8 @@ for raster in newRasters:
     path.join(zipDir,'TEMPmetadata.xml')
     ).getOutput(0)
 
-  #abstract = ET.parse(metadata).iter('abstract').next().text
-  #unixtime = GetDate(raster.name)
-
-
+  abstract = ET.parse(metadata).iter('abstract').next().text
+  unixtime = GetDate(raster.name)
 
   arcpy.AddMessage("Metadata Retrieved. Zipping together with XYZ...")
   zipped = ZipXYZ(xyz, metadata, zipDir)
@@ -91,8 +89,21 @@ for raster in newRasters:
   arcpy.mapping.UpdateLayer(df, newRaster, symLayer, True)
   arcpy.AddMessage("\nRaster symbology set\n")
 
-  WebProducts(newRaster, (mxd,tight_mxd,event_mxd), (df,tight_df,event_df))
+  event_layer = WebProducts(newRaster, (mxd,tight_mxd,event_mxd), (df,tight_df,event_df))
 
+  arcpy.AddMessage("Adding fields for right pane...")
+  arcpy.AddField_Management(event_layer,"Completed","DATE")
+  arcpy.AddField_Management(event_layer,"Abstract","TEXT",field_length=1200)
+
+  arcpy.AddMessage("Fields added. Populating from metadata...")
+
+  with arcpy.da.UpdateCursor(event_layer,['Completed','Abstract']) as cursor:
+    for row in cursor:
+      row[0] = unixtime
+      row[1] = abstract
+      cursor.updateRow(row)
+
+  arcpy.AddMessage("Data applied.")   
 arcpy.AddMessage("Merging web products to create services...")
 
 

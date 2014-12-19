@@ -13,6 +13,7 @@ from getDate import GetDate
 from zipXYZ import ZipXYZ
 from webproducts import WebProducts
 from makeService import MakeService
+from getGeometries import GetGeometries
 
 arcpy.env.workspace = gdb
 arcpy.env.OverwriteOutput = True
@@ -25,6 +26,7 @@ gisConnection = arcpy.GetParameterAsText(3)
 
 password = PasswordPrompt()
 mxd = arcpy.mapping.MapDocument("Current")
+endpoint = "https://darcgis.water.ca.gov/arcgis/rest/services/cadre"
 
 layers = arcpy.mapping.ListLayers(mxd)
 df = arcpy.mapping.ListDataFrames(mxd)[0]
@@ -129,5 +131,10 @@ for layer in arcpy.mapping.ListLayers(mxd)[:2]:
 tight_outlines = arcpy.mapping.MapDocument(r"\\nasgisnp\EntGIS\Cadre\Bathymetry\bathymetry_tight_outlines.mxd")
 event_outlines = arcpy.mapping.MapDocument(r"\\nasgisnp\EntGIS\Cadre\Bathymetry\bathymetry_event_outlines.mxd")
 
+arcpy.AddMessage("Making services...")
 MakeService(tight_outlines, username, password)
 MakeService(event_outlines, username, password)
+
+arcpy.AddMessage("Services created. Getting geometries...")
+GetGeometries(endpoint, "bathymetry_event_outlines")
+GetGeometries(endpoint, "bathymetry_tight_outlines")

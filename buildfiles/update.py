@@ -49,7 +49,9 @@ for raster in newRasters:
     path.join(zipDir,'TEMPmetadata.xml')
     ).getOutput(0)
 
-  abstract = ET.parse(metadata).iter('abstract').next().text
+  abstract = 'No description'
+  for elem in ET.parse(metadata).iter('abstract'):
+    abstract = elem.text
   unixtime = GetDate(raster.name)
 
   arcpy.AddMessage("Metadata Retrieved. Zipping together with XYZ...")

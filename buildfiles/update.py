@@ -1,5 +1,6 @@
 #Modify the import path to look in the buildfiles directory first
 buildDir = r"\\mrsbmapp21161\giswebapps\bathymetry\buildfiles"
+gdb = r"\\nasgisnp\EntGIS\Cadre\Bathymetry\Bathymetry.gdb"
 import sys
 sys.path.insert(0, buildDir)
 
@@ -13,7 +14,8 @@ from zipXYZ import ZipXYZ
 from webproducts import WebProducts
 from makeService import MakeService
 
-arcpy.env.workspace=r"\\nasgisnp\EntGIS\Cadre\Bathymetry\Bathymetry.gdb"
+arcpy.env.workspace = gdb
+arcpy.env.OverwriteOutput = True
 arcpy.env.addOutputsToMap = True
 
 username = arcpy.GetParameterAsText(0)
@@ -114,5 +116,14 @@ for raster in newRasters:
   
 arcpy.AddMessage("Merging web products to create services...")
 
+tight_layers = arcpy.mapping.ListLayers(tight_mxd)
+event_layers = arcpy.mapping.ListLayers(event_mxd)
+
+tight_merge = arcpy.Merge_management(tight_layers,"tight_layers")
+event_merge = arcpy.Merge_management(event_layers,"event_layers")
+
+arcpy.AddMessage("Merged. Removing products from map...")
+for layer in arcpy.mapping.ListLayers(mxd)[:2]:
+  arcpy.mapping.RemoveLayer(df, layer)
 
 #MakeService(tight_mxd,username,password)

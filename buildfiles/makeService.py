@@ -74,7 +74,7 @@ def doRequest(name, port, url, params, headers):
 def getToken(username, password, serverName, serverPort):
   tokenURL = "/arcgis/admin/generateToken"
 
-  params = urllib.urlencode({'username': username, 'password': password, 'client': 'requestip', 'expiration':180,'f': 'json'})
+  params = urllib.urlencode({'username': username, 'password': password, 'client': 'requestip', 'expiration':300,'f': 'json'})
   headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
 
   httpConn = httplib.HTTPConnection(serverName, serverPort)

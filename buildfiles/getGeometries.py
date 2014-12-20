@@ -1,8 +1,10 @@
 import httplib
 import arcpy
+from os import path
 
-def GetGeometries(endpoint, service, isTight):
+def GetGeometries(endpoint, service, isTight, outprefix = r"\\nasgisnp\EntGIS\Cadre\Bathymetry\static_data"):
   server = endpoint.split('argis/rest')[0]
+  outfile = path.join(outprefix,service+'.js')
   if isTight:
     url = endpoint + service + "/MapServer/0/query?f=json&where=1%3D1&returnGeometry=true&spatialRel=esriSpatialRelIntersects&maxAllowableOffset=15&outFields=OBJECTID&outSR=102100"
   else:
@@ -20,4 +22,6 @@ def GetGeometries(endpoint, service, isTight):
     data = response.read()
     httpConn.close()
 
-  
+  with open(outfile, 'w') as file:
+    file.write('window.'+service+'=')
+    file.write(data)

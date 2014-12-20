@@ -26,7 +26,7 @@ gisConnection = arcpy.GetParameterAsText(3)
 
 password = PasswordPrompt()
 mxd = arcpy.mapping.MapDocument("Current")
-endpoint = "https://darcgis.water.ca.gov/arcgis/rest/services/cadre"
+endpoint = "https://darcgis.water.ca.gov/arcgis/rest/services/cadre/"
 
 layers = arcpy.mapping.ListLayers(mxd)
 df = arcpy.mapping.ListDataFrames(mxd)[0]
@@ -136,5 +136,5 @@ MakeService(tight_outlines, username, password)
 MakeService(event_outlines, username, password)
 
 arcpy.AddMessage("Services created. Getting geometries...")
-GetGeometries(endpoint, "bathymetry_event_outlines")
-GetGeometries(endpoint, "bathymetry_tight_outlines")
+GetGeometries(endpoint, "bathymetry_event_outlines", 0)
+GetGeometries(endpoint, "bathymetry_tight_outlines", 1)

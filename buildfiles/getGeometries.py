@@ -3,8 +3,8 @@ import arcpy
 from os import path
 from time import sleep
 
-def GetGeometries(endpoint, service, appServerRoot, isTight):
-  server = endpoint.split('/arcgis/rest')[0].split("//")[1]
+def GetGeometries(server, service, appServerRoot, isTight):
+
   outfile = path.join(appServerRoot, "static_data", service+'.js')
   if isTight:
     url = "/arcgis/rest/services/" + service + "/MapServer/0/query?f=json&where=1%3D1&returnGeometry=true&spatialRel=esriSpatialRelIntersects&maxAllowableOffset=15&outFields=OBJECTID&outSR=102100"

@@ -4,9 +4,10 @@ from os import path
 username = arcpy.GetParameterAsText(0)
 appServerRoot = arcpy.GetParameterAsText(1)
 dataRoot = arcpy.GetParameterAsText(2)
-gisServer = arcpy.GetParameterAsText(3)
+gisServerMachine = arcpy.GetParameterAsText(3)
 folder = arcpy.GetParameterAsText(4)
 gisConnection = arcpy.GetParameterAsText(5)
+
 
 #Modify the import path to look in the buildfiles directory first
 buildDir = path.join(appServerRoot, "buildfiles")
@@ -30,9 +31,11 @@ arcpy.env.addOutputsToMap = True
 
 
 password = PasswordPrompt()
-mxd = arcpy.mapping.MapDocument("Current")
+gisServer = "darcgis.water.ca.gov"
 endpoint = "https://darcgis.water.ca.gov/arcgis/rest/services/cadre/"
-endpointServer = "darcgis.water.ca.gov"
+mxd = arcpy.mapping.MapDocument("Current")
+
+
 
 
 layers = arcpy.mapping.ListLayers(mxd)
@@ -139,7 +142,7 @@ tight_outlines = arcpy.mapping.MapDocument(path.join(dataRoot, "bathymetry_tight
 event_outlines = arcpy.mapping.MapDocument(path.join(dataRoot, "bathymetry_event_outlines.mxd"))
 
 arcpy.AddMessage("Getting token...")
-token = GetToken(username, password, endpointServer)
+token = GetToken(username, password, gisServer)
 
 if token == None:
   arcpy.AddMessage("Could not generate valid tokens with the username and password provided.")
@@ -151,5 +154,5 @@ MakeService(tight_outlines, token)
 MakeService(event_outlines, token)
 
 arcpy.AddMessage("Services created. Getting geometries...")
-GetGeometries(endpoint, "bathymetry_event_outlines", appServerRoot, 0)
-GetGeometries(endpoint, "bathymetry_tight_outlines", appServerRoot, 1)
+GetGeometries(gisServer, "bathymetry_event_outlines", appServerRoot, 0)
+GetGeometries(gisServer, "bathymetry_tight_outlines", appServerRoot, 1)

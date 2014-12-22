@@ -3,13 +3,14 @@ from os import path
 
 username = arcpy.GetParameterAsText(0)
 appServerRoot = arcpy.GetParameterAsText(1)
-gisServer = arcpy.GetParameterAsText(2)
-folder = arcpy.GetParameterAsText(3)
-gisConnection = arcpy.GetParameterAsText(4)
+dataRoot = arcpy.GetParameterAsText(2)
+gisServer = arcpy.GetParameterAsText(3)
+folder = arcpy.GetParameterAsText(4)
+gisConnection = arcpy.GetParameterAsText(5)
 
 #Modify the import path to look in the buildfiles directory first
-buildDir = path.join(appServerRoot, r"buildfiles")
-gdb = r"\\nasgisnp\EntGIS\Cadre\Bathymetry\Bathymetry.gdb"
+buildDir = path.join(appServerRoot, "buildfiles")
+gdb = path.join(dataRoot,"Bathymetry.gdb")
 sys.path.insert(0, buildDir)
 
 import xml.etree.ElementTree as ET
@@ -36,10 +37,10 @@ endpoint = "https://darcgis.water.ca.gov/arcgis/rest/services/cadre/"
 layers = arcpy.mapping.ListLayers(mxd)
 df = arcpy.mapping.ListDataFrames(mxd)[0]
 
-tight_mxd = arcpy.mapping.MapDocument(r"\\nasgisnp\EntGIS\Cadre\Bathymetry\tight_collection.mxd")
+tight_mxd = arcpy.mapping.MapDocument(path.join(dataRoot, "tight_collection.mxd")
 tight_df = arcpy.mapping.ListDataFrames(tight_mxd)[0]
 
-event_mxd = arcpy.mapping.MapDocument(r"\\nasgisnp\EntGIS\Cadre\Bathymetry\event_collection.mxd")
+event_mxd = arcpy.mapping.MapDocument(path.join(dataRoot, "event_collection.mxd")
 event_df = arcpy.mapping.ListDataFrames(event_mxd)[0]
 
 zipDir = path.join(appServerRoot, r'zips')
@@ -133,8 +134,8 @@ arcpy.AddMessage("Merged. Removing products from map...")
 for layer in arcpy.mapping.ListLayers(mxd)[:2]:
   arcpy.mapping.RemoveLayer(df, layer)
 
-tight_outlines = arcpy.mapping.MapDocument(r"\\nasgisnp\EntGIS\Cadre\Bathymetry\bathymetry_tight_outlines.mxd")
-event_outlines = arcpy.mapping.MapDocument(r"\\nasgisnp\EntGIS\Cadre\Bathymetry\bathymetry_event_outlines.mxd")
+tight_outlines = arcpy.mapping.MapDocument(path.join(dataRoot, "bathymetry_tight_outlines.mxd")
+event_outlines = arcpy.mapping.MapDocument(path.join(dataRoot, "bathymetry_event_outlines.mxd")
 
 arcpy.AddMessage("Getting token...")
 GetToken(username, password)

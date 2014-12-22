@@ -1,10 +1,17 @@
+import arcpy, sys
+from os import path
+
+username = arcpy.GetParameterAsText(0)
+appServerRoot = arcpy.GetParameterAsText(1)
+gisServer = arcpy.GetParameterAsText(2)
+folder = arcpy.GetParameterAsText(3)
+gisConnection = arcpy.GetParameterAsText(4)
+
 #Modify the import path to look in the buildfiles directory first
-buildDir = r"\\mrsbmapp21161\giswebapps\bathymetry\buildfiles"
+buildDir = path.join(appServerRoot, r"buildfiles")
 gdb = r"\\nasgisnp\EntGIS\Cadre\Bathymetry\Bathymetry.gdb"
-import sys
 sys.path.insert(0, buildDir)
 
-import arcpy
 import xml.etree.ElementTree as ET
 from os import path
 from passwordPrompt import PasswordPrompt
@@ -20,15 +27,11 @@ arcpy.env.workspace = gdb
 arcpy.env.OverwriteOutput = True
 arcpy.env.addOutputsToMap = True
 
-username = arcpy.GetParameterAsText(0)
-server = arcpy.GetParameterAsText(1)
-folder = arcpy.GetParameterAsText(2)
-gisConnection = arcpy.GetParameterAsText(3)
 
 password = PasswordPrompt()
 mxd = arcpy.mapping.MapDocument("Current")
 endpoint = "https://darcgis.water.ca.gov/arcgis/rest/services/cadre/"
-serverName="mrsbmapp21169"
+
 
 layers = arcpy.mapping.ListLayers(mxd)
 df = arcpy.mapping.ListDataFrames(mxd)[0]
@@ -39,7 +42,7 @@ tight_df = arcpy.mapping.ListDataFrames(tight_mxd)[0]
 event_mxd = arcpy.mapping.MapDocument(r"\\nasgisnp\EntGIS\Cadre\Bathymetry\event_collection.mxd")
 event_df = arcpy.mapping.ListDataFrames(event_mxd)[0]
 
-zipDir = r'\\mrsbmapp21161\giswebapps\bathymetry\zips'
+zipDir = path.join(appServerRoot, r'zips')
 translator = path.join(arcpy.GetInstallInfo("desktop")["InstallDir"], r"Metadata\Translator\ARCGIS2FGDC.xml")
 
 
@@ -145,5 +148,5 @@ MakeService(tight_outlines, username, password)
 MakeService(event_outlines, username, password)
 
 arcpy.AddMessage("Services created. Getting geometries...")
-GetGeometries(endpoint, "bathymetry_event_outlines", 0)
-GetGeometries(endpoint, "bathymetry_tight_outlines", 1)
+GetGeometries(endpoint, "bathymetry_event_outlines", appServerRoot, 0)
+GetGeometries(endpoint, "bathymetry_tight_outlines", appServerRoot, 1)

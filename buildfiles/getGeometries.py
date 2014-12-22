@@ -3,10 +3,9 @@ import arcpy
 from os import path
 from time import sleep
 
-
-def GetGeometries(endpoint, service, isTight, outprefix = r"\\nasgisnp\EntGIS\Cadre\Bathymetry\static_data"):
+def GetGeometries(endpoint, service, appServerRoot, isTight):
   server = endpoint.split('/arcgis/rest')[0].split("//")[1]
-  outfile = path.join(outprefix,service+'.js')
+  outfile = path.join(appServerRoot, "static_data", service+'.js')
   if isTight:
     url = "/arcgis/rest/services/" + service + "/MapServer/0/query?f=json&where=1%3D1&returnGeometry=true&spatialRel=esriSpatialRelIntersects&maxAllowableOffset=15&outFields=OBJECTID&outSR=102100"
   else:

@@ -2,13 +2,13 @@ import httplib
 import arcpy
 from os import path
 
-def GetGeometries(server, service, appServerRoot, isTight):
+def GetGeometries(server, service, appServerRoot, token, isTight):
 
-  outfile = path.join(appServerRoot, "static_data", service+'.js')
+  outfile = path.join(path.join(appServerRoot, "static_data"),service+'.js')
   if isTight:
-    url = "/arcgis/rest/services/" + service + "/MapServer/0/query?f=json&where=1%3D1&returnGeometry=true&spatialRel=esriSpatialRelIntersects&maxAllowableOffset=15&outFields=OBJECTID&outSR=102100"
+    url = "/arcgis/rest/services/" + service + "/MapServer/0/query?token="+token+"&f=json&where=1%3D1&returnGeometry=true&spatialRel=esriSpatialRelIntersects&maxAllowableOffset=15&outFields=OBJECTID&outSR=102100"
   else:
-    url = "/arcgis/rest/services/" + service + "/MapServer/0/query?f=json&where=1%3D1&returnGeometry=true&spatialRel=esriSpatialRelIntersects&outFields=*&outSR=102100"
+    url = "/arcgis/rest/services/" + service + "/MapServer/0/query?token="+token+"&f=json&where=1%3D1&returnGeometry=true&spatialRel=esriSpatialRelIntersects&outFields=*&outSR=102100"
 
   httpConn = httplib.HTTPSConnection(server)
   httpConn.request("GET", url)

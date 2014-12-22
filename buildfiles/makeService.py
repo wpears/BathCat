@@ -1,25 +1,19 @@
 import arcpy
 from os import path
 
-def MakeService(mxd, username, password, serverFolder="cadre", gisConnection="GIS Servers/staging"):
-
-  arcpy.env.overwriteOutput = True
-
-  arcpy.AddMessage("\nGetting token...\n")
-
- 
-  mxdPath = mxd.filePath
+def MakeService(mxd, token, serverFolder="cadre", gisConnection="GIS Servers/staging"):
 
   arcpy.AddMessage("Processing map: {}\n".format(mxd))
 
-  name = path.basename(mxd.filePath).split('.')[0]
+  mxdPath = mxd.filePath
+  name = path.basename(mxdPath).split('.')[0]
   sdName = path.join(path.dirname(mxdPath), name)
   draft = sdName+".sddraft"
   sd = sdName+".sd"
 
   arcpy.AddMessage("Making Service Definition Draft: {}.\n".format(draft))
 
-  analysis = arcpy.mapping.CreateMapSDDraft(mxd.filePath,
+  analysis = arcpy.mapping.CreateMapSDDraft(mxdPath,
                                             draft,
                                             name,
                                            "ARCGIS_SERVER",
@@ -34,8 +28,6 @@ def MakeService(mxd, username, password, serverFolder="cadre", gisConnection="GI
     arcpy.AddMessage("Service Definition created.\n")
   else:
     arcpy.AddMessage("Errors creating service definition",analysis['errors'])
-
-  #url = "/arcgis/admin/services/" + serverFolder + "/" + name + ".MapServer"
 
 
   arcpy.AddMessage("Publishing Service.\n")

@@ -32,15 +32,16 @@ arcpy.env.addOutputsToMap = True
 password = PasswordPrompt()
 mxd = arcpy.mapping.MapDocument("Current")
 endpoint = "https://darcgis.water.ca.gov/arcgis/rest/services/cadre/"
+endpointServer = "darcgis.water.ca.gov"
 
 
 layers = arcpy.mapping.ListLayers(mxd)
 df = arcpy.mapping.ListDataFrames(mxd)[0]
 
-tight_mxd = arcpy.mapping.MapDocument(path.join(dataRoot, "tight_collection.mxd")
+tight_mxd = arcpy.mapping.MapDocument(path.join(dataRoot, "tight_collection.mxd"))
 tight_df = arcpy.mapping.ListDataFrames(tight_mxd)[0]
 
-event_mxd = arcpy.mapping.MapDocument(path.join(dataRoot, "event_collection.mxd")
+event_mxd = arcpy.mapping.MapDocument(path.join(dataRoot, "event_collection.mxd"))
 event_df = arcpy.mapping.ListDataFrames(event_mxd)[0]
 
 zipDir = path.join(appServerRoot, r'zips')
@@ -134,19 +135,20 @@ arcpy.AddMessage("Merged. Removing products from map...")
 for layer in arcpy.mapping.ListLayers(mxd)[:2]:
   arcpy.mapping.RemoveLayer(df, layer)
 
-tight_outlines = arcpy.mapping.MapDocument(path.join(dataRoot, "bathymetry_tight_outlines.mxd")
-event_outlines = arcpy.mapping.MapDocument(path.join(dataRoot, "bathymetry_event_outlines.mxd")
+tight_outlines = arcpy.mapping.MapDocument(path.join(dataRoot, "bathymetry_tight_outlines.mxd"))
+event_outlines = arcpy.mapping.MapDocument(path.join(dataRoot, "bathymetry_event_outlines.mxd"))
 
 arcpy.AddMessage("Getting token...")
-GetToken(username, password)
- if token == None:
-    arcpy.AddMessage("Could not generate valid tokens with the username and password provided.")
-    return
+token = GetToken(username, password, endpointServer)
+
+if token == None:
+  arcpy.AddMessage("Could not generate valid tokens with the username and password provided.")
+  return
 
 
 arcpy.AddMessage("Making services...")
-MakeService(tight_outlines, username, password)
-MakeService(event_outlines, username, password)
+MakeService(tight_outlines, token)
+MakeService(event_outlines, token)
 
 arcpy.AddMessage("Services created. Getting geometries...")
 GetGeometries(endpoint, "bathymetry_event_outlines", appServerRoot, 0)

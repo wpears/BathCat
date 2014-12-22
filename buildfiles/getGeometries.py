@@ -1,7 +1,6 @@
 import httplib
 import arcpy
 from os import path
-from time import sleep
 
 def GetGeometries(server, service, appServerRoot, isTight):
 

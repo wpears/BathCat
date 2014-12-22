@@ -16,6 +16,7 @@ sys.path.insert(0, buildDir)
 
 import xml.etree.ElementTree as ET
 from os import path
+from time import sleep
 from passwordPrompt import PasswordPrompt
 from rasterToXYZ import RasterToXYZ
 from getDate import GetDate
@@ -31,7 +32,7 @@ arcpy.env.addOutputsToMap = True
 
 
 password = PasswordPrompt()
-gisServer = "darcgis.water.ca.gov"
+gisServerSite = "darcgis.water.ca.gov"
 endpoint = "https://darcgis.water.ca.gov/arcgis/rest/services/cadre/"
 mxd = arcpy.mapping.MapDocument("Current")
 
@@ -142,17 +143,19 @@ tight_outlines = arcpy.mapping.MapDocument(path.join(dataRoot, "bathymetry_tight
 event_outlines = arcpy.mapping.MapDocument(path.join(dataRoot, "bathymetry_event_outlines.mxd"))
 
 arcpy.AddMessage("Getting token...")
-token = GetToken(username, password, gisServer)
+token = GetToken(username, password, gisServerMachine)
 
 if token == None:
   arcpy.AddMessage("Could not generate valid tokens with the username and password provided.")
   return
 
-
 arcpy.AddMessage("Making services...")
 MakeService(tight_outlines, token)
 MakeService(event_outlines, token)
 
-arcpy.AddMessage("Services created. Getting geometries...")
-GetGeometries(gisServer, "bathymetry_event_outlines", appServerRoot, 0)
-GetGeometries(gisServer, "bathymetry_tight_outlines", appServerRoot, 1)
+arcpy.AddMessage("Services created. Waiting 20 seconds for the server to spin them up...")
+sleep(20)
+
+arcpy.AddMessage("Done waiting, getting geometries...")
+GetGeometries(gisServerSite, "bathymetry_event_outlines", appServerRoot, 0)
+GetGeometries(gisServerSite, "bathymetry_tight_outlines", appServerRoot, 1)

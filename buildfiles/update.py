@@ -152,12 +152,12 @@ tight_outlines = arcpy.mapping.MapDocument(path.join(dataRoot, "bathymetry_tight
 event_outlines = arcpy.mapping.MapDocument(path.join(dataRoot, "bathymetry_event_outlines.mxd"))
 
 arcpy.AddMessage("Making services...")
-MakeService(tight_outlines, token)
-MakeService(event_outlines, token)
+MakeService(tight_outlines)
+MakeService(event_outlines)
 
 arcpy.AddMessage("Services created. Waiting 20 seconds for the server to spin them up...")
 sleep(20)
 
 arcpy.AddMessage("Done waiting, getting geometries...")
-GetGeometries(gisServerSite, "bathymetry_event_outlines", appServerRoot, token, 0)
-GetGeometries(gisServerSite, "bathymetry_tight_outlines", appServerRoot, token, 1)
+GetGeometries(gisServerMachine, "bathymetry_event_outlines", appServerRoot, token, 0)
+GetGeometries(gisServerMachine, "bathymetry_tight_outlines", appServerRoot, token, 1)

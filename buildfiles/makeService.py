@@ -1,11 +1,12 @@
 import arcpy
 from os import path
 
-def MakeService(mxd, token, serverFolder="cadre", gisConnection="GIS Servers/staging"):
-
-  arcpy.AddMessage("Processing map: {}\n".format(mxd))
+def MakeService(mxd, serverFolder="cadre", gisConnection="GIS Servers/staging"):
 
   mxdPath = mxd.filePath
+
+  arcpy.AddMessage("Processing map: {}\n".format(mxdPath))
+
   name = path.basename(mxdPath).split('.')[0]
   sdName = path.join(path.dirname(mxdPath), name)
   draft = sdName+".sddraft"

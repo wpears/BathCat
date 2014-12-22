@@ -8,6 +8,7 @@ gisServerMachine = arcpy.GetParameterAsText(3)
 folder = arcpy.GetParameterAsText(4)
 gisConnection = arcpy.GetParameterAsText(5)
 
+#GIS server machines available at https://darcgis.water.ca.gov/arcgis/admin/machines
 
 #Modify the import path to look in the buildfiles directory first
 buildDir = path.join(appServerRoot, "buildfiles")
@@ -37,6 +38,12 @@ endpoint = "https://darcgis.water.ca.gov/arcgis/rest/services/cadre/"
 mxd = arcpy.mapping.MapDocument("Current")
 
 
+arcpy.AddMessage("Getting token...")
+token = GetToken(username, password, gisServerMachine)
+
+if token == None:
+  arcpy.AddMessage("Could not generate valid tokens with the username and password provided.")
+  sys.exit(1)
 
 
 layers = arcpy.mapping.ListLayers(mxd)
@@ -102,6 +109,7 @@ for raster in newRasters:
   newRaster = arcpy.mapping.ListLayers(mxd)[0]
   symLayer = arcpy.mapping.Layer(path.join(buildDir,"symbology.lyr"))
 
+
   arcpy.AddMessage("Setting new raster symbology...")
   arcpy.mapping.UpdateLayer(df, newRaster, symLayer, True)
   arcpy.AddMessage("\nRaster symbology set\n")
@@ -126,7 +134,8 @@ for raster in newRasters:
   for layer in arcpy.mapping.ListLayers(mxd)[:6]:
     arcpy.mapping.RemoveLayer(df, layer)
   del event_layer
-  
+
+
 arcpy.AddMessage("Merging web products to create services...")
 
 tight_layers = arcpy.mapping.ListLayers(tight_mxd)
@@ -142,13 +151,6 @@ for layer in arcpy.mapping.ListLayers(mxd)[:2]:
 tight_outlines = arcpy.mapping.MapDocument(path.join(dataRoot, "bathymetry_tight_outlines.mxd"))
 event_outlines = arcpy.mapping.MapDocument(path.join(dataRoot, "bathymetry_event_outlines.mxd"))
 
-arcpy.AddMessage("Getting token...")
-token = GetToken(username, password, gisServerMachine)
-
-if token == None:
-  arcpy.AddMessage("Could not generate valid tokens with the username and password provided.")
-  return
-
 arcpy.AddMessage("Making services...")
 MakeService(tight_outlines, token)
 MakeService(event_outlines, token)
@@ -157,5 +159,5 @@ arcpy.AddMessage("Services created. Waiting 20 seconds for the server to spin th
 sleep(20)
 
 arcpy.AddMessage("Done waiting, getting geometries...")
-GetGeometries(gisServerSite, "bathymetry_event_outlines", appServerRoot, 0)
-GetGeometries(gisServerSite, "bathymetry_tight_outlines", appServerRoot, 1)
+GetGeometries(gisServerSite, "bathymetry_event_outlines", appServerRoot, token, 0)
+GetGeometries(gisServerSite, "bathymetry_tight_outlines", appServerRoot, token, 1)

@@ -12,6 +12,7 @@ from rasterToXYZ import RasterToXYZ
 from getDate import GetDate
 from zipXYZ import ZipXYZ
 from webproducts import WebProducts
+from getToken import GetToken
 from makeService import MakeService
 from getGeometries import GetGeometries
 
@@ -27,6 +28,7 @@ gisConnection = arcpy.GetParameterAsText(3)
 password = PasswordPrompt()
 mxd = arcpy.mapping.MapDocument("Current")
 endpoint = "https://darcgis.water.ca.gov/arcgis/rest/services/cadre/"
+serverName="mrsbmapp21169"
 
 layers = arcpy.mapping.ListLayers(mxd)
 df = arcpy.mapping.ListDataFrames(mxd)[0]
@@ -130,6 +132,13 @@ for layer in arcpy.mapping.ListLayers(mxd)[:2]:
 
 tight_outlines = arcpy.mapping.MapDocument(r"\\nasgisnp\EntGIS\Cadre\Bathymetry\bathymetry_tight_outlines.mxd")
 event_outlines = arcpy.mapping.MapDocument(r"\\nasgisnp\EntGIS\Cadre\Bathymetry\bathymetry_event_outlines.mxd")
+
+arcpy.AddMessage("Getting token...")
+GetToken(username, password)
+ if token == None:
+    arcpy.AddMessage("Could not generate valid tokens with the username and password provided.")
+    return
+
 
 arcpy.AddMessage("Making services...")
 MakeService(tight_outlines, username, password)

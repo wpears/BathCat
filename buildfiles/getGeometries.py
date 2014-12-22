@@ -18,12 +18,13 @@ def GetGeometries(endpoint, service, isTight, outprefix = r"\\nasgisnp\EntGIS\Ca
   response = httpConn.getresponse()
   if (response.status != 200):
     httpConn.close()
+    print("ERR")
     arcpy.AddMessage("Error making request.")
     return
   else:
     data = response.read()
     httpConn.close()
-
+  print (data)
   with open(outfile, 'w') as file:
     file.write('window.'+service+'=')
     file.write(data)

@@ -1,16 +1,17 @@
 import httplib
 import arcpy
 from time import time
-import os
+from os import makedirs
+from os import path
 
 def GetGeometries(server, folder, service, appServerRoot, isTight):
 
-  buildDir = os.path.join(appServerRoot, r'static_data\build' + str(int(time()/100)))
+  buildDir = path.join(appServerRoot, r'static_data\build' + str(int(time()/100)))
 
-  if not os.path.exists(buildDir):
-    os.makedirs(buildDir)
+  if not path.exists(buildDir):
+    makedirs(buildDir)
 
-  outfile = os.path.join(buildDir, service +'.js')
+  outfile = path.join(buildDir, service +'.js')
   url = "/arcgis/rest/services/" + folder + "/" + service + "/MapServer/0/query?where=1%3D1&returnGeometry=true&f=json&maxAllowableOffset=4"
 
 
@@ -32,7 +33,15 @@ def GetGeometries(server, folder, service, appServerRoot, isTight):
   else:
     data = response.read()
     httpConn.close()
-  print (data)
+
   with open(outfile, 'w') as file:
     file.write('window.'+service+'=')
     file.write(data)
+
+  oldweb = path.join(path.dirname(buildDir), 'web.config')
+  newweb = path.join(buildDir, "web.config")
+
+  with open(oldweb, 'r') as oldFile:
+    with open(newweb, 'w') as newFile:
+      newFile.write(oldFile.read())
+

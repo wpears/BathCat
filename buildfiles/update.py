@@ -41,7 +41,7 @@ gisServerSite = "darcgis.water.ca.gov"
 endpoint = "https://darcgis.water.ca.gov/arcgis/rest/services/cadre/"
 mxd = arcpy.mapping.MapDocument("Current")
 buildNumber = str(int(time()/100))
-buildDir = path.join(appServerRoot, r'static_data\build' + buildNumber)
+staticBuildDir = path.join(appServerRoot, r'static_data\build' + buildNumber)
 
 
 arcpy.AddMessage("Getting token...")
@@ -166,8 +166,8 @@ arcpy.AddMessage("Services created. Waiting 20 seconds for the server to spin th
 sleep(20)
 
 arcpy.AddMessage("Done waiting, getting geometries...")
-GetGeometries(gisServerMachine, folder, "bathymetry_event_outlines", buildDir, 0)
-GetGeometries(gisServerMachine, folder, "bathymetry_tight_outlines", buildDir, 1)
+GetGeometries(gisServerMachine, folder, "bathymetry_event_outlines", staticBuildDir, 0)
+GetGeometries(gisServerMachine, folder, "bathymetry_tight_outlines", staticBuildDir, 1)
 
 arcpy.AddMessage("Got geometries, deleting spare services...")
 DeleteService(gisServerMachine, folder, "bathymetry_event_outlines", token)
@@ -182,7 +182,9 @@ arcpy.AddMessage("Service updated. Updating app html document...")
 
 index = path.join(appServerRoot,'index.html')
 
-with open(index.html 'r+') as file:
+with open(index, 'r+') as file:
+  buildStr = 'static_data/build'+buildNumber
   html = file.read()
+  file.write(buildStr.join(re.split('static_data/build\d{8}',html)))
 
-
+arcpy.AddMessage("html document updated. Script complete.")

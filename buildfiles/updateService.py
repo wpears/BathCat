@@ -1,5 +1,5 @@
 import arcpy
-import httplib
+import httplib, urllib
 from os import path
 from time import sleep
 from deleteService import DeleteService
@@ -20,11 +20,17 @@ def UpdateService(server, folder, mxd, token, gisConnection):
   serviceParams = resp.read()
   httpConn.close()
 
+  arcpy.AddMessage(serviceParams)
+
   DeleteService(server, folder, service, token)
 
   MakeService(mxd, folder, gisConnection)
   sleep(10)
 
-  editURL = "/arcgis/admin/services/" + folder + "/" + service + ".MapServer/edit?f=json&token="+token+"service="+serviceParams
+  editURL = "/arcgis/admin/services/" + folder + "/" + service + ".MapServer/edit?"+urllib.urlencode({'service':serviceParams,'token':token,'f':'json'})
   httpConn = httplib.HTTPConnection(server, 6080)
-  httpConn.request("GET", editURL)
+  httpConn.request("POST", editURL)
+  resp = httpConn.getresponse()
+  if resp.status != 200:
+    arcpy.AddMessage("Failed to update service with its params. Will need to be set manually.")
+  httpConn.close()

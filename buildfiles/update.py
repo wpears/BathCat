@@ -27,6 +27,7 @@ from getToken import GetToken
 from makeService import MakeService
 from getGeometries import GetGeometries
 from deleteService import DeleteService
+from updateService import UpdateService
 
 arcpy.env.workspace = gdb
 arcpy.env.OverwriteOutput = True
@@ -169,4 +170,8 @@ DeleteService(gisServerMachine, folder, "bathymetry_event_outlines", token)
 DeleteService(gisServerMachine, folder, "bathymetry_tight_outlines", token)
 
 arcpy.AddMessage("Services deleted. Updating raster service...")
+UpdateService(gisServerMachine, folder, mxd, token)
+
+arcpy.AddMessage("Service updated. Updating app html document...")
+
 

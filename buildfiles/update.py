@@ -69,8 +69,11 @@ newRasters = [layer for layer in layers if arcpy.Describe(layer).spatialReferenc
 
 for raster in newRasters:
 
+  #Make XYZ
   xyz = RasterToXYZ(raster.dataSource)
 
+
+  #Get Metadata
   arcpy.AddMessage("Getting Metadata...")
   metadata = arcpy.ExportMetadata_conversion(raster,
     translator,
@@ -82,6 +85,8 @@ for raster in newRasters:
     abstract = elem.text
   unixtime = GetDate(raster.name)
 
+
+  #Make zipfiles
   arcpy.AddMessage("Metadata Retrieved. Zipping together with XYZ...")
   zipped = ZipXYZ(xyz, metadata, zipDir)
 
@@ -98,6 +103,8 @@ for raster in newRasters:
 
   arcpy.AddMessage(str.format("Projecting {0}...",rasterName))
 
+
+  #Project the raster
   arcpy.ProjectRaster_management(
     rasterName,
     rasterName,
@@ -112,23 +119,28 @@ for raster in newRasters:
   arcpy.Delete_management("in_memory")
   arcpy.AddMessage("Archived raster removed")
 
+  
+  #Add symbology
+  arcpy.AddMessage("Setting new raster symbology...")
   newRaster = arcpy.mapping.ListLayers(mxd)[0]
   symLayer = arcpy.mapping.Layer(path.join(buildDir,"symbology.lyr"))
-
-
-  arcpy.AddMessage("Setting new raster symbology...")
   arcpy.mapping.UpdateLayer(df, newRaster, symLayer, True)
   arcpy.AddMessage("\nRaster symbology set\n")
 
+
+  #Create web products (the two outlines)
   event_layer = WebProducts(newRaster, (mxd,tight_mxd,event_mxd), (df,tight_df,event_df))
 
+
+  #Add fields
   arcpy.AddMessage("Adding fields for right pane...")
   arcpy.AddField_management(event_layer,"Project","TEXT",field_length=50)
   arcpy.AddField_management(event_layer,"Completed","FLOAT")
   arcpy.AddField_management(event_layer,"Abstract","TEXT",field_length=1200)
 
-  arcpy.AddMessage("Fields added. Populating from metadata...")
 
+  #Populate rows
+  arcpy.AddMessage("Fields added. Populating from metadata...")
   with arcpy.da.UpdateCursor(event_layer,['Project','Completed','Abstract']) as cursor:
     for row in cursor:
       row[0] = rasterName[:-10].replace("_", " ")
@@ -142,8 +154,11 @@ for raster in newRasters:
   del event_layer
 
 
-arcpy.AddMessage("Merging web products to create services...")
+#Exit loop
 
+
+#Merge layers
+arcpy.AddMessage("Merging web products to create services...")
 tight_layers = arcpy.mapping.ListLayers(tight_mxd)
 event_layers = arcpy.mapping.ListLayers(event_mxd)
 
@@ -155,31 +170,39 @@ for layer in arcpy.mapping.ListLayers(mxd)[:2]:
   arcpy.mapping.RemoveLayer(df, layer)
 
 
+#Make outline services
+arcpy.AddMessage("Making services...")
 tight_outlines = arcpy.mapping.MapDocument(path.join(dataRoot, "bathymetry_tight_outlines.mxd"))
 event_outlines = arcpy.mapping.MapDocument(path.join(dataRoot, "bathymetry_event_outlines.mxd"))
 
-arcpy.AddMessage("Making services...")
 MakeService(tight_outlines, folder, gisConnection)
 MakeService(event_outlines, folder, gisConnection)
 
 arcpy.AddMessage("Services created. Waiting 20 seconds for the server to spin them up...")
 sleep(20)
 
+
+#Save geometries
 arcpy.AddMessage("Done waiting, getting geometries...")
 GetGeometries(gisServerMachine, folder, "bathymetry_event_outlines", staticBuildDir, 0)
 GetGeometries(gisServerMachine, folder, "bathymetry_tight_outlines", staticBuildDir, 1)
 
+
+#Clear services
 arcpy.AddMessage("Got geometries, deleting spare services...")
 DeleteService(gisServerMachine, folder, "bathymetry_event_outlines", token)
 DeleteService(gisServerMachine, folder, "bathymetry_tight_outlines", token)
 
+
+#Update bathymetry_rasters
 arcpy.AddMessage("Services deleted. Updating raster service...")
 mxd.save()
 UpdateService(gisServerMachine, folder, mxd, token, gisConnection)
 mxd.save()
 
-arcpy.AddMessage("Service updated. Updating app html document...")
 
+#Rewrite index.html
+arcpy.AddMessage("Service updated. Updating app html document...")
 index = path.join(appServerRoot,'index.html')
 
 with open(index, 'r+') as file:
@@ -188,4 +211,6 @@ with open(index, 'r+') as file:
   file.seek(0)
   file.write(buildStr.join(re.split('static_data/build\d{8}',html)))
 
+
+#Donezo!
 arcpy.AddMessage("html document updated. Script complete.")

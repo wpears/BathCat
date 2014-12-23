@@ -20,8 +20,6 @@ def UpdateService(server, folder, mxd, token, gisConnection):
   serviceParams = resp.read()
   httpConn.close()
 
-  arcpy.AddMessage(serviceParams)
-
   DeleteService(server, folder, service, token)
 
   MakeService(mxd, folder, gisConnection)

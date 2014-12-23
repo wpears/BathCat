@@ -25,7 +25,6 @@ def GetGeometries(server, folder, service, appServerRoot, isTight):
 
 
   response = httpConn.getresponse()
-  print response.status
   if (response.status != 200):
     httpConn.close()
     arcpy.AddMessage("Error making request.")

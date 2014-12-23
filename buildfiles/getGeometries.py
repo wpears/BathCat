@@ -23,7 +23,7 @@ def GetGeometries(server, folder, service, appServerRoot, isTight):
   httpConn = httplib.HTTPConnection(server, 6080)
   httpConn.request("GET", url)
 
-
+#with open(web config) as inp: write it into build dir
   response = httpConn.getresponse()
   if (response.status != 200):
     httpConn.close()

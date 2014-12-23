@@ -16,8 +16,10 @@ gdb = path.join(dataRoot,"Bathymetry.gdb")
 sys.path.insert(0, buildDir)
 
 import xml.etree.ElementTree as ET
+import re
 from os import path
 from time import sleep
+from time import time
 from passwordPrompt import PasswordPrompt
 from rasterToXYZ import RasterToXYZ
 from getDate import GetDate
@@ -38,6 +40,8 @@ password = PasswordPrompt()
 gisServerSite = "darcgis.water.ca.gov"
 endpoint = "https://darcgis.water.ca.gov/arcgis/rest/services/cadre/"
 mxd = arcpy.mapping.MapDocument("Current")
+buildNumber = str(int(time()/100))
+buildDir = path.join(appServerRoot, r'static_data\build' + buildNumber)
 
 
 arcpy.AddMessage("Getting token...")
@@ -162,8 +166,8 @@ arcpy.AddMessage("Services created. Waiting 20 seconds for the server to spin th
 sleep(20)
 
 arcpy.AddMessage("Done waiting, getting geometries...")
-GetGeometries(gisServerMachine, folder, "bathymetry_event_outlines", appServerRoot, 0)
-GetGeometries(gisServerMachine, folder, "bathymetry_tight_outlines", appServerRoot, 1)
+GetGeometries(gisServerMachine, folder, "bathymetry_event_outlines", buildDir, 0)
+GetGeometries(gisServerMachine, folder, "bathymetry_tight_outlines", buildDir, 1)
 
 arcpy.AddMessage("Got geometries, deleting spare services...")
 DeleteService(gisServerMachine, folder, "bathymetry_event_outlines", token)
@@ -175,5 +179,10 @@ UpdateService(gisServerMachine, folder, mxd, token, gisConnection)
 mxd.save()
 
 arcpy.AddMessage("Service updated. Updating app html document...")
+
+index = path.join(appServerRoot,'index.html')
+
+with open(index.html 'r+') as file:
+  html = file.read()
 
 

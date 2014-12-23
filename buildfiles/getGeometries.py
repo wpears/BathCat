@@ -1,12 +1,9 @@
 import httplib
 import arcpy
-from time import time
 from os import makedirs
 from os import path
 
-def GetGeometries(server, folder, service, appServerRoot, isTight):
-
-  buildDir = path.join(appServerRoot, r'static_data\build' + str(int(time()/100)))
+def GetGeometries(server, folder, service, buildDir, isTight):
 
   if not path.exists(buildDir):
     makedirs(buildDir)
@@ -24,7 +21,6 @@ def GetGeometries(server, folder, service, appServerRoot, isTight):
   httpConn = httplib.HTTPConnection(server, 6080)
   httpConn.request("GET", url)
 
-#with open(web config) as inp: write it into build dir
   response = httpConn.getresponse()
   if (response.status != 200):
     httpConn.close()

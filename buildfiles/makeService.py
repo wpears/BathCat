@@ -34,5 +34,3 @@ def MakeService(mxd, serverFolder, gisConnection):
   arcpy.AddMessage("Publishing Service.\n")
   arcpy.UploadServiceDefinition_server(sd, gisConnection)
   arcpy.AddMessage("{} published to {} folder\n".format(name, serverFolder))
-
-#read service properties read and update the service with edit endpoint

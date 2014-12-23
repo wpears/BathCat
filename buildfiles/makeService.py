@@ -1,7 +1,7 @@
 import arcpy
 from os import path
 
-def MakeService(mxd, serverFolder="cadre", gisConnection="GIS Servers/staging"):
+def MakeService(mxd, serverFolder, gisConnection):
 
   mxdPath = mxd.filePath
 

@@ -1,44 +1,28 @@
-import httplib, urllib
+import httplib
 import arcpy
 from os import path
 
-def GetGeometries(server, service, appServerRoot, token, isTight):
+def GetGeometries(server, folder, service, appServerRoot,isTight):
 
   outfile = path.join(path.join(appServerRoot, "static_data"),service+'.js')
-  headers = {"Content-Type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
-  url = "/arcgis/rest/services/" + service + "/MapServer/0/query"
+  url = "/arcgis/rest/services/" + folder + "/" + service + "/MapServer/0/query?where=1%3D1&returnGeometry=true&f=json&maxAllowableOffset=4"
 
 
   if isTight:
-    params = urllib.urlencode({
-      'token':token,
-      'f': 'json',
-      'where':'1=1',
-      'returnGeometry':'true',
-      'spatialRel':'esriSpatialRelIntersect',
-      'outFields':'OBJECTID',
-      'maxAllowableOffset':15,
-      'outSR':102100
-    })
+    url += "&outFields=OBJECTID"
   else:
-    params = urllib.urlencode({
-      'token':token,
-      'f': 'json',
-      'where':'1=1',
-      'returnGeometry':'true',
-      'spatialRel':'esriSpatialRelIntersect',
-      'outFields':'*',
-      'outSR':102100
-    })
+    url += "&outFields=*"
 
 
   httpConn = httplib.HTTPConnection(server, 6080)
-  httpConn.request("GET", url, params, headers)
+  httpConn.request("GET", url)
 
 
   response = httpConn.getresponse()
+  print response.status
   if (response.status != 200):
     httpConn.close()
+    print('err')
     arcpy.AddMessage("Error making request.")
     return
   else:

@@ -26,6 +26,7 @@ from webproducts import WebProducts
 from getToken import GetToken
 from makeService import MakeService
 from getGeometries import GetGeometries
+from deleteService import DeleteService
 
 arcpy.env.workspace = gdb
 arcpy.env.OverwriteOutput = True
@@ -148,6 +149,7 @@ arcpy.AddMessage("Merged. Removing products from map...")
 for layer in arcpy.mapping.ListLayers(mxd)[:2]:
   arcpy.mapping.RemoveLayer(df, layer)
 
+
 tight_outlines = arcpy.mapping.MapDocument(path.join(dataRoot, "bathymetry_tight_outlines.mxd"))
 event_outlines = arcpy.mapping.MapDocument(path.join(dataRoot, "bathymetry_event_outlines.mxd"))
 
@@ -159,5 +161,12 @@ arcpy.AddMessage("Services created. Waiting 20 seconds for the server to spin th
 sleep(20)
 
 arcpy.AddMessage("Done waiting, getting geometries...")
-GetGeometries(gisServerMachine, folder, "bathymetry_event_outlines", appServerRoot, token, 0)
-GetGeometries(gisServerMachine, folder, "bathymetry_tight_outlines", appServerRoot, token, 1)
+GetGeometries(gisServerMachine, folder, "bathymetry_event_outlines", appServerRoot, 0)
+GetGeometries(gisServerMachine, folder, "bathymetry_tight_outlines", appServerRoot, 1)
+
+arcpy.AddMessage("Got geometries, deleting spare services...")
+DeleteService(gisServerMachine, folder, "bathymetry_event_outlines", token)
+DeleteService(gisServerMachine, folder, "bathymetry_tight_outlines", token)
+
+arcpy.AddMessage("Services deleted. Updating raster service...")
+

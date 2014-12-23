@@ -10,7 +10,7 @@ def GetGeometries(server, folder, service, appServerRoot, isTight):
   if not os.path.exists(buildDir):
     os.makedirs(buildDir)
 
-  outfile = os.path.join(buildDir, server +'.js')
+  outfile = os.path.join(buildDir, service +'.js')
   url = "/arcgis/rest/services/" + folder + "/" + service + "/MapServer/0/query?where=1%3D1&returnGeometry=true&f=json&maxAllowableOffset=4"
 
 

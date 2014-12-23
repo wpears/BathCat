@@ -1,10 +1,16 @@
 import httplib
 import arcpy
-from os import path
+from time import time
+import os
 
-def GetGeometries(server, folder, service, appServerRoot,isTight):
+def GetGeometries(server, folder, service, appServerRoot, isTight):
 
-  outfile = path.join(path.join(appServerRoot, "static_data"),service+'.js')
+  buildDir = os.path.join(appServerRoot, r'static_data\build' + str(int(time()/100)))
+
+  if not os.path.exists(buildDir):
+    os.makedirs(buildDir)
+
+  outfile = os.path.join(buildDir, server +'.js')
   url = "/arcgis/rest/services/" + folder + "/" + service + "/MapServer/0/query?where=1%3D1&returnGeometry=true&f=json&maxAllowableOffset=4"
 
 
@@ -22,7 +28,6 @@ def GetGeometries(server, folder, service, appServerRoot,isTight):
   print response.status
   if (response.status != 200):
     httpConn.close()
-    print('err')
     arcpy.AddMessage("Error making request.")
     return
   else:

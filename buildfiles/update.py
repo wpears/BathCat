@@ -170,7 +170,9 @@ DeleteService(gisServerMachine, folder, "bathymetry_event_outlines", token)
 DeleteService(gisServerMachine, folder, "bathymetry_tight_outlines", token)
 
 arcpy.AddMessage("Services deleted. Updating raster service...")
-UpdateService(gisServerMachine, folder, mxd, token)
+mxd.save()
+UpdateService(gisServerMachine, folder, mxd, token, gisConnection)
+mxd.save()
 
 arcpy.AddMessage("Service updated. Updating app html document...")
 

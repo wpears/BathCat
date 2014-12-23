@@ -9,8 +9,6 @@ env.outputMFlag="Disabled"
 
 def WebProducts (raster, mxds, dfs, method="POINT_REMOVE", tolerance=3, minimumArea=3000 ):
 
-  mxd = mxds[0]
-  df = dfs[0]
   rastName=arcpy.Describe(raster).baseName
   tempPath = path.join("in_memory", rastName) + "TEMP"
   temp2Path = tempPath + "2"

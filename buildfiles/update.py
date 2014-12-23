@@ -170,7 +170,7 @@ for layer in arcpy.mapping.ListLayers(mxd)[:2]:
   arcpy.mapping.RemoveLayer(df, layer)
 
 
-#Make outline services
+#Make temporary outline services
 arcpy.AddMessage("Making services...")
 tight_outlines = arcpy.mapping.MapDocument(path.join(dataRoot, "bathymetry_tight_outlines.mxd"))
 event_outlines = arcpy.mapping.MapDocument(path.join(dataRoot, "bathymetry_event_outlines.mxd"))

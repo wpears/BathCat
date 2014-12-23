@@ -185,6 +185,7 @@ index = path.join(appServerRoot,'index.html')
 with open(index, 'r+') as file:
   buildStr = 'static_data/build'+buildNumber
   html = file.read()
+  file.seek(0)
   file.write(buildStr.join(re.split('static_data/build\d{8}',html)))
 
 arcpy.AddMessage("html document updated. Script complete.")

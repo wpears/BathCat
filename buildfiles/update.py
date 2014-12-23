@@ -143,7 +143,7 @@ for raster in newRasters:
   arcpy.AddMessage("Fields added. Populating from metadata...")
   with arcpy.da.UpdateCursor(event_layer,['Project','Completed','Abstract']) as cursor:
     for row in cursor:
-      row[0] = rasterName[:-10].replace("_", " ")
+      row[0] = rasterName[:-9].replace("_", " ")
       row[1] = unixtime
       row[2] = abstract
       cursor.updateRow(row)

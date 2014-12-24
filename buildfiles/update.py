@@ -12,7 +12,7 @@ gisConnection = arcpy.GetParameterAsText(5)
 
 #Modify the import path to look in the buildfiles directory first
 buildDir = path.join(appServerRoot, "buildfiles")
-gdb = path.join(dataRoot,"Bathymetry.gdb")
+gdb = path.join(dataRoot,"webData.gdb")
 sys.path.insert(0, buildDir)
 
 import xml.etree.ElementTree as ET

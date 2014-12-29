@@ -116,7 +116,6 @@ for raster in newRasters:
 
   arcpy.AddMessage("Raster projected.\nRemoving archived raster...")
   arcpy.mapping.RemoveLayer(df, raster)
-  arcpy.Delete_management("in_memory")
   arcpy.AddMessage("Archived raster removed")
 
   

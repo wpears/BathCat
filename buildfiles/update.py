@@ -128,7 +128,7 @@ for raster in newRasters:
 
 
   #Create web products (the two outlines)
-  event_layer = WebProducts(newRaster, (mxd,tight_mxd,event_mxd), (df,tight_df,event_df))
+  event_layer = WebProducts(newRaster, (mxd,tight_mxd,event_mxd))
 
 
   #Add fields
@@ -160,7 +160,8 @@ for raster in newRasters:
 arcpy.AddMessage("Merging web products to create services...")
 tight_layers = arcpy.mapping.ListLayers(tight_mxd)
 event_layers = arcpy.mapping.ListLayers(event_mxd)
-
+arcpy.AddMessage(tight_layers)
+arcpy.AddMessage(event_layers)
 tight_merge = arcpy.Merge_management(tight_layers,"tight_layers")
 event_merge = arcpy.Merge_management(event_layers,"event_layers")
 

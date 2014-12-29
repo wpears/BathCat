@@ -7,9 +7,10 @@ env.outputMFlag="Disabled"
 
 
 
-def WebProducts (raster, mxds, dfs, method="POINT_REMOVE", tolerance=3, minimumArea=3000 ):
+def WebProducts (raster, mxds, method="POINT_REMOVE", tolerance=3, minimumArea=3000 ):
 
   rastName=arcpy.Describe(raster).baseName
+  arcpy.AddMessage("Processing raster: "+rastName)
   tempPath = rastName + "TEMP"
   temp2Path = tempPath + "2"
   temp3Path = tempPath + "3"
@@ -33,12 +34,11 @@ def WebProducts (raster, mxds, dfs, method="POINT_REMOVE", tolerance=3, minimumA
 
 
   tight_mxd = mxds[1]
-  tight_df = dfs[1]
+  tight_df = arcpy.mapping.ListDataFrames(tight_mxd)[0]
   arcpy.AddMessage("Fields cleaned. Saving to: " + path.basename(tight_mxd.filePath))
   tight_layer = arcpy.mapping.Layer(tight_buff)
   arcpy.mapping.AddLayer(tight_df, tight_layer)
   tight_mxd.save()
-
 
   arcpy.AddMessage("Tight outlines saved. Creating buffer for event outlines...")
   extent = raster.getExtent()
@@ -48,9 +48,8 @@ def WebProducts (raster, mxds, dfs, method="POINT_REMOVE", tolerance=3, minimumA
   arcpy.AddMessage("Buffer created.  Cleaning up fields...")
   arcpy.DeleteField_management(buff,["BUFF_DIST"])
 
-
   event_mxd = mxds[2]
-  event_df = dfs[2]
+  event_df = arcpy.mapping.ListDataFrames(event_mxd)[0]
   arcpy.AddMessage("Fields cleaned. Saving to: " + path.basename(event_mxd.filePath))
   event_layer = arcpy.mapping.Layer(buff)
   arcpy.mapping.AddLayer(event_df, event_layer)
@@ -69,8 +68,6 @@ def WebProducts (raster, mxds, dfs, method="POINT_REMOVE", tolerance=3, minimumA
   del tight_buff
   del tight_layer
   del event_layer
-
-  arcpy.Delete_management("in_memory")
 
   arcpy.AddMessage("\nWeb Products created\n")
   return buff

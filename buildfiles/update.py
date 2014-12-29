@@ -170,11 +170,24 @@ for layer in arcpy.mapping.ListLayers(mxd)[:2]:
   arcpy.mapping.RemoveLayer(df, layer)
 
 
-#Make temporary outline services
-arcpy.AddMessage("Making services...")
+# Add merged products to pre-service maps
 tight_outlines = arcpy.mapping.MapDocument(path.join(dataRoot, "bathymetry_tight_outlines.mxd"))
 event_outlines = arcpy.mapping.MapDocument(path.join(dataRoot, "bathymetry_event_outlines.mxd"))
 
+for mapTuple in [(tight_outlines, tight_merge), (event_outlines,event_merge)]:
+  mapDoc = mapTuple[0]
+  mergeLayer = mapTuple[1]
+  mapLayers = arcpy.mapping.ListLayers(mapDoc)
+  mapDf = arcpy.mapping.ListDataFrames(mapDoc)[0]
+
+  for layer in mapLayers:
+    arcpy.mapping.RemoveLayer(mapDf, layer)
+  merge_layer = arcpy.mapping.Layer(mergeLayer)
+  arcpy.mapping.AddLayer(mapDf, merge_layer)
+  mapDoc.save()
+
+#Make temporary outline services
+arcpy.AddMessage("Making services...")
 MakeService(tight_outlines, folder, gisConnection)
 MakeService(event_outlines, folder, gisConnection)
 

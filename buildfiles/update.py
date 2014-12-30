@@ -148,11 +148,11 @@ for raster in newRasters:
       cursor.updateRow(row)
 
   arcpy.AddMessage("Data applied. Removing excess layers...")
-  for layer in arcpy.mapping.ListLayers(mxd)[:6]:
-    arcpy.mapping.RemoveLayer(df, layer)
-  arcpy.Delete_management(event_layer)
   del event_layer
 
+  for layer in arcpy.mapping.ListLayers(mxd)[:2]:
+    arcpy.mapping.RemoveLayer(df, layer)
+  arcpy.AddMessage(rasterName +" processed\n")
 
 #Exit loop
 

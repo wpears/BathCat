@@ -150,6 +150,7 @@ for raster in newRasters:
   arcpy.AddMessage("Data applied. Removing excess layers...")
   for layer in arcpy.mapping.ListLayers(mxd)[:6]:
     arcpy.mapping.RemoveLayer(df, layer)
+  arcpy.Delete_management(event_layer)
   del event_layer
 
 
@@ -160,21 +161,18 @@ for raster in newRasters:
 arcpy.AddMessage("Merging web products to create services...")
 tight_layers = arcpy.mapping.ListLayers(tight_mxd)
 event_layers = arcpy.mapping.ListLayers(event_mxd)
-arcpy.AddMessage(tight_layers)
-arcpy.AddMessage(event_layers)
-tight_merge = arcpy.Merge_management(tight_layers,"tight_layers")
-event_merge = arcpy.Merge_management(event_layers,"event_layers")
-
-arcpy.AddMessage("Merged. Removing products from map...")
-for layer in arcpy.mapping.ListLayers(mxd)[:2]:
-  arcpy.mapping.RemoveLayer(df, layer)
+arcpy.Merge_management(tight_layers,"tight_layers")
+tight_merge = arcpy.mapping.ListLayers(mxd)[0]
+arcpy.Merge_management(event_layers,"event_layers")
+event_merge = arcpy.mapping.ListLayers(mxd)[0]
 
 
 # Add merged products to pre-service maps
+arcpy.AddMessage("Saving merges to service mxds...")
 tight_outlines = arcpy.mapping.MapDocument(path.join(dataRoot, "bathymetry_tight_outlines.mxd"))
 event_outlines = arcpy.mapping.MapDocument(path.join(dataRoot, "bathymetry_event_outlines.mxd"))
 
-for mapTuple in [(tight_outlines, tight_merge), (event_outlines,event_merge)]:
+for mapTuple in [(tight_outlines, tight_merge), (event_outlines, event_merge)]:
   mapDoc = mapTuple[0]
   mergeLayer = mapTuple[1]
   mapLayers = arcpy.mapping.ListLayers(mapDoc)
@@ -182,9 +180,13 @@ for mapTuple in [(tight_outlines, tight_merge), (event_outlines,event_merge)]:
 
   for layer in mapLayers:
     arcpy.mapping.RemoveLayer(mapDf, layer)
-  merge_layer = arcpy.mapping.Layer(mergeLayer)
-  arcpy.mapping.AddLayer(mapDf, merge_layer)
+
+  arcpy.mapping.AddLayer(mapDf, mergeLayer)
   mapDoc.save()
+
+arcpy.AddMessage("Merges saved. Removing products from map...")
+for layer in arcpy.mapping.ListLayers(mxd)[:2]:
+  arcpy.mapping.RemoveLayer(df, layer)
 
 #Make temporary outline services
 arcpy.AddMessage("Making services...")

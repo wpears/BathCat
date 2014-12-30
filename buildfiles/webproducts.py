@@ -56,6 +56,11 @@ def WebProducts (raster, mxds, method="POINT_REMOVE", tolerance=3, minimumArea=3
   event_mxd.save()
 
   arcpy.AddMessage("Event outlines saved.")
+  arcpy.Delete_management(tight_buff)
+  arcpy.Delete_management(tempPath)
+  arcpy.Delete_management(temp2Path)
+  arcpy.Delete_management(temp3Path)
+  arcpy.Delete_management(temp4Path)
 
   del tempPath
   del temp2Path

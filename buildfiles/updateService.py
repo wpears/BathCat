@@ -21,9 +21,9 @@ def UpdateService(server, folder, mxd, token, gisConnection):
   httpConn.close()
 
   DeleteService(server, folder, service, token)
-
+  sleep(20)
   MakeService(mxd, folder, gisConnection)
-  sleep(10)
+  sleep(20)
 
   editURL = "/arcgis/admin/services/" + folder + "/" + service + ".MapServer/edit?"+urllib.urlencode({'service':serviceParams,'token':token,'f':'json'})
   httpConn = httplib.HTTPConnection(server, 6080)

@@ -1,32 +1,26 @@
 import arcpy
-from arcpy import env
 from os import path
 arcpy.CheckOutExtension("3D")
-env.outputZFlag="Disabled"
-env.outputMFlag="Disabled"
-
 
 
 def WebProducts (raster, mxds, method="POINT_REMOVE", tolerance=3, minimumArea=3000 ):
 
   rastName=arcpy.Describe(raster).baseName
-  arcpy.AddMessage("Processing raster: "+rastName)
+  arcpy.AddMessage("Processing raster: "+rastName+" for web products.")
   tempPath = rastName + "TEMP"
   temp2Path = tempPath + "2"
-  temp3Path = tempPath + "3"
-  temp4Path = tempPath + "4"
 
   arcpy.AddMessage("Running Raster Domain...")
-  domain = arcpy.RasterDomain_3d(raster, tempPath, "POLYGON")
+  arcpy.RasterDomain_3d(raster, tempPath, "POLYGON")
 
-  arcpy.AddMessage("Raster Domain finished. Running Union...")
-  union = arcpy.Union_analysis(domain, temp2Path, "ALL", 0.1, "NO_GAPS")
+  #arcpy.AddMessage("Raster Domain finished. Running Union...")
+  #arcpy.Union_analysis(tempPath, temp2Path, "ALL", 0.1, "NO_GAPS")
 
-  arcpy.AddMessage("Union finished. Running Dissolve...")
-  dissolve = arcpy.Dissolve_management(union, temp3Path)
+  #arcpy.AddMessage("Union finished. Running Dissolve...")
+  #arcpy.Dissolve_management(temp2Path, temp3Path)
 
-  arcpy.AddMessage("Dissolve finished. Running Simplify and slight buffer...")
-  simp = arcpy.cartography.SimplifyPolygon(dissolve, temp4Path, method, tolerance, minimumArea, "NO_CHECK", "NO_KEEP").getOutput(0)
+  arcpy.AddMessage("Raster Domain finsihed. Running Simplify and slight buffer...")
+  simp = arcpy.cartography.SimplifyPolygon(tempPath, temp2Path, method, tolerance, minimumArea, "NO_CHECK", "NO_KEEP").getOutput(0)
   tight_buff = arcpy.Buffer_analysis(simp, rastName+"_tight", "10 Feet", "FULL", "", "NONE").getOutput(0)
 
   arcpy.AddMessage("Tight outline created. Cleaning up fields...")
@@ -58,16 +52,9 @@ def WebProducts (raster, mxds, method="POINT_REMOVE", tolerance=3, minimumArea=3
   arcpy.AddMessage("Event outlines saved.")
   arcpy.Delete_management(tempPath)
   arcpy.Delete_management(temp2Path)
-  arcpy.Delete_management(temp3Path)
-  arcpy.Delete_management(temp4Path)
 
   del tempPath
   del temp2Path
-  del temp3Path
-  del temp4Path
-  del domain
-  del union
-  del dissolve
   del simp
   del tight_buff
   del tight_layer

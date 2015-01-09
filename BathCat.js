@@ -410,13 +410,13 @@ function( dom
 			var timeSlider
 			  , tCount
 			  , sliderDiv = DOC.createElement('div')
-				, timeExtent = new TimeExtent(new Date("01/01/2010 UTC"), new Date("12/31/2014 UTC"))
+				, timeExtent = new TimeExtent(new Date("01/01/2010 UTC"), new Date("12/31/2015 UTC"))
 				;
 
 			map.setTimeExtent(timeExtent);
 			timeDiv.appendChild(sliderDiv);
 			timeSlider = new TimeSlider({                                            //create TimeSlider
-				style:"width:300px;",
+				style:"width:335px;",
 				id: "timeSlider",
 				intermediateChanges: true},
 				sliderDiv

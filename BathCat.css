@@ -455,7 +455,7 @@ b{
 
 
 .labelCon{
-  width:320px;
+  width:360px;
   bottom:40px;
   right:13px;
   position:absolute;
@@ -501,6 +501,9 @@ b{
   color:rgb(112, 84, 59);
 }
 .tsLabel:nth-child(6){
+  color:rgb(102, 1, 152);
+}
+.tsLabel:nth-child(7){
   color:rgb(25,25,35);
 }
 
@@ -521,6 +524,9 @@ b{
   background-color:rgb(112, 84, 59);
 }
 .tsHighlight:nth-child(6){
+  background-color:rgb(102, 1, 152);
+}
+.tsHighlight:nth-child(7){
   background-color:rgb(25,25,35);
 }
 
@@ -541,6 +547,9 @@ b{
   color:rgb(169,152,137);
 }
 .satLabels>.tsLabel:nth-child(6){
+  color:rgb(148,77,183);
+}
+.satLabels>.tsLabel:nth-child(7){
   color:#fff;
 }
 
@@ -561,6 +570,9 @@ b{
   background-color:rgb(169,152,137);
 }
 .satLabels>.tsHighlight:nth-child(6){
+  background-color:rgb(148,77,183);
+}
+.satLabels>.tsHighlight:nth-child(7){
   background-color:rgb(25,25,35);
 }
 

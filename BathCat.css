@@ -987,10 +987,8 @@ th:active{
 
 
 .downloadlink{
-  margin-top:1px;
-  float:right;
   line-height: 1.2em;
-  padding:0 1px 0 1px;
+  padding:0 3px 0 3px;
 }
 
 
@@ -1006,7 +1004,7 @@ th:active{
 
 
 #dlLink{
-  margin-right:10px;
+  margin-left:5px;
 }
 
 

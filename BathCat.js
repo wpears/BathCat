@@ -969,7 +969,7 @@ function( dom
    		}
 
 
-   		dataPane.innerHTML='<div id="dataCon"><div id="dataNode"></div><div id="downloadNode"><strong id="dlTitle">Downloads:</strong><a class="downloadlink" href="zips/Metadata.zip" target="_self">Metadata</a><a class="downloadlink" id="dlLink" href="tryagain.zip" target="_self">Dataset</a></div></div><div id="infopane"></div><div id="foot" class="unselectable"><div class="footDiv">Help</div><div class="footDiv">Terms of Use</div><div class="footDiv">Contact</div></div>';
+   		dataPane.innerHTML='<div id="dataCon"><div id="dataNode"></div><div id="downloadNode"><strong id="dlTitle">Downloads:</strong><a class="downloadlink" id="dlLink" href="tryagain.zip" target="_self">XYZ</a></div></div><div id="infopane"></div><div id="foot" class="unselectable"><div class="footDiv">Help</div><div class="footDiv">Terms of Use</div><div class="footDiv">Contact</div></div>';
 
    		mainWindow.appendChild(gridPane);
    		mainWindow.appendChild(dataPane);

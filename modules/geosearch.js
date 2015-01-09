@@ -170,7 +170,7 @@ function( splice
 
     /*Allow queries from non-event sources*/
     function syntheticQuery(mapX, mapY, bin){
-      console.log("@")
+      console.log("Synthethic query is broken")
       queriedLayers.length = 0;
       if(!bin) return queriedLayers;
 

@@ -36,7 +36,7 @@ require(["dojo/dom"
 				,"modules/clearnode"
 				,"modules/tooltip"
 				,"modules/getdate"
-				,"modules/gridconnector"
+				,"modules/gridconnector.js"
 				,"modules/setvisiblerasters"
 				,"modules/basemap"
 				,"modules/zoomlevel"
@@ -291,7 +291,7 @@ function( dom
 				var intData ={};
 				var featureAttr = features[i].attributes;
 				intData.__Date = featureAttr.Completed;
-				intData.Date = formattedDates[i];
+				intData.Completed = formattedDates[i];
 				intData.Project = names[i];
 				intData.OBJECTID = featureAttr.OBJECTID;
 				gridData[i]=intData;
@@ -1403,7 +1403,7 @@ function( dom
 			}
 
 			function sortByDate(a,b){
-				return features[a-1].attributes.Date - features[b-1].attributes.Date;
+				return features[a-1].attributes.Collected - features[b-1].attributes.Collected;
 			}
 
 		  function setData (attr){
@@ -1435,10 +1435,8 @@ function( dom
 			function parseAttributes(attr,ind){
 				dataNode.style.marginTop = "0";	
 				dataNode.innerHTML = "<h2>"+names[ind]+"</h2>"+
-				"<span class = 'projectinfo'><strong>Collection Date: </strong>"+formattedDates[ind]+"</span>"+
-				"<span class = 'projectinfo'><strong>Client: </strong>"+(attr.Client||"Groundwater Supply Assessment Section, DWR")+"</span>"+
-				"<span class = 'projectinfo'><strong>Waterways Covered: </strong>"+(attr.Waterways||WWays(attr))+"</span>"+
-				"<span class = 'projectinfo'><strong>Purpose: </strong>"+(attr.Purpose||ssMessage)+"</span>";
+				"<span class = 'projectinfo'><strong>Collection ended: </strong>"+formattedDates[ind]+"</span>"+
+				"<span class = 'projectinfo'><strong>Abstract: </strong>"+(attr.Abstract||ssMessage)+"</span>";
 				downloadNode.style.display = "block";
 			}
 

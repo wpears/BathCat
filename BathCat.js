@@ -164,7 +164,7 @@ function( dom
 		rasterLayer.setVisibleLayers([-1]);
 
 		//outlines are included in separate files, loaded before the module loader is even in place
-		var outlinesFeatureSet = window.DATA_OUTLINES;
+		var outlinesFeatureSet = window.bathymetry_event_outlines;
 		var features = outlinesFeatureSet.features;
 	  var featureCount = features.length;
 
@@ -195,7 +195,7 @@ function( dom
 
 
 		tiout = new FeatureLayer({
-			featureSet:window.TIGHT_OUTLINES,
+			featureSet:window.bathymetry_tight_outlines,
 				layerDefinition:{
 					"geometryType":"esriGeometryPolygon"
 				 ,"spatialReference":spatialRef

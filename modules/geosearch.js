@@ -116,19 +116,24 @@ function( splice
       geoArr.sort(function(a, b){return a.xmin-b.xmin})
 
       //define breakpoints for bins sorted by xmin, with a break for every 10 datasets.
-      for(var k = 0, l = geoBreaks.length-1; k<l; k++){
+      for(var k = 0, l = geoBreaks.length; k<l; k++){
         geoBreaks[k] = geoArr[k*featureCount/10>>0].xmin;
         geoBins[k] =[];
       }
-      geoBreaks[l] = geoArr[featureCount-1].xmin;
 
       //for every feature, put it in each bin that it intersects. Since bins are defined based on
       //longitude, datasets with great east-west distances will likely fall into multiple bins.
-      for(i = 0; i<featureCount; i++){
-        var currGeo = geoArr[i];
-        for(k=0; k<l; k++){
-          if(currGeo.xmin<= geoBreaks[k+1]&&currGeo.xmax>= geoBreaks[k])
-            geoBins[k].push(currGeo);
+      if(geoBreaks.length===1){
+        for(i=0; i<featureCount; i++){
+          geoBins[0].push(geoArr[i]);
+        }
+      }else{
+        for(i = 0; i<featureCount; i++){
+          var currGeo = geoArr[i];
+          for(k=0; k<l; k++){
+            if(currGeo.xmin<= geoBreaks[k+1]&&currGeo.xmax>= geoBreaks[k])
+              geoBins[k].push(currGeo);
+          }
         }
       }
       
@@ -165,6 +170,7 @@ function( splice
 
     /*Allow queries from non-event sources*/
     function syntheticQuery(mapX, mapY, bin){
+      console.log("@")
       queriedLayers.length = 0;
       if(!bin) return queriedLayers;
 

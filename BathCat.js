@@ -26,7 +26,7 @@ require(["dojo/dom"
   			,"esri/symbols/SimpleMarkerSymbol"
   			,"esri/geometry/Point"
 
-  			,"modules/geosearch"
+  			,"modules/geosearch.js"
   			,"modules/symbols"
 				,"modules/popup"
 				,"modules/animationtool"

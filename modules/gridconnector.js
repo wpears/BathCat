@@ -52,7 +52,7 @@ function( Grid
     grid = new Grid({bufferRows:Infinity,
         columns:{
           Project:{label:"Project", sortable:false},
-          Date:{label:"Date", sortable:false},
+          Completed:{label:"Completed", sortable:false},
           OBJECTID:{label:"OBJECTID"},
           Editor:Editor({field: "Image", sortable:false}, "checkbox"),
           __Date:{label:"_Date"}

@@ -180,15 +180,9 @@ function( dom
 				      "type" : "esriFieldTypeOID"},
 				    {"name" : "Project",
 				      "type" : "esriFieldTypeString"},
-				    {"name" : "Date",
-				      "type" : "esriFieldTypeDate"},
-				    {"name" : "Waterways",
-				      "type" : "esriFieldTypeString"},
-				    {"name" : "Method",
-				      "type" : "esriFieldTypeString"},
-				    {"name" : "Client",
-				      "type" : "esriFieldTypeString"},
-				    {"name" : "Purpose",
+				    {"name" : "Completed",
+				      "type" : "esriFieldTypeSingle"},
+				    {"name" : "Abstract",
 				      "type" : "esriFieldTypeString"}
 				  ]};
 
@@ -285,7 +279,7 @@ function( dom
 				hl[i] = 0;
 				insideTimeBoundary[i] = 1;
 				rastersShowing[i+1] = 0;
-				formattedDates[i]= getDate(att.Date);
+				formattedDates[i]= getDate(att.Completed);
 				names[i] = (att.Project.length<6?ss + att.Project:att.Project);
 			}
 		})();
@@ -296,7 +290,7 @@ function( dom
 			for(var i = 0; i<featureCount; i++){
 				var intData ={};
 				var featureAttr = features[i].attributes;
-				intData.__Date = featureAttr.Date;
+				intData.__Date = featureAttr.Completed;
 				intData.Date = formattedDates[i];
 				intData.Project = names[i];
 				intData.OBJECTID = featureAttr.OBJECTID;
@@ -862,7 +856,7 @@ function( dom
 
 			if(!graphic) return;
 
-			date = features[oid-1].attributes.Date;
+			date = features[oid-1].attributes.Completed;
 			color = getColor(date);
 			if(fromEvent){
 				row = gridObject.oidToRow(oid);

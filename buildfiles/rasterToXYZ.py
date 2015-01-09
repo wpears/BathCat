@@ -12,11 +12,11 @@ def RasterToXYZ(rastPath, outLocation=r"\\mrsbmapp21161\giswebapps\bathymetry\zi
 
 
   arcpy.AddMessage("Running Raster to Point...")
-  point = arcpy.RasterToPoint_conversion(rastPath, r"in_memory\TEMPPOINT", "VALUE")
+  point = arcpy.RasterToPoint_conversion(rastPath, r"TEMPPOINT", "VALUE")
   arcpy.AddMessage("Point feature created")
 
   arcpy.AddMessage("Converting to 3D by Attribute...")
-  threed = arcpy.FeatureTo3DByAttribute_3d(point, r"in_memory\TEMPPOINT3D", "grid_code")
+  threed = arcpy.FeatureTo3DByAttribute_3d(point, r"TEMPPOINT3D", "grid_code")
   arcpy.AddMessage("3D conversion complete")
   del point
   arcpy.Delete_management("TEMPPOINT")
@@ -30,9 +30,5 @@ def RasterToXYZ(rastPath, outLocation=r"\\mrsbmapp21161\giswebapps\bathymetry\zi
   arcpy.AddMessage("Adding header...")
   xyz = addHeader(outPath)
   arcpy.AddMessage("Header added")
-
-  arcpy.AddMessage("Clearing in-memory workspace...")
-  arcpy.Delete_management("in_memory")
-  arcpy.AddMessage("In-memory workspace cleared")
 
   return xyz

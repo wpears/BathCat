@@ -1,5 +1,6 @@
 import arcpy, sys
 from os import path
+from os import unlink
 
 username = arcpy.GetParameterAsText(0)
 appServerRoot = arcpy.GetParameterAsText(1)
@@ -95,8 +96,7 @@ for raster in newRasters:
   arcpy.mapping.RemoveTableView(df, arcpy.mapping.ListTableViews(mxd)[0])
   arcpy.Delete_management(xyz)
   del xyz
-  arcpy.Delete_management(metadata)
-  del metadata
+  unlink(metadata)
   arcpy.AddMessage("text and XML files removed")
 
   rasterName = raster.name

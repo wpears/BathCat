@@ -26,7 +26,7 @@ require(["dojo/dom"
   			,"esri/symbols/SimpleMarkerSymbol"
   			,"esri/geometry/Point"
 
-  			,"modules/geosearch.js"
+  			,"modules/geosearch"
   			,"modules/symbols"
 				,"modules/popup"
 				,"modules/animationtool"
@@ -36,7 +36,7 @@ require(["dojo/dom"
 				,"modules/clearnode"
 				,"modules/tooltip"
 				,"modules/getdate"
-				,"modules/gridconnector.js"
+				,"modules/gridconnector"
 				,"modules/setvisiblerasters"
 				,"modules/basemap"
 				,"modules/zoomlevel"
@@ -1119,7 +1119,7 @@ function( dom
 
    		//assign the download dataset link to the proper file
    		function makeDownloadLink(e){
-	   		var project =(dataNode.firstChild.textContent).split(" ").join("")
+	   		var project =(dataNode.firstChild.textContent).split(" ").join("_")
 	   		, dat = new Date(dataNode.firstChild.nextElementSibling.textContent.slice(-11))
 	   		, year = dat.getFullYear()
 	   		, month = dat.getUTCMonth()+1
@@ -1129,7 +1129,7 @@ function( dom
  				day = day+'';
  				month = (month.length === 1?"0"+month:month);
  				day = (day.length === 1?"0"+day:day);
- 				dlLink.href = "zips/"+project+"_"+year+"_"+month+"_"+day+".zip";
+ 				dlLink.href = "zips/"+project+year+"_"+month+day+".zip";
    		}
 
 
